@@ -1,0 +1,29 @@
+{
+  "name": "linx-electron",
+  "version": "0.0.0",
+  "description": "Mix builder",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/linxmix/linx-electron.git"
+  },
+  "author": "wolfbiter",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/linxmix/linx-electron/issues"
+  },
+  "homepage": "https://github.com/linxmix/linx-electron#readme",
+  "dependencies": {
+    "babel-preset-react": "^6.16.0",
+    "babel-register": "^6.18.0",
+    "electron": "^1.4.7",
+    "react": "^15.4.0",
+    "react-dom": "^15.4.0",
+    "redux": "^3.6.0",
+    "redux-loop": "^2.2.2"
+  }
+}
