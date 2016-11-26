@@ -1,26 +1,26 @@
 const { createSelector: Getter, createStructuredSelector: Struct } = require('reselect')
 const { values } = require('lodash')
 
-const getMixes = (state) => state.mixes.records
-const getMixesIsLoading = (state) => state.mixes.isLoading
+const getSamples = (state) => state.samples.records
+const getSamplesIsLoading = (state) => state.samples.isLoading
 
-const getMixList = Getter(
-  getMixes,
-  (mixes) => values(mixes)
+const getSampleList = Getter(
+  getSamples,
+  (samples) => { console.log('samples', samples, values(samples)); return values(samples) }
 )
 
-const getMixListProps = Struct({
-  mixes: getMixes,
-  mixList: getMixList,
-  isLoading: getMixesIsLoading
+const getSampleListProps = Struct({
+  samples: getSamples,
+  sampleList: getSampleList,
+  isLoading: getSamplesIsLoading
 })
 
-const getMixProps = Struct({
-  mixes: getMixes,
-  isLoading: getMixesIsLoading
+const getSampleProps = Struct({
+  samples: getSamples,
+  isLoading: getSamplesIsLoading
 })
 
 module.exports = {
-  getMixListProps,
-  getMixProps
+  getSampleListProps,
+  getSampleProps
 }

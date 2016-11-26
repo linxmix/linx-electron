@@ -5,28 +5,29 @@ const { join, basename, extname } = require('path')
 module.exports = createService
 
 function createService (config) {
-  const mixesDirectory = join(config.dataDirectory, 'mixes')
+  const { dataDirectory, audioContext } = config
+  const samplesDirectory = join(dataDirectory, 'samples')
 
   return {
-    readMixList,
-    readMix
+    readSampleList,
+    readSample
   }
 
-  function readMixList () {
-    return fs.readdir(mixesDirectory)
+  function readSampleList () {
+    return fs.readdir(samplesDirectory)
       .then(list => list.filter(item => {
-        return extname(item) === '.json'
-      }))
-      .then(list => list.map(item => {
-        return basename(item, '.json')
+        return !item.startsWith('.')
       }))
       .then(list => list.map(item => ({ id: item })))
   }
 
-  function readMix (id) {
-    const path = join(mixesDirectory, id) + '.json'
-    return fs.readFile(path, 'utf8')
-      .then(JSON.parse)
-      .then(mix => ({ ...mix, id }))
+  function readSample (id) {
+    const path = join(samplesDirectory, id)
+
+    return fs.readFile(path)
+      .then(({ buffer }) => {
+        return audioContext.decodeAudioData(buffer)
+      })
+      .then(audioBuffer => ({ id, path, audioBuffer }))
   }
 }

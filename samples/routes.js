@@ -1,10 +1,10 @@
 const React = require('react')
 const { Route, IndexRoute } = require('react-router')
 
-const MixListContainer = require('./containers/mix-list')
-const MixContainer = require('./containers/mix')
+const SampleListContainer = require('./containers/sample-list')
+const SampleContainer = require('./containers/sample')
 
-module.exports = <Route path='/mixes'>
-  <IndexRoute component={MixListContainer} />
-  <Route path=':mixId' component={MixContainer} />
+module.exports = <Route path='/samples'>
+  <IndexRoute component={SampleListContainer} />
+  <Route path=':sampleId' component={SampleContainer} />
 </Route>

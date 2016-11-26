@@ -28,7 +28,7 @@ function createReducer (config) {
     ])),
     [loadMixListSuccess]: (state, action) => ({
       ...state,
-      records: merge(state.records, keyBy(action.payload, 'id'))
+      records: merge({}, state.records, keyBy(action.payload, 'id'))
     }),
     [loadMixListFailure]: (state, action) => ({
       ...state, error: action.payload.message

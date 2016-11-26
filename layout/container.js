@@ -9,6 +9,10 @@ class LayoutContainer extends React.Component {
       <Link to='/'>
         <h1>Linx</h1>
       </Link>
+      <nav>
+        <Link to='/mixes'>mixes</Link>
+        <Link to='/samples'>samples</Link>
+      </nav>
       <div>{children}</div>
     </div>
   }

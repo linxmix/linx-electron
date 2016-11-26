@@ -3,14 +3,14 @@ const { handleActions } = require('redux-actions')
 const { merge, keyBy } = require('lodash')
 
 const {
-  loadMixList,
-  loadMixListSuccess,
-  loadMixListFailure,
-  loadMixListEnd,
-  loadMix,
-  loadMixSuccess,
-  loadMixFailure,
-  loadMixEnd
+  loadSampleList,
+  loadSampleListSuccess,
+  loadSampleListFailure,
+  loadSampleListEnd,
+  loadSample,
+  loadSampleSuccess,
+  loadSampleFailure,
+  loadSampleEnd
 } = require('./actions')
 const createService = require('./service')
 
@@ -20,39 +20,39 @@ function createReducer (config) {
   const service = createService(config)
 
   return handleActions({
-    [loadMixList]: (state, action) => loop({
+    [loadSampleList]: (state, action) => loop({
       ...state, isLoading: true
     }, Effects.batch([
-      Effects.promise(runLoadMixList),
-      Effects.constant(loadMixListEnd())
+      Effects.promise(runLoadSampleList),
+      Effects.constant(loadSampleListEnd())
     ])),
-    [loadMixListSuccess]: (state, action) => ({
+    [loadSampleListSuccess]: (state, action) => ({
       ...state,
-      records: merge(state.records, keyBy(action.payload, 'id'))
+      records: merge({}, state.records, keyBy(action.payload, 'id'))
     }),
-    [loadMixListFailure]: (state, action) => ({
+    [loadSampleListFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
-    [loadMixListEnd]: (state, action) => ({
+    [loadSampleListEnd]: (state, action) => ({
       ...state, isLoading: false
     }),
-    [loadMix]: (state, action) => loop({
+    [loadSample]: (state, action) => loop({
       ...state, isLoading: true
     }, Effects.batch([
-      Effects.promise(runLoadMix, action.payload.id),
-      Effects.constant(loadMixEnd())
+      Effects.promise(runLoadSample, action.payload.id),
+      Effects.constant(loadSampleEnd())
     ])),
-    [loadMixSuccess]: (state, action) => ({
+    [loadSampleSuccess]: (state, action) => ({
       ...state,
       records: {
         ...state.records,
         [action.payload.id]: action.payload
       }
     }),
-    [loadMixFailure]: (state, action) => ({
+    [loadSampleFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
-    [loadMixEnd]: (state, action) => ({
+    [loadSampleEnd]: (state, action) => ({
       ...state, isLoading: false
     })
   }, {
@@ -61,15 +61,15 @@ function createReducer (config) {
     error: null
   })
 
-  function runLoadMixList () {
-    return service.readMixList()
-      .then(loadMixListSuccess)
-      .catch(loadMixListFailure)
+  function runLoadSampleList () {
+    return service.readSampleList()
+      .then(loadSampleListSuccess)
+      .catch(loadSampleListFailure)
   }
 
-  function runLoadMix (id) {
-    return service.readMix(id)
-      .then(loadMixSuccess)
-      .catch(loadMixFailure)
+  function runLoadSample (id) {
+    return service.readSample(id)
+      .then(loadSampleSuccess)
+      .catch(loadSampleFailure)
   }
 }
