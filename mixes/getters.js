@@ -2,6 +2,7 @@ const { createSelector: Getter, createStructuredSelector: Struct } = require('re
 const { mapValues, values } = require('lodash')
 
 const { getChannels } = require('../channels/getters')
+const { getClips } = require('../clips/getters')
 const nestMix = require('./helpers/nest')
 
 const getMixesRecords = (state) => state.mixes.records
@@ -10,10 +11,11 @@ const getMixesIsLoading = (state) => state.mixes.isLoading
 const getMixes = Getter(
   getMixesRecords,
   getChannels,
-  (mixes, channels) => {
+  getClips,
+  (mixes, channels, clips) => {
     return mapValues(mixes, (mix, mixId) => {
       return (mix.channelId && channels[mix.channelId])
-        ? nestMix({ ...mix, channels })
+        ? nestMix({ ...mix, channels, clips })
         : mix
     })
   }

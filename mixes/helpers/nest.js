@@ -1,23 +1,23 @@
 module.exports = nest
 
 function nest (mix) {
-  const { id, channelId, channels } = mix
+  const { id, channelId, channels, clips } = mix
 
   return {
     id,
-    channel: nestChannels({ channelId, channels })
+    channel: nestChannels({ channelId, channels, clips })
   }
 }
 
-function nestChannels ({ channelId, channels }) {
+function nestChannels ({ channelId, channels, clips }) {
   const channel = channels[channelId]
-    console.log('channel', channel, channelId)
-  const { channels: children = [] } = channel
+  const { id, channelIds: subChannelIds = [], clipIds = [] } = channel
 
   return {
-    ...channel,
-    channels: children.map(child => {
-      return nestChannels({ channelId: child, channels })
-    })
+    id,
+    channels: subChannelIds.map(subChannelId => {
+      return nestChannels({ channelId: subChannelId, channels, clips })
+    }),
+    clips: clipIds.map(clipId => clips[clipId])
   }
 }

@@ -6,7 +6,7 @@ const getSamplesIsLoading = (state) => state.samples.isLoading
 
 const getSampleList = Getter(
   getSamples,
-  (samples) => { console.log('samples', samples, values(samples)); return values(samples) }
+  (samples) => values(samples)
 )
 
 const getSampleListProps = Struct({

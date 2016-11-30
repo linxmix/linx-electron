@@ -12,7 +12,11 @@ test('flatten', (t) => {
         channels: [{
           id: 2
         }, {
-          id: 3
+          id: 3,
+          clips: [{
+            id: 'beat',
+            sampleId: 'beat.wav'
+          }]
         }]
       }, {
         id: 4,
@@ -27,24 +31,36 @@ test('flatten', (t) => {
     channels: {
       0: {
         id: 0,
-        channels: [1, 4]
+        channelIds: [1, 4],
+        clipIds: []
       },
       1: {
         id: 1,
-        channels: [2, 3]
+        channelIds: [2, 3],
+        clipIds: []
       },
       2: {
-        id: 2
+        id: 2,
+        channelIds: [],
+        clipIds: []
       },
       3: {
-        id: 3
+        id: 3,
+        channelIds: [],
+        clipIds: ['beat']
       },
       4: {
         id: 4,
-        channels: []
+        channelIds: [],
+        clipIds: []
       }
     },
-    clips: {}
+    clips: {
+      beat: {
+        id: 'beat',
+        sampleId: 'beat.wav'
+      }
+    }
   }
   const actual = flatten(mix)
   t.deepEqual(actual, expected)

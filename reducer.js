@@ -8,6 +8,7 @@ function createReducer (config) {
     routing: routerReducer,
     mixes: require('./mixes/reducer')(config),
     samples: require('./samples/reducer')(config),
-    channels: require('./channels/reducer')(config)
+    channels: require('./channels/reducer')(config),
+    clips: require('./clips/reducer')(config)
   })
 }

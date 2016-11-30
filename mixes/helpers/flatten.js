@@ -1,39 +1,45 @@
-const { reduce, keyBy, isEmpty } = require('lodash')
+const { reduce, keyBy } = require('lodash')
 
 module.exports = flatten
 
 function flatten (mix) {
-  const channels = flattenChannels(mix.channel)
+  const { id, channel } = mix
 
   return {
-    id: mix.id,
-    channelId: mix.channel.id,
-    channels,
-    clips: flattenClips(channels)
+    id,
+    channelId: channel.id,
+    channels: flattenChannels(channel),
+    clips: flattenClips(channel)
   }
 }
 
-function flattenChannels (channel) {
-  const { channels: children } = channel
-
-  if (isEmpty(children)) {
-    return { [channel.id]: channel }
-  }
+function reduceChannelsToObject (channel, callback) {
+  const { channels: subChannels = [] } = channel
 
   return {
-    [channel.id]: {
-      ...channel,
-      channels: children.map(child => child.id)
-    },
-    ...children.reduce((sofar, next) => {
-      return { ...sofar, ...flattenChannels(next) }
+    ...callback(channel),
+    ...subChannels.reduce((sofar, subChannel) => {
+      return { ...sofar, ...reduceChannelsToObject(subChannel, callback) }
     }, {})
   }
 }
 
-function flattenClips (channels) {
-  return reduce(channels, (sofar, next) => {
-    const { clips: nextClips = [] } = next
-    return { ...sofar, ...keyBy(nextClips, 'id') }
-  }, {})
+function flattenChannels (channel) {
+  return reduceChannelsToObject(channel, (next) => {
+    const { channels = [], clips = [] } = next
+    return {
+      [next.id]: {
+        ...next,
+        channelIds: channels.map(channel => channel.id),
+        clipIds: clips.map(clip => clip.id)
+      }
+    }
+  })
+}
+
+function flattenClips (channel) {
+  return reduceChannelsToObject(channel, (next) => {
+    const { clips = [] } = next
+    return keyBy(clips, 'id')
+  })
 }

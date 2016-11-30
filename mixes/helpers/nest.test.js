@@ -9,21 +9,28 @@ test('nest', (t) => {
     channels: {
       0: {
         id: 0,
-        channels: [1, 4]
+        channelIds: [1, 4]
       },
       1: {
         id: 1,
-        channels: [2, 3]
+        channelIds: [2, 3]
       },
       2: {
         id: 2
       },
       3: {
-        id: 3
+        id: 3,
+        clipIds: ['beat']
       },
       4: {
         id: 4,
-        channels: []
+        channelIds: []
+      }
+    },
+    clips: {
+      beat: {
+        id: 'beat',
+        sampleId: 'beat.wav'
       }
     }
   }
@@ -36,15 +43,23 @@ test('nest', (t) => {
         id: 1,
         channels: [{
           id: 2,
-          channels: []
+          channels: [],
+          clips: []
         }, {
           id: 3,
-          channels: []
-        }]
+          channels: [],
+          clips: [{
+            id: 'beat',
+            sampleId: 'beat.wav'
+          }]
+        }],
+        clips: []
       }, {
         id: 4,
-        channels: []
-      }]
+        channels: [],
+        clips: []
+      }],
+      clips: []
     }
   }
 

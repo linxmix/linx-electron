@@ -14,6 +14,7 @@ const {
 } = require('./actions')
 const createService = require('./service')
 const { setChannels } = require('../channels/actions')
+const { setClips } = require('../clips/actions')
 const flattenMix = require('./helpers/flatten')
 
 module.exports = createReducer
@@ -49,7 +50,8 @@ function createReducer (config) {
       const { payload: mix } = action
       const { channelId, channels, clips } = flattenMix(mix)
       const effects = Effects.batch([
-        Effects.constant(setChannels(channels))
+        Effects.constant(setChannels(channels)),
+        Effects.constant(setClips(clips))
       ])
       const nextRecords = {
         ...records,
