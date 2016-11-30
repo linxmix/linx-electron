@@ -1,6 +1,6 @@
 const pify = require('pify')
 const fs = pify(require('fs'))
-const { join, basename, extname } = require('path')
+const { join } = require('path')
 
 module.exports = createService
 
