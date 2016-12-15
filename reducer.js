@@ -6,6 +6,9 @@ module.exports = createReducer
 function createReducer (config) {
   return combineReducers({
     routing: routerReducer,
-    mixes: require('./mixes/reducer')(config)
+    mixes: require('./mixes/reducer')(config),
+    samples: require('./samples/reducer')(config),
+    channels: require('./channels/reducer')(config),
+    clips: require('./clips/reducer')(config)
   })
 }

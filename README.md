@@ -24,12 +24,45 @@ To run normally,
 npm start
 ```
 
+### Test
+
+To run all the tests:
+
+```shell
+npm test
+```
+
+To run all the unit tests:
+
+```shell
+npm run test:unit
+```
+
+To run a specific unit test:
+
+```shell
+npm run test:unit -- ./samples/helpers/flatten.test.js
+```
+
+To run the [standard style](http://standardjs.com) linter on all files:
+
+```shell
+npm run test:lint
+```
+
+To run the [standard style](http://standardjs.com) linter on a specific file:
+
+```shell
+npm run test:lint -- ./samples/helpers/flatten.js
+```
+
 ## Project Structure
 
 Each concept in the application gets its own `${conceptName}/` directory.
 
 ```txt
 Directory structure
+  *.test.js       unit tests (co-located next to file being tested)
   lib/*           generalized modules, should be moved out of project later
   ${concept}/     application concepts
   main.js         electron entry file

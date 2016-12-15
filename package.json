@@ -6,7 +6,10 @@
   "scripts": {
     "start": "electron .",
     "start:dev": "NODE_ENV=development node dev",
-    "test": "standard"
+    "test:lint": "standard",
+    "test:lint:fix": "standard --fix",
+    "test:unit": "ava",
+    "test": "npm-run-all -p test:*"
   },
   "repository": {
     "type": "git",
@@ -19,11 +22,19 @@
   },
   "homepage": "https://github.com/linxmix/linx-electron#readme",
   "dependencies": {
+    "babel-code-frame": "^6.16.0",
+    "babel-messages": "^6.8.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.18.0",
     "babel-plugin-transform-object-rest-spread": "^6.19.0",
     "babel-preset-react": "^6.16.0",
     "babel-register": "^6.18.0",
+    "core-js": "^2.4.1",
+    "debug": "^2.3.3",
     "electron": "^1.4.7",
+    "globals": "^9.14.0",
+    "invariant": "^2.2.2",
     "lodash": "^4.17.2",
+    "npm-run-all": "^3.1.1",
     "pify": "^2.3.0",
     "react": "^15.4.0",
     "react-dom": "^15.4.0",
@@ -38,8 +49,19 @@
     "uuid": "^3.0.0"
   },
   "devDependencies": {
+    "ava": "^0.17.0",
     "chokidar": "^1.6.1",
     "electron-connect": "^0.6.1",
     "standard": "^8.6.0"
+  },
+  "ava": {
+    "files": [
+      "./**/*.test.js",
+      "!./node_modules/**/*"
+    ],
+    "require": [
+      "babel-register"
+    ],
+    "babel": "inherit"
   }
 }

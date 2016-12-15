@@ -5,5 +5,6 @@ const LayoutContainer = require('./layout/container')
 
 module.exports = <Route path='/' component={LayoutContainer}>
   { require('./mixes/routes') }
+  { require('./samples/routes') }
   <IndexRedirect to='/mixes' />
 </Route>
