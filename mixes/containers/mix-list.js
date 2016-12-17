@@ -7,11 +7,12 @@ const { loadMixList } = require('../actions')
 
 class MixListContainer extends React.Component {
   render () {
-    const { mixList, isLoading } = this.props
+    const { mixList, isLoading, error } = this.props
 
     return <div>
       <header>
-        mixes are {isLoading ? 'loading' : 'here'}
+        <div>mixes are {isLoading ? 'loading' : 'here'}</div>
+        <div>{error ? error : 'no errors'}</div>
       </header>
       {mixList.map(mix => {
         return <section key={mix.id}>

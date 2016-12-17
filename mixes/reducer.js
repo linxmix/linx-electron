@@ -1,6 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { merge, keyBy } = require('lodash')
+const uuid = require('uuid/v1');
 
 const {
   loadMixList,
@@ -29,10 +30,12 @@ function createReducer (config) {
       Effects.promise(runLoadMixList),
       Effects.constant(loadMixListEnd())
     ])),
-    [loadMixListSuccess]: (state, action) => ({
-      ...state,
-      records: merge({}, state.records, keyBy(action.payload, 'id'))
-    }),
+
+    // how to get this to not run LOAD_MIX_END end until all LOAD_MIX are done?
+
+    [loadMixListSuccess]: (state, action) => loop(state, Effects.batch(
+      action.payload.map((mix) => Effects.constant(loadMix(mix.id)))
+    )),
     [loadMixListFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -42,7 +45,7 @@ function createReducer (config) {
     [loadMix]: (state, action) => loop({
       ...state, isLoading: true
     }, Effects.batch([
-      Effects.promise(runLoadMix, action.payload.id),
+      Effects.promise(runLoadMix, action.payload),
       Effects.constant(loadMixEnd())
     ])),
     [loadMixSuccess]: (state, action) => {

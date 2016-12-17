@@ -6,13 +6,14 @@ const { loadMix } = require('../actions')
 
 class MixContainer extends React.Component {
   render () {
-    const { mix, isLoading } = this.props
+    const { mix, isLoading, error } = this.props
 
     console.log('mix', mix)
 
     return <div>
       <header>
-        mix is {isLoading ? 'loading' : 'here'}
+        <div>mix is {isLoading ? 'loading' : 'here'}</div>
+        <div>{error ? error : 'no errors'}</div>
       </header>
       <section>
         {mix.id}
@@ -21,8 +22,11 @@ class MixContainer extends React.Component {
   }
 
   componentDidMount () {
-    const { loadMix, mix } = this.props
-    loadMix({ id: mix.id })
+    const { loadMix, mix, mixId } = this.props
+
+    if (!mix) {
+      loadMix(mixId)
+    }
   }
 }
 
@@ -30,7 +34,7 @@ module.exports = connect(
   (state, ownProps) => {
     const props = getMixProps(state)
     const currentMixId = ownProps.params.mixId
-    return { ...props, mix: props.mixes[currentMixId] }
+    return { ...props, mixId: currentMixId, mix: props.mixes[currentMixId] }
   },
   { loadMix }
 )(MixContainer)

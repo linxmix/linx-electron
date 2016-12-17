@@ -20,7 +20,7 @@ function createService (config) {
       .then(list => list.map(item => {
         return basename(item, '.json')
       }))
-      .then(list => list.map(item => ({ id: item })))
+      .then(list => Promise.all(list.map(readMix)))
   }
 
   function readMix (id) {
