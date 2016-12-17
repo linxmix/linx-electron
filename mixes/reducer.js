@@ -72,7 +72,10 @@ function createReducer (config) {
       ...state, isLoading: false
     }),
     // [navigateToMix]: (state, action) => push(`/mixes/${action.payload}`)
-    [navigateToMix]: (state, action) => push('/mixes/one')
+    [navigateToMix]: (state, action) => loop(
+      state,
+      Effects.constant(push('/mixes/one'))
+    )
   }, {
     isLoading: false,
     records: {},
