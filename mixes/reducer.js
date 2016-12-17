@@ -13,6 +13,10 @@ const {
   loadMixSuccess,
   loadMixFailure,
   loadMixEnd,
+  saveMix,
+  saveMixSuccess,
+  saveMixFailure,
+  saveMixEnd,
   setMix,
   navigateToMix,
   createMix,
@@ -61,6 +65,21 @@ function createReducer (config) {
     }),
     [loadMixEnd]: (state, action) => ({
       ...state, isLoading: false
+    }),
+    [saveMix]: (state, action) => loop({
+      ...state, isSaving: true
+    }, Effects.batch([
+      // currently, the component passes a nestedMix into this saveMix action.payload
+      // maybe in the future we should pass mixId and nestMix with channels, clips
+      Effects.promise(runSaveMix, action.payload),
+      Effects.constant(saveMixEnd())
+    ])),
+    [saveMixSuccess]: (state, action) => state,
+    [saveMixFailure]: (state, action) => ({
+      ...state, error: action.payload.message
+    }),
+    [saveMixEnd]: (state, action) => ({
+      ...state, isSaving: false
     }),
     [setMix]: (state, action) => {
       const { records } = state
@@ -114,5 +133,11 @@ function createReducer (config) {
     return service.readMix(id)
       .then(loadMixSuccess)
       .catch(loadMixFailure)
+  }
+
+  function runSaveMix (mix) {
+    return service.saveMix(mix)
+      .then(saveMixSuccess)
+      .catch(saveMixFailure)
   }
 }
