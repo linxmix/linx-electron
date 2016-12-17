@@ -9,5 +9,6 @@ module.exports = createActions(
   'LOAD_MIX_SUCCESS',
   'LOAD_MIX_FAILURE',
   'LOAD_MIX_END',
-  'SET_MIX'
+  'SET_MIX',
+  'CREATE_MIX'
 )

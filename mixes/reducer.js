@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { merge, keyBy } = require('lodash')
-const uuid = require('uuid/v1');
+const uuid = require('uuid/v4');
 
 const {
   loadMixList,
@@ -12,7 +12,8 @@ const {
   loadMixSuccess,
   loadMixFailure,
   loadMixEnd,
-  setMix
+  setMix,
+  createMix
 } = require('./actions')
 const createService = require('./service')
 const { setChannels } = require('../channels/actions')
@@ -74,6 +75,13 @@ function createReducer (config) {
       const nextState = { ...state, records: nextRecords }
       return loop(nextState, effects)
     },
+    [createMix]: (state, action) => loop(
+      state,
+      Effects.constant(setMix({
+        id: uuid(),
+        channel: { id: uuid(), type: 'mix' }
+      }))
+    )
   }, {
     isLoading: false,
     records: {},
