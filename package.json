@@ -46,7 +46,7 @@
     "redux-logger": "^2.7.4",
     "redux-loop": "^2.2.2",
     "reselect": "^2.5.4",
-    "uuid": "^3.0.0"
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "ava": "^0.17.0",

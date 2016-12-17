@@ -1,5 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
+const { push } = require('react-router-redux')
 const { merge, keyBy } = require('lodash')
 const uuid = require('uuid/v4');
 
@@ -13,7 +14,8 @@ const {
   loadMixFailure,
   loadMixEnd,
   setMix,
-  createMix
+  navigateToMix,
+  createMix,
 } = require('./actions')
 const createService = require('./service')
 const { setChannels } = require('../channels/actions')
@@ -75,12 +77,26 @@ function createReducer (config) {
       const nextState = { ...state, records: nextRecords }
       return loop(nextState, effects)
     },
-    [createMix]: (state, action) => loop(
-      state,
-      Effects.constant(setMix({
+    [createMix]: (state, action) => {
+      const newMix = {
         id: uuid(),
         channel: { id: uuid(), type: 'mix' }
-      }))
+      }
+      const effects = Effects.batch([
+        Effects.constant(setMix(newMix)),
+        Effects.constant(navigateToMix(newMix.id))
+      ])
+      return loop(state, effects);
+    },
+    [loadMixFailure]: (state, action) => ({
+      ...state, error: action.payload.message
+    }),
+    [loadMixEnd]: (state, action) => ({
+      ...state, isLoading: false
+    }),
+    [navigateToMix]: (state, action) => loop(
+      state,
+      Effects.constant(push(`/mixes/${action.payload}`))
     )
   }, {
     isLoading: false,

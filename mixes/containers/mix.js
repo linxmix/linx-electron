@@ -8,8 +8,6 @@ class MixContainer extends React.Component {
   render () {
     const { mix, isLoading, error } = this.props
 
-    console.log('mix', mix)
-
     return <div>
       <header>
         <div>mix is {isLoading ? 'loading' : 'here'}</div>

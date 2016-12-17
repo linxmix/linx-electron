@@ -9,8 +9,6 @@ class SampleListContainer extends React.Component {
   render () {
     const { sampleList, isLoading } = this.props
 
-    console.log('props', this.props)
-
     return <div>
       <header>
         samples are {isLoading ? 'loading' : 'here'}

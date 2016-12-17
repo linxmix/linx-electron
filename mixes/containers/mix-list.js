@@ -9,8 +9,6 @@ class MixListContainer extends React.Component {
   render () {
     const { mixList, isLoading, error, createMix } = this.props
 
-    console.log('mix list', mixList);
-
     return <div>
       <header>
         <div>mixes are {isLoading ? 'loading' : 'here'}</div>
