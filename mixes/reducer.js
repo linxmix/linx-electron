@@ -11,7 +11,8 @@ const {
   loadMix,
   loadMixSuccess,
   loadMixFailure,
-  loadMixEnd
+  loadMixEnd,
+  setMix
 } = require('./actions')
 const createService = require('./service')
 const { setChannels } = require('../channels/actions')
@@ -31,11 +32,11 @@ function createReducer (config) {
       Effects.constant(loadMixListEnd())
     ])),
 
-    // how to get this to not run LOAD_MIX_END end until all LOAD_MIX are done?
-
+    // how to get this to not run LOAD_MIX_END end until all SET_MIX are done?
     [loadMixListSuccess]: (state, action) => loop(state, Effects.batch(
-      action.payload.map((mix) => Effects.constant(loadMix(mix.id)))
+      action.payload.map((mix) => Effects.constant(setMix(mix)))
     )),
+
     [loadMixListFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -48,7 +49,17 @@ function createReducer (config) {
       Effects.promise(runLoadMix, action.payload),
       Effects.constant(loadMixEnd())
     ])),
-    [loadMixSuccess]: (state, action) => {
+    [loadMixSuccess]: (state, action) => loop(
+      state,
+      Effects.constant(setMix(action.payload))
+    ),
+    [loadMixFailure]: (state, action) => ({
+      ...state, error: action.payload.message
+    }),
+    [loadMixEnd]: (state, action) => ({
+      ...state, isLoading: false
+    }),
+    [setMix]: (state, action) => {
       const { records } = state
       const { payload: mix } = action
       const { channelId, channels, clips } = flattenMix(mix)
@@ -63,12 +74,6 @@ function createReducer (config) {
       const nextState = { ...state, records: nextRecords }
       return loop(nextState, effects)
     },
-    [loadMixFailure]: (state, action) => ({
-      ...state, error: action.payload.message
-    }),
-    [loadMixEnd]: (state, action) => ({
-      ...state, isLoading: false
-    })
   }, {
     isLoading: false,
     records: {},
