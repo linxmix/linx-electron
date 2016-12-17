@@ -52,7 +52,8 @@
     "ava": "^0.17.0",
     "chokidar": "^1.6.1",
     "electron-connect": "^0.6.1",
-    "standard": "^8.6.0"
+    "standard": "^8.6.0",
+    "uuid": "^3.0.1"
   },
   "ava": {
     "files": [
