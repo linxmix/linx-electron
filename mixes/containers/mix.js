@@ -8,12 +8,6 @@ class MixContainer extends React.Component {
   render () {
     const { mix, isLoading, isSaving, error, saveMix } = this.props
 
-    // mix.meta = { title: 'one' }
-    mix.tracks = [
-      { id: 'track one', meta: { title: 'track one' } },
-      { id: 'track two', meta: { title: 'track two' } }
-    ];
-
     return <div>
       <header>
         <div>'{mix.meta.title}' is {isLoading ? 'loading' : 'here'}</div>
@@ -21,7 +15,7 @@ class MixContainer extends React.Component {
         <button disabled={isLoading || isSaving} onClick={() => saveMix(mix)}>Save Mix</button>
       </header>
       <section key={mix.id}>
-        {mix.tracks.map(track => {
+        {mix.primaryTracks.map(track => {
           return <div key={track.id} >{track.meta.title}</div>
         })}
       </section>

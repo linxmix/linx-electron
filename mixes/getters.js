@@ -5,7 +5,7 @@ const { getMetas } = require('../metas/getters')
 const { getChannels } = require('../channels/getters')
 const { getClips } = require('../clips/getters')
 const nestMix = require('./helpers/nest')
-const getTracksFromMix = require('./helpers/get-tracks-from-mix')
+const { getPrimaryTracks } = require('./helpers/get-tracks')
 
 const getMixesRecords = (state) => state.mixes.records
 const getMixesIsLoading = (state) => state.mixes.isLoading
@@ -18,14 +18,17 @@ const getMixes = Getter(
   getChannels,
   getClips,
   (mixes, metas, channels, clips) => {
-    return mapValues(mixes, (mix, mixId) => {
-      mix = (mix.channelId && channels[mix.channelId])
-        ? nestMix({ ...mix, channels, clips })
-        : mix
-
-      mix.meta = metas[mix.id]
-      // mix.tracks = getTracksFromMix(mix, metas)
-      return mix
+    return mapValues(mixes, (flatMix, mixId) => {
+      if (!channels[flatMix.channelId]) {
+        return flatMix
+      } else {
+        const nestedMix = nestMix({ ...flatMix, channels, clips })
+        return {
+          ...nestedMix,
+          meta: metas[nestedMix.id],
+          primaryTracks: getPrimaryTracks(nestedMix, metas)
+        }
+      }
     })
   }
 )

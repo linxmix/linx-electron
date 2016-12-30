@@ -14,6 +14,7 @@ function nestChannels ({ channelId, channels, clips }) {
   const { id, channelIds: subChannelIds = [], clipIds = [] } = channel
 
   return {
+    ...channel,
     id,
     channels: subChannelIds.map(subChannelId => {
       return nestChannels({ channelId: subChannelId, channels, clips })
