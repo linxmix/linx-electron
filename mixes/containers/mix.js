@@ -8,14 +8,22 @@ class MixContainer extends React.Component {
   render () {
     const { mix, isLoading, isSaving, error, saveMix } = this.props
 
+    // mix.meta = { title: 'one' }
+    mix.tracks = [
+      { id: 'track one', meta: { title: 'track one' } },
+      { id: 'track two', meta: { title: 'track two' } }
+    ];
+
     return <div>
       <header>
-        <div>mix is {isLoading ? 'loading' : 'here'}</div>
+        <div>'{mix.meta.title}' is {isLoading ? 'loading' : 'here'}</div>
         <div>{error ? error : 'no errors'}</div>
         <button disabled={isLoading || isSaving} onClick={() => saveMix(mix)}>Save Mix</button>
       </header>
-      <section>
-        {mix.id}
+      <section key={mix.id}>
+        {mix.tracks.map(track => {
+          return <div key={track.id} >{track.meta.title}</div>
+        })}
       </section>
     </div>
   }
@@ -23,6 +31,7 @@ class MixContainer extends React.Component {
   componentDidMount () {
     const { loadMix, mix, mixId } = this.props
 
+    // TODO: does this also need to loadMetas?
     if (!mix) {
       loadMix(mixId)
     }

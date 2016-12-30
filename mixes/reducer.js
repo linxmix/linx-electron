@@ -4,6 +4,8 @@ const { push } = require('react-router-redux')
 const { merge, keyBy } = require('lodash')
 const uuid = require('uuid/v4');
 
+const { loadMetaList } = require('../metas/actions')
+
 const {
   loadMixList,
   loadMixListSuccess,
@@ -35,6 +37,7 @@ function createReducer (config) {
     [loadMixList]: (state, action) => loop({
       ...state, isLoading: true
     }, Effects.batch([
+      Effects.constant(loadMetaList()), // TODO: load metas here, or in getMixes getter?
       Effects.promise(runLoadMixList),
       Effects.constant(loadMixListEnd())
     ])),
@@ -63,8 +66,8 @@ function createReducer (config) {
     [saveMix]: (state, action) => loop({
       ...state, isSaving: true
     }, Effects.batch([
-      // currently, the component passes a nestedMix into this saveMix action.payload
-      // maybe in the future we should pass mixId and nestMix with channels, clips
+      // currently, the component passes a nestedMix as action.payload
+      // maybe in the future we should pass mixId and call nestMix with channels, clips
       Effects.promise(runSaveMix, action.payload),
       Effects.constant(saveMixEnd())
     ])),
@@ -107,6 +110,7 @@ function createReducer (config) {
     )
   }, {
     isLoading: false,
+    isSaving: false,
     records: {},
     error: null
   })
