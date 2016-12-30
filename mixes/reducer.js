@@ -13,6 +13,10 @@ const {
   loadMixSuccess,
   loadMixFailure,
   loadMixEnd,
+  saveMix,
+  saveMixSuccess,
+  saveMixFailure,
+  saveMixEnd,
   setMix,
   navigateToMix,
   createMix,
@@ -34,12 +38,9 @@ function createReducer (config) {
       Effects.promise(runLoadMixList),
       Effects.constant(loadMixListEnd())
     ])),
-
-    // how to get this to not run LOAD_MIX_END end until all SET_MIX are done?
     [loadMixListSuccess]: (state, action) => loop(state, Effects.batch(
       action.payload.map((mix) => Effects.constant(setMix(mix)))
     )),
-
     [loadMixListFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -52,15 +53,27 @@ function createReducer (config) {
       Effects.promise(runLoadMix, action.payload),
       Effects.constant(loadMixEnd())
     ])),
-    [loadMixSuccess]: (state, action) => loop(
-      state,
-      Effects.constant(setMix(action.payload))
-    ),
+    [loadMixSuccess]: (state, action) => loop(state, Effects.constant(setMix(action.payload))),
     [loadMixFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
     [loadMixEnd]: (state, action) => ({
       ...state, isLoading: false
+    }),
+    [saveMix]: (state, action) => loop({
+      ...state, isSaving: true
+    }, Effects.batch([
+      // currently, the component passes a nestedMix into this saveMix action.payload
+      // maybe in the future we should pass mixId and nestMix with channels, clips
+      Effects.promise(runSaveMix, action.payload),
+      Effects.constant(saveMixEnd())
+    ])),
+    [saveMixSuccess]: (state, action) => state,
+    [saveMixFailure]: (state, action) => ({
+      ...state, error: action.payload.message
+    }),
+    [saveMixEnd]: (state, action) => ({
+      ...state, isSaving: false
     }),
     [setMix]: (state, action) => {
       const { records } = state
@@ -88,12 +101,6 @@ function createReducer (config) {
       ])
       return loop(state, effects);
     },
-    [loadMixFailure]: (state, action) => ({
-      ...state, error: action.payload.message
-    }),
-    [loadMixEnd]: (state, action) => ({
-      ...state, isLoading: false
-    }),
     [navigateToMix]: (state, action) => loop(
       state,
       Effects.constant(push(`/mixes/${action.payload}`))
@@ -114,5 +121,11 @@ function createReducer (config) {
     return service.readMix(id)
       .then(loadMixSuccess)
       .catch(loadMixFailure)
+  }
+
+  function runSaveMix (mix) {
+    return service.saveMix(mix)
+      .then(saveMixSuccess)
+      .catch(saveMixFailure)
   }
 }
