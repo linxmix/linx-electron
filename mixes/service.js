@@ -9,7 +9,8 @@ function createService (config) {
 
   return {
     readMixList,
-    readMix
+    readMix,
+    saveMix
   }
 
   function readMixList () {
@@ -20,7 +21,7 @@ function createService (config) {
       .then(list => list.map(item => {
         return basename(item, '.json')
       }))
-      .then(list => list.map(item => ({ id: item })))
+      .then(list => Promise.all(list.map(readMix)))
   }
 
   function readMix (id) {
@@ -28,5 +29,10 @@ function createService (config) {
     return fs.readFile(path, 'utf8')
       .then(JSON.parse)
       .then(mix => ({ ...mix, id }))
+  }
+
+  function saveMix (mix) {
+    const path = join(mixesDirectory, mix.id) + '.json'
+    return fs.writeFile(path, JSON.stringify(mix, null, 2), 'utf8')
   }
 }

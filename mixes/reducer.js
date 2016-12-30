@@ -1,6 +1,8 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
+const { push } = require('react-router-redux')
 const { merge, keyBy } = require('lodash')
+const uuid = require('uuid/v4');
 
 const {
   loadMixList,
@@ -10,7 +12,14 @@ const {
   loadMix,
   loadMixSuccess,
   loadMixFailure,
-  loadMixEnd
+  loadMixEnd,
+  saveMix,
+  saveMixSuccess,
+  saveMixFailure,
+  saveMixEnd,
+  setMix,
+  navigateToMix,
+  createMix,
 } = require('./actions')
 const createService = require('./service')
 const { setChannels } = require('../channels/actions')
@@ -29,10 +38,9 @@ function createReducer (config) {
       Effects.promise(runLoadMixList),
       Effects.constant(loadMixListEnd())
     ])),
-    [loadMixListSuccess]: (state, action) => ({
-      ...state,
-      records: merge({}, state.records, keyBy(action.payload, 'id'))
-    }),
+    [loadMixListSuccess]: (state, action) => loop(state, Effects.batch(
+      action.payload.map((mix) => Effects.constant(setMix(mix)))
+    )),
     [loadMixListFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -42,10 +50,32 @@ function createReducer (config) {
     [loadMix]: (state, action) => loop({
       ...state, isLoading: true
     }, Effects.batch([
-      Effects.promise(runLoadMix, action.payload.id),
+      Effects.promise(runLoadMix, action.payload),
       Effects.constant(loadMixEnd())
     ])),
-    [loadMixSuccess]: (state, action) => {
+    [loadMixSuccess]: (state, action) => loop(state, Effects.constant(setMix(action.payload))),
+    [loadMixFailure]: (state, action) => ({
+      ...state, error: action.payload.message
+    }),
+    [loadMixEnd]: (state, action) => ({
+      ...state, isLoading: false
+    }),
+    [saveMix]: (state, action) => loop({
+      ...state, isSaving: true
+    }, Effects.batch([
+      // currently, the component passes a nestedMix into this saveMix action.payload
+      // maybe in the future we should pass mixId and nestMix with channels, clips
+      Effects.promise(runSaveMix, action.payload),
+      Effects.constant(saveMixEnd())
+    ])),
+    [saveMixSuccess]: (state, action) => state,
+    [saveMixFailure]: (state, action) => ({
+      ...state, error: action.payload.message
+    }),
+    [saveMixEnd]: (state, action) => ({
+      ...state, isSaving: false
+    }),
+    [setMix]: (state, action) => {
       const { records } = state
       const { payload: mix } = action
       const { channelId, channels, clips } = flattenMix(mix)
@@ -60,12 +90,21 @@ function createReducer (config) {
       const nextState = { ...state, records: nextRecords }
       return loop(nextState, effects)
     },
-    [loadMixFailure]: (state, action) => ({
-      ...state, error: action.payload.message
-    }),
-    [loadMixEnd]: (state, action) => ({
-      ...state, isLoading: false
-    })
+    [createMix]: (state, action) => {
+      const newMix = {
+        id: uuid(),
+        channel: { id: uuid(), type: 'mix' }
+      }
+      const effects = Effects.batch([
+        Effects.constant(setMix(newMix)),
+        Effects.constant(navigateToMix(newMix.id))
+      ])
+      return loop(state, effects);
+    },
+    [navigateToMix]: (state, action) => loop(
+      state,
+      Effects.constant(push(`/mixes/${action.payload}`))
+    )
   }, {
     isLoading: false,
     records: {},
@@ -82,5 +121,11 @@ function createReducer (config) {
     return service.readMix(id)
       .then(loadMixSuccess)
       .catch(loadMixFailure)
+  }
+
+  function runSaveMix (mix) {
+    return service.saveMix(mix)
+      .then(saveMixSuccess)
+      .catch(saveMixFailure)
   }
 }
