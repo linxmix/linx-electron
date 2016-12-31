@@ -2,11 +2,11 @@ const React = require('react')
 const { connect } = require('react-redux')
 
 const { getMixProps } = require('../getters')
-const { saveMix, loadMix } = require('../actions')
+const { saveMix, loadMix, deleteMix } = require('../actions')
 
 class MixContainer extends React.Component {
   render () {
-    const { mix, isLoading, isSaving, error, saveMix } = this.props
+    const { mix, isLoading, isSaving, error, saveMix, deleteMix } = this.props
     if (!mix) { return null }
 
     console.log('mix', mix)
@@ -15,7 +15,12 @@ class MixContainer extends React.Component {
       <header>
         <div>'{mix.meta.title}' is {isLoading ? 'loading' : 'here'}</div>
         <div>{error || 'no errors'}</div>
-        <button disabled={isLoading || isSaving} onClick={() => saveMix(mix)}>Save Mix</button>
+        <button disabled={isLoading || isSaving} onClick={() => saveMix(mix)}>
+          Save Mix
+        </button>
+        <button disabled={isLoading || isSaving} onClick={() => deleteMix(mix)}>
+          Delete Mix
+        </button>
       </header>
       <section key={mix.id}>
         {mix.primaryTracks.map(track => {
@@ -42,5 +47,5 @@ module.exports = connect(
     const currentMixId = ownProps.params.mixId
     return { ...props, mixId: currentMixId, mix: props.mixes[currentMixId] }
   },
-  { loadMix, saveMix }
+  { saveMix, loadMix, deleteMix }
 )(MixContainer)

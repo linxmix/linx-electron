@@ -11,7 +11,8 @@ function createService (config) {
   return {
     readMetaList,
     readMeta,
-    saveMeta
+    saveMeta,
+    deleteMeta
   }
 
   function readMetaList () {
@@ -35,5 +36,12 @@ function createService (config) {
   function saveMeta (meta) {
     const path = join(metasDirectory, meta.id) + '.json'
     return fs.writeFile(path, JSON.stringify(meta, null, 2), 'utf8')
+      .then(() => meta)
+  }
+
+  function deleteMeta (id) {
+    const path = join(metasDirectory, id) + '.json'
+    return fs.unlink(path)
+      .then(() => id)
   }
 }

@@ -15,6 +15,10 @@ const {
   saveMetaSuccess,
   saveMetaFailure,
   saveMetaEnd,
+  deleteMeta,
+  deleteMetaSuccess,
+  deleteMetaFailure,
+  deleteMetaEnd,
   createMeta
 } = require('./actions')
 const createService = require('./service')
@@ -73,6 +77,26 @@ function createReducer (config) {
     [saveMetaEnd]: (state, action) => ({
       ...state, isSaving: false
     }),
+    [deleteMeta]: (state, action) => loop({
+      ...state, isSaving: true
+    }, Effects.batch([
+      Effects.promise(runDeleteMeta, action.payload), 
+      Effects.constant(deleteMetaEnd())
+    ])),
+    [deleteMetaSuccess]: (state, action) => {
+      const metaId = action.payload;
+
+      const nextRecords = { ...state.records }
+      delete nextRecords[metaId]
+
+      return { ...state, records: nextRecords }
+    },
+    [deleteMetaFailure]: (state, action) => ({
+      ...state, error: action.payload.message
+    }),
+    [deleteMetaEnd]: (state, action) => ({
+      ...state, isSaving: false
+    }),
     [createMeta]: (state, action) => {
       const { id } = action.payload
       if (!id) {
@@ -109,5 +133,11 @@ function createReducer (config) {
     return service.saveMeta(meta)
       .then(saveMetaSuccess)
       .catch(saveMetaFailure)
+  }
+
+  function runDeleteMeta (id) {
+    return service.deleteMeta(id)
+      .then(deleteMetaSuccess)
+      .catch(deleteMetaFailure)
   }
 }

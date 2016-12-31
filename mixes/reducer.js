@@ -7,7 +7,8 @@ const uuid = require('uuid/v4')
 const {
   loadMetaList,
   createMeta,
-  saveMeta
+  saveMeta,
+  deleteMeta
 } = require('../metas/actions')
 const { CHANNEL_TYPE_MIX } = require('../channels/constants')
 
@@ -24,9 +25,19 @@ const {
   saveMixSuccess,
   saveMixFailure,
   saveMixEnd,
+  deleteMix,
+  deleteMixSuccess,
+  deleteMixFailure,
+  deleteMixEnd,
   setMix,
+<<<<<<< b5010e298be5718ccace3c167b1b36dc0080cdb5
   navigateToMix,
   createMix
+=======
+  createMix,
+  navigateToMix,
+  navigateToMixList,
+>>>>>>> implement mix delete button, which also deletes mix meta
 } = require('./actions')
 const createService = require('./service')
 const { setChannels } = require('../channels/actions')
@@ -94,6 +105,31 @@ function createReducer (config) {
     [saveMixEnd]: (state, action) => ({
       ...state, isSaving: false
     }),
+    [deleteMix]: (state, action) => loop({
+      ...state, isSaving: true
+    }, Effects.batch([
+      Effects.promise(runDeleteMix, action.payload), 
+      Effects.constant(deleteMixEnd())
+    ])),
+    [deleteMixSuccess]: (state, action) => {
+      const nestedMix = action.payload;
+
+      const nextRecords = { ...state.records }
+      delete nextRecords[nestedMix.id]
+
+      // TODO: do we need to do the inverse of setChannels, setClips? how?
+
+      return loop({ ...state, records: nextRecords }, Effects.batch([
+        Effects.constant(deleteMeta(nestedMix.id)),
+        Effects.constant(navigateToMixList())
+      ]))
+    },
+    [deleteMixFailure]: (state, action) => ({
+      ...state, error: action.payload.message
+    }),
+    [deleteMixEnd]: (state, action) => ({
+      ...state, isSaving: false
+    }),
     [setMix]: (state, action) => {
       const { records } = state
       const { payload: mix } = action
@@ -125,7 +161,9 @@ function createReducer (config) {
       return loop(state, effects)
     },
     [navigateToMix]: (state, action) => loop(state,
-      Effects.constant(push(`/mixes/${action.payload}`)))
+      Effects.constant(push(`/mixes/${action.payload}`))),
+    [navigateToMixList]: (state, action) => loop(state,
+      Effects.constant(push('/mixes/')))
   }, {
     isLoading: false,
     isSaving: false,
@@ -149,5 +187,11 @@ function createReducer (config) {
     return service.saveMix(mix)
       .then(saveMixSuccess)
       .catch(saveMixFailure)
+  }
+
+  function runDeleteMix (id) {
+    return service.deleteMix(id)
+      .then(deleteMixSuccess)
+      .catch(deleteMixFailure)
   }
 }
