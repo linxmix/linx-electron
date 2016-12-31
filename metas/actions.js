@@ -8,5 +8,6 @@ module.exports = createActions(
   'LOAD_META',
   'LOAD_META_SUCCESS',
   'LOAD_META_FAILURE',
-  'LOAD_META_END'
+  'LOAD_META_END',
+  'CREATE_META'
 )

@@ -4,7 +4,11 @@ const { push } = require('react-router-redux')
 const { merge, keyBy } = require('lodash')
 const uuid = require('uuid/v4');
 
-const { loadMetaList } = require('../metas/actions')
+const {
+  loadMetaList,
+  createMeta,
+  // saveMeta
+} = require('../metas/actions')
 
 const {
   loadMixList,
@@ -100,14 +104,16 @@ function createReducer (config) {
       }
       const effects = Effects.batch([
         Effects.constant(setMix(newMix)),
+        Effects.constant(createMeta({
+          id: newMix.id,
+          title: 'new mix title',
+        })),
         Effects.constant(navigateToMix(newMix.id))
       ])
       return loop(state, effects);
     },
-    [navigateToMix]: (state, action) => loop(
-      state,
-      Effects.constant(push(`/mixes/${action.payload}`))
-    )
+    [navigateToMix]: (state, action) => loop(state,
+      Effects.constant(push(`/mixes/${action.payload}`))),
   }, {
     isLoading: false,
     isSaving: false,

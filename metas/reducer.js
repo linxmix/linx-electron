@@ -10,7 +10,8 @@ const {
   loadMeta,
   loadMetaSuccess,
   loadMetaFailure,
-  loadMetaEnd
+  loadMetaEnd,
+  createMeta
 } = require('./actions')
 const createService = require('./service')
 
@@ -54,7 +55,20 @@ function createReducer (config) {
     }),
     [loadMetaEnd]: (state, action) => ({
       ...state, isLoading: false
-    })
+    }),
+    [createMeta]: (state, action) => {
+      const { id } = action.payload;
+      if (!id) {
+        console.warn('Cannot createMeta without id');
+      }
+      return {
+        ...state,
+        records: {
+          ...state.records,
+          [id]: action.payload
+        }
+      }
+    },
   }, {
     isLoading: false,
     records: {},

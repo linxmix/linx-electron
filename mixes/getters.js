@@ -1,5 +1,5 @@
 const { createSelector: Getter, createStructuredSelector: Struct } = require('reselect')
-const { mapValues, values } = require('lodash')
+const { mapValues, values, omitBy, isNil } = require('lodash')
 
 const { getMetas } = require('../metas/getters')
 const { getChannels } = require('../channels/getters')
@@ -18,10 +18,8 @@ const getMixes = Getter(
   getChannels,
   getClips,
   (mixes, metas, channels, clips) => {
-    return mapValues(mixes, (flatMix, mixId) => {
-      if (!channels[flatMix.channelId]) {
-        return flatMix
-      } else {
+    return omitBy(mapValues(mixes, (flatMix, mixId) => {
+      if (channels[flatMix.channelId]) {
         const nestedMix = nestMix({ ...flatMix, channels, clips })
         return {
           ...nestedMix,
@@ -29,7 +27,7 @@ const getMixes = Getter(
           primaryTracks: getPrimaryTracks(nestedMix, metas)
         }
       }
-    })
+    }), isNil)
   }
 )
 

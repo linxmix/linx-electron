@@ -7,6 +7,7 @@ const { loadMix, saveMix } = require('../actions')
 class MixContainer extends React.Component {
   render () {
     const { mix, isLoading, isSaving, error, saveMix } = this.props
+    if (!mix) { return null }
 
     return <div>
       <header>
@@ -25,10 +26,11 @@ class MixContainer extends React.Component {
   componentDidMount () {
     const { loadMix, mix, mixId } = this.props
 
-    // TODO: does this also need to loadMetas?
-    if (!mix) {
-      loadMix(mixId)
-    }
+    // TODO: remove this?
+    // note this breaks if we navigate to a new mix which hasnt yet been added to the store.
+    // if (!mix) {
+      // loadMix(mixId)
+    // }
   }
 }
 
