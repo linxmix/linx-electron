@@ -9,6 +9,8 @@ class MixContainer extends React.Component {
     const { mix, isLoading, isSaving, error, saveMix } = this.props
     if (!mix) { return null }
 
+    console.log('mix', mix)
+
     return <div>
       <header>
         <div>'{mix.meta.title}' is {isLoading ? 'loading' : 'here'}</div>

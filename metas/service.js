@@ -10,7 +10,8 @@ function createService (config) {
 
   return {
     readMetaList,
-    readMeta
+    readMeta,
+    saveMeta
   }
 
   function readMetaList () {
@@ -29,5 +30,10 @@ function createService (config) {
     return fs.readFile(path, 'utf8')
       .then(JSON.parse)
       .then(meta => ({ ...meta, id }))
+  }
+
+  function saveMeta (meta) {
+    const path = join(metasDirectory, meta.id) + '.json'
+    return fs.writeFile(path, JSON.stringify(meta, null, 2), 'utf8')
   }
 }

@@ -1,14 +1,15 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { merge, keyBy } = require('lodash')
+const { merge, keyBy, pick } = require('lodash')
 const uuid = require('uuid/v4');
 
 const {
   loadMetaList,
   createMeta,
-  // saveMeta
+  saveMeta
 } = require('../metas/actions')
+const { CHANNEL_TYPE_MIX } = require('../channels/constants')
 
 const {
   loadMixList,
@@ -31,6 +32,7 @@ const createService = require('./service')
 const { setChannels } = require('../channels/actions')
 const { setClips } = require('../clips/actions')
 const flattenMix = require('./helpers/flatten')
+const nestMix = require('./helpers/nest')
 
 module.exports = createReducer
 
@@ -67,15 +69,26 @@ function createReducer (config) {
     [loadMixEnd]: (state, action) => ({
       ...state, isLoading: false
     }),
-    [saveMix]: (state, action) => loop({
-      ...state, isSaving: true
-    }, Effects.batch([
-      // currently, the component passes a nestedMix as action.payload
-      // maybe in the future we should pass mixId and call nestMix with channels, clips
-      Effects.promise(runSaveMix, action.payload),
-      Effects.constant(saveMixEnd())
-    ])),
-    [saveMixSuccess]: (state, action) => state,
+    [saveMix]: (state, action) => {
+      const nestedMix = action.payload;
+      const { meta: mixMeta, primaryTracks } = nestedMix
+
+      // TODO: save primaryTracks and sampleTracks sample meta here too
+
+      const effects = Effects.batch([
+        Effects.promise(runSaveMix, pick(nestedMix, 'id', 'channel')),
+
+        // TODO: should saveMeta only trigger in saveMixSuccess?
+        Effects.constant(saveMeta(mixMeta)),
+        Effects.constant(saveMixEnd())
+      ])
+
+      return loop({
+        ...state, isSaving: true
+      }, effects)
+    },
+    [saveMixSuccess]: (state, action) => loop(state,
+      Effects.constant(loadMixList())), // TODO: is this necessary?
     [saveMixFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -100,7 +113,7 @@ function createReducer (config) {
     [createMix]: (state, action) => {
       const newMix = {
         id: uuid(),
-        channel: { id: uuid(), type: 'mix' }
+        channel: { id: uuid(), type: CHANNEL_TYPE_MIX }
       }
       const effects = Effects.batch([
         Effects.constant(setMix(newMix)),

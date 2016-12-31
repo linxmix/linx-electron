@@ -9,5 +9,9 @@ module.exports = createActions(
   'LOAD_META_SUCCESS',
   'LOAD_META_FAILURE',
   'LOAD_META_END',
+  'SAVE_META',
+  'SAVE_META_SUCCESS',
+  'SAVE_META_FAILURE',
+  'SAVE_META_END',
   'CREATE_META'
 )

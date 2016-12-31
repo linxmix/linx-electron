@@ -11,11 +11,11 @@ function nest (mix) {
 
 function nestChannels ({ channelId, channels, clips }) {
   const channel = channels[channelId]
-  const { id, channelIds: subChannelIds = [], clipIds = [] } = channel
+  const { id, type, channelIds: subChannelIds = [], clipIds = [] } = channel
 
   return {
-    ...channel,
     id,
+    type,
     channels: subChannelIds.map(subChannelId => {
       return nestChannels({ channelId: subChannelId, channels, clips })
     }),

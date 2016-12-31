@@ -15,6 +15,5 @@ module.exports = createActions(
   'SAVE_MIX_END',
   'NAVIGATE_TO_MIX',
   'SET_MIX',
-  'CREATE_MIX',
-  'CREATE_MIX_END'
+  'CREATE_MIX'
 )
