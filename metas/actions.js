@@ -13,5 +13,9 @@ module.exports = createActions(
   'SAVE_META_SUCCESS',
   'SAVE_META_FAILURE',
   'SAVE_META_END',
+  'DELETE_META',
+  'DELETE_META_SUCCESS',
+  'DELETE_META_FAILURE',
+  'DELETE_META_END',
   'CREATE_META'
 )
