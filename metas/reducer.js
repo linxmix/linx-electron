@@ -74,9 +74,9 @@ function createReducer (config) {
       ...state, isSaving: false
     }),
     [createMeta]: (state, action) => {
-      const { id } = action.payload;
+      const { id } = action.payload
       if (!id) {
-        console.warn('Cannot createMeta without id');
+        console.warn('Cannot createMeta without id')
       }
       return {
         ...state,
@@ -85,7 +85,7 @@ function createReducer (config) {
           [id]: action.payload
         }
       }
-    },
+    }
   }, {
     isLoading: false,
     isSaving: false,

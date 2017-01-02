@@ -1,8 +1,8 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { merge, keyBy, pick } = require('lodash')
-const uuid = require('uuid/v4');
+const { pick } = require('lodash')
+const uuid = require('uuid/v4')
 
 const {
   loadMetaList,
@@ -26,13 +26,12 @@ const {
   saveMixEnd,
   setMix,
   navigateToMix,
-  createMix,
+  createMix
 } = require('./actions')
 const createService = require('./service')
 const { setChannels } = require('../channels/actions')
 const { setClips } = require('../clips/actions')
 const flattenMix = require('./helpers/flatten')
-const nestMix = require('./helpers/nest')
 
 module.exports = createReducer
 
@@ -70,8 +69,8 @@ function createReducer (config) {
       ...state, isLoading: false
     }),
     [saveMix]: (state, action) => {
-      const nestedMix = action.payload;
-      const { meta: mixMeta, primaryTracks } = nestedMix
+      const nestedMix = action.payload
+      const { meta: mixMeta } = nestedMix
 
       // TODO: save primaryTracks and sampleTracks sample meta here too
 
@@ -119,14 +118,14 @@ function createReducer (config) {
         Effects.constant(setMix(newMix)),
         Effects.constant(createMeta({
           id: newMix.id,
-          title: 'new mix title',
+          title: 'new mix title'
         })),
         Effects.constant(navigateToMix(newMix.id))
       ])
-      return loop(state, effects);
+      return loop(state, effects)
     },
     [navigateToMix]: (state, action) => loop(state,
-      Effects.constant(push(`/mixes/${action.payload}`))),
+      Effects.constant(push(`/mixes/${action.payload}`)))
   }, {
     isLoading: false,
     isSaving: false,

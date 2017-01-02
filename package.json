@@ -52,10 +52,6 @@
     "ava": "^0.17.0",
     "chokidar": "^1.6.1",
     "electron-connect": "^0.6.1",
-    "expand-range": "^1.8.2",
-    "is-extendable": "^0.1.1",
-    "preserve": "^0.2.0",
-    "repeat-element": "^1.1.2",
     "standard": "^8.6.0"
   },
   "ava": {

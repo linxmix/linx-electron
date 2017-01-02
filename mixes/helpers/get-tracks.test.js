@@ -2,21 +2,20 @@ const test = require('ava')
 
 const { getPrimaryTracks } = require('./get-tracks')
 
-
 test('getPrimaryTracks', (t) => {
   const metas = {
     'track-1.m4a': {
       id: 'track-1.m4a',
-      title: 'track-1',
+      title: 'track-1'
     },
     'track-2.m4a': {
       id: 'track-2.m4a',
-      title: 'track-2',
+      title: 'track-2'
     },
     'beat.m4a': {
       id: 'beat.m4a',
-      title: 'beat',
-    },
+      title: 'beat'
+    }
   }
 
   const nestedMix = {
@@ -74,14 +73,14 @@ test('getPrimaryTracks', (t) => {
     id: 'track-1.m4a',
     meta: {
       id: 'track-1.m4a',
-      title: 'track-1',
-    },
+      title: 'track-1'
+    }
   }, {
     id: 'track-2.m4a',
     meta: {
       id: 'track-2.m4a',
-      title: 'track-2',
-    },
+      title: 'track-2'
+    }
   }]
 
   const actual = getPrimaryTracks(nestedMix, metas)
