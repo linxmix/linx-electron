@@ -18,7 +18,7 @@ function reduceChannelsToObject (channel, callback) {
 
   return {
     ...callback(channel),
-    ...subChannels.reduce((sofar, subChannel) => {
+    ...reduce(subChannels, (sofar, subChannel) => {
       return { ...sofar, ...reduceChannelsToObject(subChannel, callback) }
     }, {})
   }

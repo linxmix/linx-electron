@@ -2,7 +2,7 @@ const { filter } = require('lodash')
 const { CHANNEL_TYPE_PRIMARY_TRACK } = require('../../channels/constants')
 
 module.exports = {
-  getPrimaryTracks,
+  getPrimaryTracks
 }
 
 function getPrimaryTracks (mix, metas) {

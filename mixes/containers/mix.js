@@ -2,7 +2,7 @@ const React = require('react')
 const { connect } = require('react-redux')
 
 const { getMixProps } = require('../getters')
-const { loadMix, saveMix } = require('../actions')
+const { saveMix, loadMix } = require('../actions')
 
 class MixContainer extends React.Component {
   render () {
@@ -14,7 +14,7 @@ class MixContainer extends React.Component {
     return <div>
       <header>
         <div>'{mix.meta.title}' is {isLoading ? 'loading' : 'here'}</div>
-        <div>{error ? error : 'no errors'}</div>
+        <div>{error || 'no errors'}</div>
         <button disabled={isLoading || isSaving} onClick={() => saveMix(mix)}>Save Mix</button>
       </header>
       <section key={mix.id}>
@@ -26,7 +26,7 @@ class MixContainer extends React.Component {
   }
 
   componentDidMount () {
-    const { loadMix, mix, mixId } = this.props
+    // const { loadMix, mix, mixId } = this.props
 
     // TODO: remove this?
     // note this breaks if we navigate to a new mix which hasnt yet been added to the store.
