@@ -9,21 +9,26 @@ test('nest', (t) => {
     channels: {
       0: {
         id: 0,
+        type: 'type0',
         channelIds: [1, 4]
       },
       1: {
         id: 1,
+        type: 'type1',
         channelIds: [2, 3]
       },
       2: {
-        id: 2
+        id: 2,
+        type: 'type2'
       },
       3: {
         id: 3,
+        type: 'type3',
         clipIds: ['beat']
       },
       4: {
         id: 4,
+        type: 'type4',
         channelIds: []
       }
     },
@@ -39,14 +44,18 @@ test('nest', (t) => {
     id: 'one',
     channel: {
       id: 0,
+      type: 'type0',
       channels: [{
         id: 1,
+        type: 'type1',
         channels: [{
           id: 2,
+          type: 'type2',
           channels: [],
           clips: []
         }, {
           id: 3,
+          type: 'type3',
           channels: [],
           clips: [{
             id: 'beat',
@@ -56,6 +65,7 @@ test('nest', (t) => {
         clips: []
       }, {
         id: 4,
+        type: 'type4',
         channels: [],
         clips: []
       }],
