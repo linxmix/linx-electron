@@ -30,14 +30,9 @@ const {
   deleteMixFailure,
   deleteMixEnd,
   setMix,
-<<<<<<< b5010e298be5718ccace3c167b1b36dc0080cdb5
-  navigateToMix,
-  createMix
-=======
   createMix,
   navigateToMix,
-  navigateToMixList,
->>>>>>> implement mix delete button, which also deletes mix meta
+  navigateToMixList
 } = require('./actions')
 const createService = require('./service')
 const { setChannels } = require('../channels/actions')
@@ -53,7 +48,7 @@ function createReducer (config) {
     [loadMixList]: (state, action) => loop({
       ...state, isLoading: true
     }, Effects.batch([
-      Effects.constant(loadMetaList()), // TODO: load metas here, or in getMixes getter?
+      Effects.constant(loadMetaList()),
       Effects.promise(runLoadMixList),
       Effects.constant(loadMixListEnd())
     ])),
@@ -72,33 +67,22 @@ function createReducer (config) {
       Effects.promise(runLoadMix, action.payload),
       Effects.constant(loadMixEnd())
     ])),
-    [loadMixSuccess]: (state, action) => loop(state, Effects.constant(setMix(action.payload))),
+    [loadMixSuccess]: (state, action) => loop(state,
+      Effects.constant(setMix(action.payload))),
     [loadMixFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
     [loadMixEnd]: (state, action) => ({
       ...state, isLoading: false
     }),
-    [saveMix]: (state, action) => {
-      const nestedMix = action.payload
-      const { meta: mixMeta } = nestedMix
-
-      // TODO: save primaryTracks and sampleTracks sample meta here too
-
-      const effects = Effects.batch([
-        Effects.promise(runSaveMix, pick(nestedMix, 'id', 'channel')),
-
-        // TODO: should saveMeta only trigger in saveMixSuccess?
-        Effects.constant(saveMeta(mixMeta)),
-        Effects.constant(saveMixEnd())
-      ])
-
-      return loop({
-        ...state, isSaving: true
-      }, effects)
-    },
+    [saveMix]: (state, action) => loop({
+      ...state, isSaving: true
+    }, Effects.batch([
+      Effects.promise(runSaveMix, action.payload),
+      Effects.constant(saveMixEnd())
+    ])),
     [saveMixSuccess]: (state, action) => loop(state,
-      Effects.constant(loadMixList())), // TODO: is this necessary?
+      Effects.constant(saveMeta(action.payload.meta))),
     [saveMixFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -108,16 +92,16 @@ function createReducer (config) {
     [deleteMix]: (state, action) => loop({
       ...state, isSaving: true
     }, Effects.batch([
-      Effects.promise(runDeleteMix, action.payload), 
+      Effects.promise(runDeleteMix, action.payload),
       Effects.constant(deleteMixEnd())
     ])),
     [deleteMixSuccess]: (state, action) => {
-      const nestedMix = action.payload;
+      const nestedMix = action.payload
 
       const nextRecords = { ...state.records }
       delete nextRecords[nestedMix.id]
 
-      // TODO: do we need to do the inverse of setChannels, setClips? how?
+      // TODO: we need to do the inverse of setChannels, setClips. how?
 
       return loop({ ...state, records: nextRecords }, Effects.batch([
         Effects.constant(deleteMeta(nestedMix.id)),
@@ -183,15 +167,15 @@ function createReducer (config) {
       .catch(loadMixFailure)
   }
 
-  function runSaveMix (mix) {
-    return service.saveMix(mix)
-      .then(saveMixSuccess)
+  function runSaveMix (nestedMix) {
+    return service.saveMix(pick(nestedMix, 'id', 'channel'))
+      .then(() => saveMixSuccess(nestedMix))
       .catch(saveMixFailure)
   }
 
   function runDeleteMix (id) {
     return service.deleteMix(id)
-      .then(deleteMixSuccess)
+      .then(() => deleteMixSuccess(id))
       .catch(deleteMixFailure)
   }
 }

@@ -1,6 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { merge, keyBy } = require('lodash')
+const assert = require('assert')
 
 const {
   loadMetaList,
@@ -80,11 +81,11 @@ function createReducer (config) {
     [deleteMeta]: (state, action) => loop({
       ...state, isSaving: true
     }, Effects.batch([
-      Effects.promise(runDeleteMeta, action.payload), 
+      Effects.promise(runDeleteMeta, action.payload),
       Effects.constant(deleteMetaEnd())
     ])),
     [deleteMetaSuccess]: (state, action) => {
-      const metaId = action.payload;
+      const metaId = action.payload
 
       const nextRecords = { ...state.records }
       delete nextRecords[metaId]
@@ -99,9 +100,8 @@ function createReducer (config) {
     }),
     [createMeta]: (state, action) => {
       const { id } = action.payload
-      if (!id) {
-        console.warn('Cannot createMeta without id')
-      }
+      assert(id, 'Cannot createMeta without id')
+
       return {
         ...state,
         records: {
@@ -131,13 +131,13 @@ function createReducer (config) {
 
   function runSaveMeta (meta) {
     return service.saveMeta(meta)
-      .then(saveMetaSuccess)
+      .then(() => saveMetaSuccess(meta))
       .catch(saveMetaFailure)
   }
 
   function runDeleteMeta (id) {
     return service.deleteMeta(id)
-      .then(deleteMetaSuccess)
+      .then(() => deleteMetaSuccess(id))
       .catch(deleteMetaFailure)
   }
 }

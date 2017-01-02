@@ -35,12 +35,10 @@ function createService (config) {
   function saveMix (mix) {
     const path = join(mixesDirectory, mix.id) + '.json'
     return fs.writeFile(path, JSON.stringify(mix, null, 2), 'utf8')
-      .then(() => mix)
   }
 
   function deleteMix (mix) {
     const path = join(mixesDirectory, mix.id) + '.json'
     return fs.unlink(path)
-      .then(() => mix)
   }
 }
