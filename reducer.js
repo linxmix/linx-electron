@@ -9,6 +9,7 @@ function createReducer (config) {
     mixes: require('./mixes/reducer')(config),
     samples: require('./samples/reducer')(config),
     channels: require('./channels/reducer')(config),
-    clips: require('./clips/reducer')(config)
+    clips: require('./clips/reducer')(config),
+    metas: require('./metas/reducer')(config)
   })
 }

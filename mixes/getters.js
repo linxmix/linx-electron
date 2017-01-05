@@ -1,9 +1,11 @@
 const { createSelector: Getter, createStructuredSelector: Struct } = require('reselect')
-const { mapValues, values } = require('lodash')
+const { mapValues, values, omitBy, isNil } = require('lodash')
 
+const { getMetas } = require('../metas/getters')
 const { getChannels } = require('../channels/getters')
 const { getClips } = require('../clips/getters')
 const nestMix = require('./helpers/nest')
+const { getPrimaryTracks } = require('./helpers/get-tracks')
 
 const getMixesRecords = (state) => state.mixes.records
 const getMixesIsLoading = (state) => state.mixes.isLoading
@@ -12,14 +14,20 @@ const getMixesError = (state) => state.mixes.error
 
 const getMixes = Getter(
   getMixesRecords,
+  getMetas,
   getChannels,
   getClips,
-  (mixes, channels, clips) => {
-    return mapValues(mixes, (mix, mixId) => {
-      return (mix.channelId && channels[mix.channelId])
-        ? nestMix({ ...mix, channels, clips })
-        : mix
-    })
+  (mixes, metas, channels, clips) => {
+    return omitBy(mapValues(mixes, (flatMix, mixId) => {
+      if (channels[flatMix.channelId]) {
+        const nestedMix = nestMix({ ...flatMix, channels, clips })
+        return {
+          ...nestedMix,
+          meta: metas[nestedMix.id],
+          primaryTracks: getPrimaryTracks(nestedMix, metas)
+        }
+      }
+    }), isNil)
   }
 )
 

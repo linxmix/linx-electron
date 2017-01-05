@@ -10,7 +10,8 @@ function createService (config) {
   return {
     readMixList,
     readMix,
-    saveMix
+    saveMix,
+    deleteMix
   }
 
   function readMixList () {
@@ -34,5 +35,10 @@ function createService (config) {
   function saveMix (mix) {
     const path = join(mixesDirectory, mix.id) + '.json'
     return fs.writeFile(path, JSON.stringify(mix, null, 2), 'utf8')
+  }
+
+  function deleteMix (mix) {
+    const path = join(mixesDirectory, mix.id) + '.json'
+    return fs.unlink(path)
   }
 }

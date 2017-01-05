@@ -12,7 +12,7 @@ class MixListContainer extends React.Component {
     return <div>
       <header>
         <div>mixes are {isLoading ? 'loading' : 'here'}</div>
-        <div>{error ? error : 'no errors'}</div>
+        <div>{error || 'no errors'}</div>
         <button onClick={createMix}>Create Mix</button>
       </header>
 
