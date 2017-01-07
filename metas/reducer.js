@@ -114,7 +114,6 @@ function createReducer (config) {
     [updateMeta]: (state, action) => {
       const { id } = action.payload
       assert(id, 'Cannot updateMeta without id')
-      console.log('')
 
       return {
         ...state,
