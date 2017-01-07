@@ -20,7 +20,8 @@ const {
   deleteMetaSuccess,
   deleteMetaFailure,
   deleteMetaEnd,
-  createMeta
+  createMeta,
+  updateMeta
 } = require('./actions')
 const createService = require('./service')
 
@@ -107,6 +108,19 @@ function createReducer (config) {
         records: {
           ...state.records,
           [id]: action.payload
+        }
+      }
+    },
+    [updateMeta]: (state, action) => {
+      const { id } = action.payload
+      assert(id, 'Cannot updateMeta without id')
+      console.log('')
+
+      return {
+        ...state,
+        records: {
+          ...state.records,
+          [id]: merge(state.records[id], action.payload)
         }
       }
     }

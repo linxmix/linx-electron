@@ -3,17 +3,30 @@ const { connect } = require('react-redux')
 
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix, deleteMix } = require('../actions')
+const { updateMeta } = require('../../metas/actions')
 
 class MixContainer extends React.Component {
+  onChangeMixTitle (e) {
+    const newTitle = e && e.target && e.target.value
+    const { mix, updateMeta } = this.props
+    updateMeta({ id: mix.id, title: newTitle })
+  }
+
   render () {
     const { mix, isLoading, isSaving, error, saveMix, deleteMix } = this.props
     if (!mix) { return null }
 
     console.log('mix', mix)
+    const title = isLoading
+      ? <div>'{mix.meta.title}' is loading</div>
+      : <input type='text'
+        value={mix.meta.title}
+        placeholder='Untitled Mix'
+        onChange={this.onChangeMixTitle.bind(this)} />
 
     return <div>
       <header>
-        <div>'{mix.meta.title}' is {isLoading ? 'loading' : 'here'}</div>
+        {title}
         <div>{error || 'no errors'}</div>
         <button disabled={isLoading || isSaving} onClick={() => saveMix(mix)}>
           Save Mix
@@ -47,5 +60,5 @@ module.exports = connect(
     const currentMixId = ownProps.params.mixId
     return { ...props, mixId: currentMixId, mix: props.mixes[currentMixId] }
   },
-  { saveMix, loadMix, deleteMix }
+  { saveMix, loadMix, deleteMix, updateMeta }
 )(MixContainer)
