@@ -21,7 +21,7 @@ const {
   analyzeSampleFailure,
   analyzeSampleEnd
 } = require('./actions')
-const { createMeta, updateMeta } = require('../metas/actions')
+const { createMeta, updateMeta, loadMetaList } = require('../metas/actions')
 const createService = require('./service')
 
 module.exports = createReducer
@@ -33,6 +33,7 @@ function createReducer (config) {
     [loadSampleList]: (state, action) => loop({
       ...state, isLoading: true
     }, Effects.batch([
+      Effects.constant(loadMetaList()),
       Effects.promise(runLoadSampleList),
       Effects.constant(loadSampleListEnd())
     ])),

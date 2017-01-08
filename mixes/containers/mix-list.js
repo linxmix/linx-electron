@@ -19,7 +19,7 @@ class MixListContainer extends React.Component {
       {mixList.map(mix => {
         return <section key={mix.id}>
           <Link to={`/mixes/${mix.id}`}>
-            {mix.id}
+            {mix.meta.title || mix.id}
           </Link>
         </section>
       })}
