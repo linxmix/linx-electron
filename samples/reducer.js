@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { merge, keyBy } = require('lodash')
+const { merge, keyBy, pick } = require('lodash')
 const assert = require('assert')
 
 const {
@@ -15,9 +15,13 @@ const {
   createSample,
   createSampleSuccess,
   createSampleFailure,
-  createSampleEnd
+  createSampleEnd,
+  analyzeSample,
+  analyzeSampleSuccess,
+  analyzeSampleFailure,
+  analyzeSampleEnd
 } = require('./actions')
-const { createMeta } = require('../metas/actions')
+const { createMeta, updateMeta } = require('../metas/actions')
 const createService = require('./service')
 
 module.exports = createReducer
@@ -95,9 +99,9 @@ function createReducer (config) {
         }
       }, Effects.batch([
         // TODO: here is a case where ordering might be nice.
-        Effects.constant(createMeta(meta))
+        Effects.constant(createMeta(meta)),
         // Effects.constant(saveMeta(meta))
-        // Effects.constant(analyzeSample(id))
+        Effects.constant(analyzeSample(id))
       ]))
     },
     [createSampleFailure]: (state, action) => ({
@@ -105,10 +109,30 @@ function createReducer (config) {
     }),
     [createSampleEnd]: (state, action) => ({
       ...state, isCreating: false
+    }),
+    [analyzeSample]: (state, action) => {
+      const id = action.payload
+      assert(id, 'Cannot analyzeSample without id')
+
+      return loop({
+        ...state, isAnalyzing: true
+      }, Effects.batch([
+        Effects.promise(runAnalyzeSample, id),
+        Effects.constant(analyzeSampleEnd())
+      ]))
+    },
+    [analyzeSampleSuccess]: (state, action) => loop(state,
+      Effects.constant(updateMeta(action.payload))),
+    [analyzeSampleFailure]: (state, action) => ({
+      ...state, error: action.payload.message
+    }),
+    [analyzeSampleEnd]: (state, action) => ({
+      ...state, isAnalyzing: false
     })
   }, {
     isLoading: false,
     isCreating: false,
+    isAnalyzing: false,
     records: {},
     error: null
   })
@@ -121,15 +145,19 @@ function createReducer (config) {
 
   function runLoadSample (id) {
     return service.readSample(id)
-      .then(loadSampleSuccess)
+      .then(sample => loadSampleSuccess(pick(sample, 'id', 'audioBuffer')))
       .catch(loadSampleFailure)
   }
 
   function runCreateSample (file) {
     return service.createSample(file)
-      .then(createSampleSuccess)
+      .then(sample => createSampleSuccess(pick(sample, 'id', 'audioBuffer')))
       .catch(createSampleFailure)
   }
 
-  // TODO(FUTURE): could have runAnalyzeSample here
+  function runAnalyzeSample (id) {
+    return service.analyzeSample(id)
+      .then(analyzeSampleSuccess)
+      .catch(analyzeSampleFailure)
+  }
 }
