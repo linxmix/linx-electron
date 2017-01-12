@@ -27,19 +27,23 @@ function createService (config) {
   }
 
   function readMeta (id) {
-    const path = join(metasDirectory, id) + '.json'
+    const path = _getMetaPath(id)
     return fs.readFile(path, 'utf8')
       .then(JSON.parse)
       .then(meta => ({ ...meta, id }))
   }
 
   function saveMeta (meta) {
-    const path = join(metasDirectory, meta.id) + '.json'
+    const path = _getMetaPath(meta.id)
     return fs.writeFile(path, JSON.stringify(meta, null, 2), 'utf8')
   }
 
   function deleteMeta (id) {
-    const path = join(metasDirectory, id) + '.json'
+    const path = _getMetaPath(id)
     return fs.unlink(path)
+  }
+
+  function _getMetaPath (id) {
+    return join(metasDirectory, id) + '.json'
   }
 }

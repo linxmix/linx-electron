@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { merge, keyBy, pick } = require('lodash')
+const { merge, keyBy, omit } = require('lodash')
 const assert = require('assert')
 
 const {
@@ -14,6 +14,7 @@ const {
   loadSampleEnd,
   createSample,
   createSampleSuccess,
+  createSampleDuplicate,
   createSampleFailure,
   createSampleEnd,
   analyzeSample,
@@ -21,7 +22,12 @@ const {
   analyzeSampleFailure,
   analyzeSampleEnd
 } = require('./actions')
-const { createMeta, updateMeta, loadMetaList } = require('../metas/actions')
+const {
+  createMeta,
+  updateMeta,
+  saveMeta,
+  loadMetaList
+} = require('../metas/actions')
 const createService = require('./service')
 
 module.exports = createReducer
@@ -86,25 +92,32 @@ function createReducer (config) {
       ]))
     },
     [createSampleSuccess]: (state, action) => {
-      const { id, fileName } = action.payload
+      const { id, file } = action.payload
       const meta = {
         id,
-        title: fileName
+        title: file.name
       }
 
       return loop({
         ...state,
         records: {
           ...state.records,
-          [action.payload.id]: action.payload
+          [id]: action.payload
         }
+      // TODO: here is a case where ordering might be nice. only save meta after created
       }, Effects.batch([
-        // TODO: here is a case where ordering might be nice.
         Effects.constant(createMeta(meta)),
-        // Effects.constant(saveMeta(meta))
+        Effects.constant(saveMeta(meta)),
         Effects.constant(analyzeSample(id))
       ]))
     },
+    [createSampleDuplicate]: (state, action) => ({
+      ...state,
+      records: {
+        ...state.records,
+        [action.payload.id]: action.payload
+      }
+    }),
     [createSampleFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -122,8 +135,10 @@ function createReducer (config) {
         Effects.constant(analyzeSampleEnd())
       ]))
     },
-    [analyzeSampleSuccess]: (state, action) => loop(state,
-      Effects.constant(updateMeta(action.payload))),
+    [analyzeSampleSuccess]: (state, action) => loop(state, Effects.batch([
+      Effects.constant(updateMeta(action.payload)),
+      Effects.constant(saveMeta(action.payload))
+    ])),
     [analyzeSampleFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -146,13 +161,17 @@ function createReducer (config) {
 
   function runLoadSample (id) {
     return service.readSample(id)
-      .then(sample => loadSampleSuccess(pick(sample, 'id', 'audioBuffer')))
+      .then(sample => loadSampleSuccess(omit(sample, 'data')))
       .catch(loadSampleFailure)
   }
 
   function runCreateSample (file) {
     return service.createSample(file)
-      .then(sample => createSampleSuccess(pick(sample, 'id', 'audioBuffer')))
+      .then(sample => {
+        return sample.isDuplicateSample
+          ? createSampleDuplicate(omit(sample, 'data', 'isDuplicateSample'))
+          : createSampleSuccess(omit(sample, 'data'))
+      })
       .catch(createSampleFailure)
   }
 
