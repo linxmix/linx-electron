@@ -17,7 +17,7 @@ class MixContainer extends React.Component {
     if (!mix) { return null }
 
     console.log('mix', mix)
-    const title = isLoading
+    const titleElement = isLoading
       ? <div>'{mix.meta.title}' is loading</div>
       : <input type='text'
         value={mix.meta.title}
@@ -26,7 +26,7 @@ class MixContainer extends React.Component {
 
     return <div>
       <header>
-        {title}
+        {titleElement}
         <div>{error || 'no errors'}</div>
         <button disabled={isLoading || isSaving} onClick={() => saveMix(mix)}>
           Save Mix

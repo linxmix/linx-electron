@@ -26,19 +26,23 @@ function createService (config) {
   }
 
   function readMix (id) {
-    const path = join(mixesDirectory, id) + '.json'
+    const path = _getMixPath(id)
     return fs.readFile(path, 'utf8')
       .then(JSON.parse)
       .then(mix => ({ ...mix, id }))
   }
 
   function saveMix (mix) {
-    const path = join(mixesDirectory, mix.id) + '.json'
+    const path = _getMixPath(mix.id)
     return fs.writeFile(path, JSON.stringify(mix, null, 2), 'utf8')
   }
 
   function deleteMix (mix) {
-    const path = join(mixesDirectory, mix.id) + '.json'
+    const path = _getMixPath(mix.id)
     return fs.unlink(path)
+  }
+
+  function _getMixPath (id) {
+    return join(mixesDirectory, id) + '.json'
   }
 }

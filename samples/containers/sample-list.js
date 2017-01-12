@@ -21,7 +21,9 @@ class SampleListContainer extends React.Component {
   }
 
   render () {
-    const { sampleList, isLoading, isCreating, error } = this.props
+    const { sampleList, isLoading, isCreating, isAnalyzing, error } = this.props
+
+    console.log('sampleList', sampleList)
 
     return <div>
       <FileDrop
@@ -30,12 +32,13 @@ class SampleListContainer extends React.Component {
       <header>
         <div>samples are {isLoading ? 'loading' : 'here'}</div>
         {isCreating && <div>'creating samples…'</div>}
+        {isAnalyzing && <div>'analyzing samples…'</div>}
         <div>{error || 'no errors'}</div>
       </header>
       {sampleList.map(sample => {
         return <section key={sample.id}>
           <Link to={`/samples/${sample.id}`}>
-            {sample.id}
+            {sample.meta.title || sample.id}
           </Link>
         </section>
       })}

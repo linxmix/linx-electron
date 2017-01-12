@@ -173,9 +173,9 @@ function createReducer (config) {
       .catch(saveMixFailure)
   }
 
-  function runDeleteMix (id) {
-    return service.deleteMix(id)
-      .then(() => deleteMixSuccess(id))
+  function runDeleteMix (nestedMix) {
+    return service.deleteMix(nestedMix)
+      .then(() => deleteMixSuccess(nestedMix))
       .catch(deleteMixFailure)
   }
 }

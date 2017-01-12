@@ -1,5 +1,6 @@
 const React = require('react')
 const { connect } = require('react-redux')
+const { keys } = require('lodash')
 
 const { getSampleProps } = require('../getters')
 const { loadSample } = require('../actions')
@@ -7,16 +8,19 @@ const Waveform = require('../../lib/react-waveform')
 
 class SampleContainer extends React.Component {
   render () {
-    const { sample, isLoading, error } = this.props
+    const { sample, isLoading, isAnalyzing, error } = this.props
     console.log('sample', sample)
 
     return <div>
       <header>
-        <div>sample is {isLoading ? 'loading' : 'here'}</div>
+        {isLoading && <div>'loading sample…'</div>}
+        {isAnalyzing && <div>'analyzing sample…'</div>}
         <div>{error || 'no errors'}</div>
       </header>
       <section>
-        {sample.id}
+        {keys(sample.meta).map(key => {
+          return <div key={key}>{key}: {sample.meta[key]}</div>
+        })}
         { sample.audioBuffer && <Waveform audioBuffer={sample.audioBuffer} /> }
       </section>
     </div>

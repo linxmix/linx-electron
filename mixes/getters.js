@@ -23,7 +23,7 @@ const getMixes = Getter(
         const nestedMix = nestMix({ ...flatMix, channels, clips })
         return {
           ...nestedMix,
-          meta: metas[nestedMix.id],
+          meta: metas[nestedMix.id] || {},
           primaryTracks: getPrimaryTracks(nestedMix, metas)
         }
       }
