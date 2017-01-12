@@ -1,6 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { merge, keyBy } = require('lodash')
+const assert = require('assert')
 
 const {
   loadSampleList,
@@ -10,8 +11,13 @@ const {
   loadSample,
   loadSampleSuccess,
   loadSampleFailure,
-  loadSampleEnd
+  loadSampleEnd,
+  createSample,
+  createSampleSuccess,
+  createSampleFailure,
+  createSampleEnd
 } = require('./actions')
+const { createMeta } = require('../metas/actions')
 const createService = require('./service')
 
 module.exports = createReducer
@@ -36,12 +42,20 @@ function createReducer (config) {
     [loadSampleListEnd]: (state, action) => ({
       ...state, isLoading: false
     }),
-    [loadSample]: (state, action) => loop({
-      ...state, isLoading: true
-    }, Effects.batch([
-      Effects.promise(runLoadSample, action.payload.id),
-      Effects.constant(loadSampleEnd())
-    ])),
+    [loadSample]: (state, action) => {
+      const id = action.payload
+      const sample = state.records[id]
+      if (sample && sample.audioBuffer) {
+        return state
+      } else {
+        return loop({
+          ...state, isLoading: true
+        }, Effects.batch([
+          Effects.promise(runLoadSample, action.payload.id),
+          Effects.constant(loadSampleEnd())
+        ]))
+      }
+    },
     [loadSampleSuccess]: (state, action) => ({
       ...state,
       records: {
@@ -54,9 +68,47 @@ function createReducer (config) {
     }),
     [loadSampleEnd]: (state, action) => ({
       ...state, isLoading: false
+    }),
+    [createSample]: (state, action) => {
+      const file = action.payload
+      assert(file && file.path, 'Cannot createSample without file && file.path')
+
+      return loop({
+        ...state, isCreating: true
+      }, Effects.batch([
+        Effects.promise(runCreateSample, file),
+        Effects.constant(createSampleEnd())
+      ]))
+    },
+    [createSampleSuccess]: (state, action) => {
+      const { id, fileName } = action.payload
+      const meta = {
+        id,
+        title: fileName
+      }
+
+      return loop({
+        ...state,
+        records: {
+          ...state.records,
+          [action.payload.id]: action.payload
+        }
+      }, Effects.batch([
+        // TODO: here is a case where ordering might be nice.
+        Effects.constant(createMeta(meta))
+        // Effects.constant(saveMeta(meta))
+        // Effects.constant(analyzeSample(id))
+      ]))
+    },
+    [createSampleFailure]: (state, action) => ({
+      ...state, error: action.payload.message
+    }),
+    [createSampleEnd]: (state, action) => ({
+      ...state, isCreating: false
     })
   }, {
     isLoading: false,
+    isCreating: false,
     records: {},
     error: null
   })
@@ -72,4 +124,12 @@ function createReducer (config) {
       .then(loadSampleSuccess)
       .catch(loadSampleFailure)
   }
+
+  function runCreateSample (file) {
+    return service.createSample(file)
+      .then(createSampleSuccess)
+      .catch(createSampleFailure)
+  }
+
+  // TODO(FUTURE): could have runAnalyzeSample here
 }

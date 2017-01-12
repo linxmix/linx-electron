@@ -7,12 +7,13 @@ const Waveform = require('../../lib/react-waveform')
 
 class SampleContainer extends React.Component {
   render () {
-    const { sample, isLoading } = this.props
+    const { sample, isLoading, error } = this.props
     console.log('sample', sample)
 
     return <div>
       <header>
-        sample is {isLoading ? 'loading' : 'here'}
+        <div>sample is {isLoading ? 'loading' : 'here'}</div>
+        <div>{error || 'no errors'}</div>
       </header>
       <section>
         {sample.id}
@@ -23,7 +24,10 @@ class SampleContainer extends React.Component {
 
   componentDidMount () {
     const { loadSample, sample } = this.props
-    loadSample({ id: sample.id })
+
+    if (sample && !sample.audioBuffer) {
+      loadSample({ id: sample.id })
+    }
   }
 }
 

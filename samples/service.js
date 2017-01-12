@@ -1,6 +1,7 @@
 const pify = require('pify')
 const fs = pify(require('fs'))
 const { join } = require('path')
+const crypto = require('crypto')
 
 module.exports = createService
 
@@ -10,7 +11,8 @@ function createService (config) {
 
   return {
     readSampleList,
-    readSample
+    readSample,
+    createSample
   }
 
   function readSampleList () {
@@ -30,4 +32,34 @@ function createService (config) {
       })
       .then(audioBuffer => ({ id, path, audioBuffer }))
   }
+
+  function createSample (file) {
+    const { path } = file
+
+    return fs.readFile(path)
+      .then(({ buffer }) => {
+        // TODO: dedupe against checksum
+        const id = checksum(arrayBufferToBuffer(buffer))
+
+        return audioContext
+          .decodeAudioData(buffer)
+          .then(audioBuffer => ({ id, path, audioBuffer }))
+      })
+  }
+}
+
+function checksum (str, algorithm = 'sha256', encoding = 'hex') {
+  return crypto
+    .createHash(algorithm)
+    .update(str, 'utf8')
+    .digest(encoding)
+}
+
+function arrayBufferToBuffer (ab) {
+  var buf = new Buffer(ab.byteLength)
+  var view = new Uint8Array(ab)
+  for (var i = 0; i < buf.length; ++i) {
+    buf[i] = view[i]
+  }
+  return buf
 }
