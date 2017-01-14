@@ -32,6 +32,7 @@
     "debug": "^2.3.3",
     "electron": "^1.4.7",
     "globals": "^9.14.0",
+    "insert-css": "^2.0.0",
     "invariant": "^2.2.2",
     "jsmediatags": "^3.3.2",
     "lodash": "^4.17.2",

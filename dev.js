@@ -8,7 +8,7 @@ chokidar
   .on('change', () => electron.restart())
 
 chokidar
-  .watch('**/*.(js|json|html)', {
+  .watch('**/*.(js|json|html|css)', {
     ignored: '**/data/**'
   })
   .on('change', () => electron.reload())
