@@ -8,7 +8,8 @@ const Waveform = require('../../lib/react-waveform')
 
 class SampleContainer extends React.Component {
   render () {
-    const { sample, isLoading, isAnalyzing, error } = this.props
+    const { sample, isLoading, error } = this.props
+    const { isAnalyzing } = sample
     console.log('sample', sample)
 
     return <div>

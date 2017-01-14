@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { merge, keyBy, without } = require('lodash')
+const { merge, keyBy, without, includes } = require('lodash')
 const assert = require('assert')
 
 const {
@@ -83,12 +83,13 @@ function createReducer (config) {
     [createSample]: (state, action) => {
       const file = action.payload
       assert(file && file.path, 'Cannot createSample without file && file.path')
+      assert(!includes(state.creating, file.path), 'Already creating sample with file.path')
 
       return loop({
-        ...state, isCreating: true
+        ...state, creating: [...state.creating, file.path]
       }, Effects.batch([
         Effects.promise(runCreateSample, file),
-        Effects.constant(createSampleEnd())
+        Effects.constant(createSampleEnd(file.path))
       ]))
     },
     [createSampleSuccess]: (state, action) => {
@@ -122,7 +123,7 @@ function createReducer (config) {
       ...state, error: action.payload.message
     }),
     [createSampleEnd]: (state, action) => ({
-      ...state, isCreating: false
+      ...state, creating: without(state.creating, action.payload)
     }),
     [analyzeSample]: (state, action) => {
       const id = action.payload
@@ -146,8 +147,8 @@ function createReducer (config) {
       ...state, analyzing: without(state.analyzing, action.payload)
     })
   }, {
+    creating: [],
     isLoading: false,
-    isCreating: false,
     analyzing: [],
     records: {},
     error: null

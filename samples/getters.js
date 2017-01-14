@@ -5,7 +5,7 @@ const { getMetas } = require('../metas/getters')
 
 const getSamplesRecords = (state) => state.samples.records
 const getSamplesIsLoading = (state) => state.samples.isLoading
-const getSamplesIsCreating = (state) => state.samples.isCreating
+const getSamplesCreating = (state) => state.samples.creating
 const getSamplesError = (state) => state.samples.error
 const getSamplesAnalyzing = (state) => state.samples.analyzing
 
@@ -29,14 +29,13 @@ const getSampleListProps = Struct({
   samples: getSamples,
   sampleList: getSampleList,
   isLoading: getSamplesIsLoading,
-  isCreating: getSamplesIsCreating,
+  creatingSamples: getSamplesCreating,
   error: getSamplesError
 })
 
 const getSampleProps = Struct({
   samples: getSamples,
   isLoading: getSamplesIsLoading,
-  isCreating: getSamplesIsCreating,
   error: getSamplesError
 })
 
