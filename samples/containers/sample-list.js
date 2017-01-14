@@ -29,7 +29,7 @@ class SampleListContainer extends React.Component {
 
     const creatingText = `creating ${creatingSamples.length} ${pluralize(creatingSamples.length, 'sample')}…`
     const analyzingText = `analyzing ${analyzingSamples.length} ${pluralize(analyzingSamples.length, 'sample')}…`
-    
+
     console.log('sampleList', sampleList)
 
     return <div>

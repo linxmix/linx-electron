@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { pick, without, includes } = require('lodash')
+const { pick, without } = require('lodash')
 const uuid = require('uuid/v4')
 
 const {

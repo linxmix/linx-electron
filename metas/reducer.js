@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { merge, keyBy, without, includes } = require('lodash')
+const { merge, keyBy, without } = require('lodash')
 const assert = require('assert')
 
 const {

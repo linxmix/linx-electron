@@ -71,7 +71,7 @@ module.exports = connect(
       )
     }
 
-    console.log("OWN PROPS", ownProps)
+    console.log('OWN PROPS', ownProps)
     return { ...props, mix, mixId: currentMixId }
   },
   { saveMix, loadMix, deleteMix, updateMeta }
