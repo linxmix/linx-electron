@@ -2,7 +2,7 @@ const React = require('react')
 const { connect } = require('react-redux')
 const { Link } = require('react-router')
 const FileDrop = require('react-file-drop')
-const { forEach } = require('lodash')
+const { forEach, filter, isEmpty } = require('lodash')
 
 const { getSampleListProps } = require('../getters')
 const { loadSampleList, createSample } = require('../actions')
@@ -21,7 +21,8 @@ class SampleListContainer extends React.Component {
   }
 
   render () {
-    const { sampleList, isLoading, isCreating, isAnalyzing, error } = this.props
+    const { sampleList, isLoading, isCreating, error } = this.props
+    const isAnalyzing = !isEmpty(filter(sampleList, { isAnalyzing: true }))
 
     console.log('sampleList', sampleList)
 

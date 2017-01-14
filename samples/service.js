@@ -3,7 +3,7 @@ const fsRaw = require('fs')
 const fs = pify(fsRaw)
 const { join } = require('path')
 const crypto = require('crypto')
-const { merge, omitBy, isNil } = require('lodash')
+const { omitBy, isNil } = require('lodash')
 const JsMediaTags = require('jsmediatags')
 
 const { validNumberOrDefault } = require('../lib/number-utils')
@@ -43,7 +43,7 @@ function createService (config) {
         return audioContext.decodeAudioData(buffer)
           .then(audioBuffer => ({ data, audioBuffer }))
       })
-      .then(({ data, audioBuffer }) => ({ id, path, data, audioBuffer }))
+      .then(({ data, audioBuffer }) => ({ sample: { id, audioBuffer }, path, data }))
   }
 
   function createSample (file) {
@@ -52,12 +52,12 @@ function createService (config) {
 
       // dedupe against checksum: if sample doesnt exist, create
       return readSample(id)
-        .then(sample => merge({ isDuplicateSample: true }, sample))
+        .then(({ sample }) => ({ sample, isDuplicate: true }))
         .catch(error => {
           if (error && error.code === 'ENOENT') {
             // TODO: is there a clean way to not have to read the file so many times?
             return fs.writeFile(_getSamplePath(id), data).then(() => {
-              return readSample(id).then(sample => merge({ file }, sample))
+              return readSample(id).then(({ sample }) => ({ sample, file }))
             })
           } else {
             return Promise.reject(error)
@@ -67,7 +67,9 @@ function createService (config) {
   }
 
   function analyzeSample (id) {
-    return readSample(id).then(({ path, data, audioBuffer }) => {
+    return readSample(id).then(({ sample, path, data }) => {
+      const { audioBuffer } = sample
+
       return Promise.all([
         readId3Tags(data),
         calculateBeatGrid(audioBuffer)

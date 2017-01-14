@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { merge, keyBy, omit } = require('lodash')
+const { merge, keyBy, without } = require('lodash')
 const assert = require('assert')
 
 const {
@@ -92,7 +92,8 @@ function createReducer (config) {
       ]))
     },
     [createSampleSuccess]: (state, action) => {
-      const { id, file } = action.payload
+      const { sample, file } = action.payload
+      const { id } = sample
       const meta = {
         id,
         title: file.name
@@ -102,7 +103,7 @@ function createReducer (config) {
         ...state,
         records: {
           ...state.records,
-          [id]: action.payload
+          [id]: sample
         }
       }, Effects.batch([
         Effects.constant(createMeta(meta)),
@@ -128,10 +129,10 @@ function createReducer (config) {
       assert(id, 'Cannot analyzeSample without id')
 
       return loop({
-        ...state, isAnalyzing: true
+        ...state, analyzing: [...state.analyzing, id]
       }, Effects.batch([
         Effects.promise(runAnalyzeSample, id),
-        Effects.constant(analyzeSampleEnd())
+        Effects.constant(analyzeSampleEnd(id))
       ]))
     },
     [analyzeSampleSuccess]: (state, action) => loop(state, Effects.batch([
@@ -142,12 +143,12 @@ function createReducer (config) {
       ...state, error: action.payload.message
     }),
     [analyzeSampleEnd]: (state, action) => ({
-      ...state, isAnalyzing: false
+      ...state, analyzing: without(state.analyzing, action.payload)
     })
   }, {
     isLoading: false,
     isCreating: false,
-    isAnalyzing: false,
+    analyzing: [],
     records: {},
     error: null
   })
@@ -160,17 +161,14 @@ function createReducer (config) {
 
   function runLoadSample (id) {
     return service.readSample(id)
-      .then(sample => loadSampleSuccess(omit(sample, 'data')))
+      .then(({ sample }) => loadSampleSuccess(sample))
       .catch(loadSampleFailure)
   }
 
   function runCreateSample (file) {
     return service.createSample(file)
-      .then(sample => {
-        return sample.isDuplicateSample
-          ? createSampleDuplicate(omit(sample, 'data', 'isDuplicateSample'))
-          : createSampleSuccess(omit(sample, 'data'))
-      })
+      .then(({ sample, file, isDuplicate }) =>
+        isDuplicate ? createSampleDuplicate(sample) : createSampleSuccess({ sample, file }))
       .catch(createSampleFailure)
   }
 
