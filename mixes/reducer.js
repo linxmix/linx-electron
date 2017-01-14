@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { pick, without } = require('lodash')
+const { pick, without, map } = require('lodash')
 const uuid = require('uuid/v4')
 
 const {
@@ -10,6 +10,9 @@ const {
   saveMeta,
   deleteMeta
 } = require('../metas/actions')
+const {
+  unsetChannel
+} = require('../channels/actions')
 const { CHANNEL_TYPE_MIX } = require('../channels/constants')
 
 const {
@@ -53,7 +56,7 @@ function createReducer (config) {
       Effects.constant(loadMixListEnd())
     ])),
     [loadMixListSuccess]: (state, action) => loop(state, Effects.batch(
-      action.payload.map((mix) => Effects.constant(setMix(mix)))
+      map(action.payload, mix => Effects.constant(setMix(mix)))
     )),
     [loadMixListFailure]: (state, action) => ({
       ...state, error: action.payload.message
@@ -101,18 +104,18 @@ function createReducer (config) {
     ])),
     [deleteMixSuccess]: (state, action) => {
       const nestedMix = action.payload
+      const { id, channel } = nestedMix
 
       const nextRecords = { ...state.records }
-      delete nextRecords[nestedMix.id]
-
-      // TODO: we need to do the inverse of setChannels, setClips. how?
+      delete nextRecords[id]
 
       return loop({
         ...state,
-        dirty: without(state.dirty, nestedMix.id),
+        dirty: without(state.dirty, id),
         records: nextRecords
       }, Effects.batch([
-        Effects.constant(deleteMeta(nestedMix.id)),
+        Effects.constant(unsetChannel(channel)),
+        Effects.constant(deleteMeta(id)),
         Effects.constant(navigateToMixList())
       ]))
     },
