@@ -3,6 +3,7 @@ const { mapValues, values, omitBy, isNil, includes } = require('lodash')
 
 const { getMetas, getMetasDirty } = require('../metas/getters')
 const { getChannels } = require('../channels/getters')
+const { getSamplesError } = require('../samples/getters')
 const { getClips } = require('../clips/getters')
 const nestMix = require('./helpers/nest')
 const { getPrimaryTracks } = require('./helpers/get-tracks')
@@ -53,6 +54,7 @@ const getMixListProps = Struct({
 
 const getMixProps = Struct({
   mixes: getMixes,
+  sampleError: getSamplesError,
   error: getMixesError
 })
 

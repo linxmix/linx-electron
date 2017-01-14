@@ -1,11 +1,26 @@
 const React = require('react')
 const { connect } = require('react-redux')
+const { forEach } = require('lodash')
+const FileDrop = require('react-file-drop')
 
 const { getMixProps } = require('../getters')
-const { saveMix, loadMix, deleteMix } = require('../actions')
+const { saveMix, loadMix, deleteMix, createPrimaryTrackFromFile } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 
 class MixContainer extends React.Component {
+  onFilesDrop (e) {
+    const { mix, createPrimaryTrackFromFile } = this.props
+    const files = e && e.dataTransfer && e.dataTransfer.files
+
+    console.log('file drop', e)
+    if (files) {
+      e.preventDefault()
+      e.stopPropagation()
+      forEach(files, file =>
+        createPrimaryTrackFromFile({ file, mixChannelId: mix.channel.id }))
+    }
+  }
+
   onChangeMixTitle (e) {
     const newTitle = e && e.target && e.target.value
     const { mix, updateMeta } = this.props
@@ -13,7 +28,7 @@ class MixContainer extends React.Component {
   }
 
   render () {
-    const { mix, error, saveMix, deleteMix } = this.props
+    const { mix, error, sampleError, saveMix, deleteMix } = this.props
     if (!mix) { return null }
     console.log('mix', mix)
 
@@ -26,9 +41,12 @@ class MixContainer extends React.Component {
         onChange={this.onChangeMixTitle.bind(this)} />
 
     return <div>
+      <FileDrop
+        frame={document}
+        onFrameDrop={this.onFilesDrop.bind(this)} />
       <header>
         {titleElement}
-        <div>{error || 'no errors'}</div>
+        <div>{error || sampleError || 'no errors'}</div>
         <button disabled={!isDirty || (isLoading || isSaving)} onClick={() => saveMix(mix)}>
           Save Mix
         </button>
@@ -73,5 +91,5 @@ module.exports = connect(
 
     return { ...props, mix, mixId: currentMixId }
   },
-  { saveMix, loadMix, deleteMix, updateMeta }
+  { saveMix, loadMix, deleteMix, updateMeta, createPrimaryTrackFromFile }
 )(MixContainer)

@@ -109,16 +109,18 @@ function createReducer (config) {
       }, Effects.batch([
         Effects.constant(createMeta(meta)),
         Effects.constant(saveMeta(id)),
-        Effects.constant(analyzeSample(id))
+        Effects.constant(analyzeSample(id)),
+        Effects.none() // TODO
       ]))
     },
-    [createSampleDuplicate]: (state, action) => ({
-      ...state,
-      records: {
-        ...state.records,
-        [action.payload.id]: action.payload
-      }
-    }),
+    [createSampleDuplicate]: (state, action) => {
+      const { sample } = action.payload
+
+      return loop(state, Effects.batch([
+        Effects.constant(loadSampleSuccess(sample)),
+        Effects.none() // TODO
+      ]))
+    },
     [createSampleFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -169,8 +171,9 @@ function createReducer (config) {
 
   function runCreateSample (file) {
     return service.createSample(file)
-      .then(({ sample, file, isDuplicate }) =>
-        isDuplicate ? createSampleDuplicate(sample) : createSampleSuccess({ sample, file }))
+      .then(({ sample, file, isDuplicate }) => isDuplicate
+        ? createSampleDuplicate({ sample })
+        : createSampleSuccess({ sample, file }))
       .catch(createSampleFailure)
   }
 

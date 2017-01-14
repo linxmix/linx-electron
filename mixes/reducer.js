@@ -13,6 +13,9 @@ const {
 const {
   unsetChannel
 } = require('../channels/actions')
+const {
+  createSample
+} = require('../samples/actions')
 const { CHANNEL_TYPE_MIX } = require('../channels/constants')
 
 const {
@@ -34,6 +37,7 @@ const {
   deleteMixEnd,
   setMix,
   createMix,
+  createPrimaryTrackFromFile,
   navigateToMix,
   navigateToMixList
 } = require('./actions')
@@ -143,8 +147,10 @@ function createReducer (config) {
     [createMix]: (state, action) => {
       const newMix = {
         id: uuid(),
+        // TODO: this should be createMixChannel
         channel: { id: uuid(), type: CHANNEL_TYPE_MIX }
       }
+
       const effects = Effects.batch([
         Effects.constant(setMix(newMix)),
         Effects.constant(createMeta({
@@ -158,6 +164,8 @@ function createReducer (config) {
         dirty: [...state.dirty, newMix.id]
       }, effects)
     },
+    [createPrimaryTrackFromFile]: (state, action) => loop(state,
+      Effects.constant(createSample(action.payload))),
     [navigateToMix]: (state, action) => loop(state,
       Effects.constant(push(`/mixes/${action.payload}`))),
     [navigateToMixList]: (state, action) => loop(state,
