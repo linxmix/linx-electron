@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { merge, keyBy } = require('lodash')
+const { merge, keyBy, without, includes } = require('lodash')
 const assert = require('assert')
 
 const {
@@ -32,7 +32,7 @@ function createReducer (config) {
 
   return handleActions({
     [loadMetaList]: (state, action) => loop({
-      ...state, isLoading: true
+      ...state, isLoadingList: true
     }, Effects.batch([
       Effects.promise(runLoadMetaList),
       Effects.constant(loadMetaListEnd())
@@ -45,16 +45,17 @@ function createReducer (config) {
       ...state, error: action.payload.message
     }),
     [loadMetaListEnd]: (state, action) => ({
-      ...state, isLoading: false
+      ...state, isLoadingList: false
     }),
     [loadMeta]: (state, action) => loop({
-      ...state, isLoading: true
+      ...state, loading: [...state.loading, action.payload]
     }, Effects.batch([
-      Effects.promise(runLoadMeta, action.payload.id),
-      Effects.constant(loadMetaEnd())
+      Effects.promise(runLoadMeta, action.payload),
+      Effects.constant(loadMetaEnd(action.payload))
     ])),
     [loadMetaSuccess]: (state, action) => ({
       ...state,
+      dirty: without(state.dirty, action.payload.id),
       records: {
         ...state.records,
         [action.payload.id]: action.payload
@@ -64,26 +65,28 @@ function createReducer (config) {
       ...state, error: action.payload.message
     }),
     [loadMetaEnd]: (state, action) => ({
-      ...state, isLoading: false
+      ...state, loading: without(state.loading, action.payload)
     }),
     [saveMeta]: (state, action) => loop({
-      ...state, isSaving: true
+      ...state, saving: [...state.saving, action.payload]
     }, Effects.batch([
       Effects.promise(runSaveMeta, state.records[action.payload]),
-      Effects.constant(saveMetaEnd())
+      Effects.constant(saveMetaEnd(action.payload))
     ])),
-    [saveMetaSuccess]: (state, action) => state,
+    [saveMetaSuccess]: (state, action) => ({
+      ...state, dirty: without(state.dirty, action.payload.id)
+    }),
     [saveMetaFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
     [saveMetaEnd]: (state, action) => ({
-      ...state, isSaving: false
+      ...state, saving: without(state.saving, action.payload)
     }),
     [deleteMeta]: (state, action) => loop({
       ...state, isSaving: true
     }, Effects.batch([
       Effects.promise(runDeleteMeta, action.payload),
-      Effects.constant(deleteMetaEnd())
+      Effects.constant(deleteMetaEnd(action.payload))
     ])),
     [deleteMetaSuccess]: (state, action) => {
       const metaId = action.payload
@@ -91,13 +94,17 @@ function createReducer (config) {
       const nextRecords = { ...state.records }
       delete nextRecords[metaId]
 
-      return { ...state, records: nextRecords }
+      return {
+        ...state,
+        dirty: without(state.dirty, metaId),
+        records: nextRecords
+      }
     },
     [deleteMetaFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
     [deleteMetaEnd]: (state, action) => ({
-      ...state, isSaving: false
+      ...state, saving: without(state.saving, action.payload)
     }),
     [createMeta]: (state, action) => {
       const { id } = action.payload
@@ -106,6 +113,7 @@ function createReducer (config) {
 
       return {
         ...state,
+        dirty: [...state.dirty, id],
         records: {
           ...state.records,
           [id]: action.payload
@@ -119,6 +127,7 @@ function createReducer (config) {
 
       return {
         ...state,
+        dirty: [...state.dirty, id],
         records: {
           ...state.records,
           [id]: merge(state.records[id], action.payload)
@@ -126,8 +135,10 @@ function createReducer (config) {
       }
     }
   }, {
-    isLoading: false,
-    isSaving: false,
+    isLoadingList: false,
+    loading: [],
+    saving: [],
+    dirty: [],
     records: {},
     error: null
   })
