@@ -22,7 +22,7 @@ class SampleListContainer extends React.Component {
   }
 
   render () {
-    const { sampleList, isLoading, creatingSamples, error } = this.props
+    const { sampleList, isLoadingList, creatingSamples, error } = this.props
     const analyzingSamples = filter(sampleList, { isAnalyzing: true })
     const isAnalyzing = !isEmpty(analyzingSamples)
     const isCreating = !isEmpty(creatingSamples)
@@ -37,7 +37,7 @@ class SampleListContainer extends React.Component {
         frame={document}
         onFrameDrop={this.onFilesDrop.bind(this)} />
       <header>
-        <div>samples are {isLoading ? 'loading' : 'here'}</div>
+        <div>samples are {isLoadingList ? 'loading' : 'here'}</div>
         {isCreating && <div>{creatingText}</div>}
         {isAnalyzing && <div>{analyzingText}</div>}
         <div>{error || 'no errors'}</div>

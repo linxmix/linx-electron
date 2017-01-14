@@ -4,19 +4,22 @@ const { mapValues, values, includes } = require('lodash')
 const { getMetas } = require('../metas/getters')
 
 const getSamplesRecords = (state) => state.samples.records
-const getSamplesIsLoading = (state) => state.samples.isLoading
+const getSampleListIsLoading = (state) => state.samples.isLoadingList
 const getSamplesCreating = (state) => state.samples.creating
-const getSamplesError = (state) => state.samples.error
 const getSamplesAnalyzing = (state) => state.samples.analyzing
+const getSamplesLoading = (state) => state.samples.loading
+const getSamplesError = (state) => state.samples.error
 
 const getSamples = Getter(
   getSamplesRecords,
   getMetas,
   getSamplesAnalyzing,
-  (samples, metas, analyzing) => mapValues(samples, (sample, sampleId) => ({
+  getSamplesLoading,
+  (samples, metas, analyzing, loading) => mapValues(samples, (sample, sampleId) => ({
     ...sample,
     meta: metas[sampleId] || {},
-    isAnalyzing: includes(analyzing, sampleId)
+    isAnalyzing: includes(analyzing, sampleId),
+    isLoading: includes(loading, sampleId)
   }))
 )
 
@@ -28,14 +31,13 @@ const getSampleList = Getter(
 const getSampleListProps = Struct({
   samples: getSamples,
   sampleList: getSampleList,
-  isLoading: getSamplesIsLoading,
+  isLoadingList: getSampleListIsLoading,
   creatingSamples: getSamplesCreating,
   error: getSamplesError
 })
 
 const getSampleProps = Struct({
   samples: getSamples,
-  isLoading: getSamplesIsLoading,
   error: getSamplesError
 })
 

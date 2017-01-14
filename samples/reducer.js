@@ -37,7 +37,7 @@ function createReducer (config) {
 
   return handleActions({
     [loadSampleList]: (state, action) => loop({
-      ...state, isLoading: true
+      ...state, isLoadingList: true
     }, Effects.batch([
       Effects.constant(loadMetaList()),
       Effects.promise(runLoadSampleList),
@@ -51,7 +51,7 @@ function createReducer (config) {
       ...state, error: action.payload.message
     }),
     [loadSampleListEnd]: (state, action) => ({
-      ...state, isLoading: false
+      ...state, isLoadingList: false
     }),
     [loadSample]: (state, action) => {
       const id = action.payload
@@ -60,10 +60,10 @@ function createReducer (config) {
         return state
       } else {
         return loop({
-          ...state, isLoading: true
+          ...state, loading: [...state.loading, id]
         }, Effects.batch([
-          Effects.promise(runLoadSample, action.payload.id),
-          Effects.constant(loadSampleEnd())
+          Effects.promise(runLoadSample, id),
+          Effects.constant(loadSampleEnd(id))
         ]))
       }
     },
@@ -78,7 +78,7 @@ function createReducer (config) {
       ...state, error: action.payload.message
     }),
     [loadSampleEnd]: (state, action) => ({
-      ...state, isLoading: false
+      ...state, loading: without(state.loading, action.payload)
     }),
     [createSample]: (state, action) => {
       const file = action.payload
@@ -147,8 +147,9 @@ function createReducer (config) {
       ...state, analyzing: without(state.analyzing, action.payload)
     })
   }, {
+    isLoadingList: false,
     creating: [],
-    isLoading: false,
+    loading: [],
     analyzing: [],
     records: {},
     error: null
