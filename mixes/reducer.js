@@ -82,7 +82,7 @@ function createReducer (config) {
       Effects.constant(saveMixEnd())
     ])),
     [saveMixSuccess]: (state, action) => loop(state,
-      Effects.constant(saveMeta(action.payload.meta))),
+      Effects.constant(saveMeta(action.payload.id))),
     [saveMixFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),

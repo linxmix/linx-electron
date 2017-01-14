@@ -69,7 +69,7 @@ function createReducer (config) {
     [saveMeta]: (state, action) => loop({
       ...state, isSaving: true
     }, Effects.batch([
-      Effects.promise(runSaveMeta, action.payload),
+      Effects.promise(runSaveMeta, state.records[action.payload]),
       Effects.constant(saveMetaEnd())
     ])),
     [saveMetaSuccess]: (state, action) => state,
@@ -102,6 +102,7 @@ function createReducer (config) {
     [createMeta]: (state, action) => {
       const { id } = action.payload
       assert(id, 'Cannot createMeta without id')
+      action.payload.createdAt = Date.now()
 
       return {
         ...state,
@@ -114,6 +115,7 @@ function createReducer (config) {
     [updateMeta]: (state, action) => {
       const { id } = action.payload
       assert(id, 'Cannot updateMeta without id')
+      action.payload.updatedAt = Date.now()
 
       return {
         ...state,

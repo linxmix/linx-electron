@@ -104,10 +104,9 @@ function createReducer (config) {
           ...state.records,
           [id]: action.payload
         }
-      // TODO: here is a case where ordering might be nice. only save meta after created
       }, Effects.batch([
         Effects.constant(createMeta(meta)),
-        Effects.constant(saveMeta(meta)),
+        Effects.constant(saveMeta(id)),
         Effects.constant(analyzeSample(id))
       ]))
     },
@@ -137,7 +136,7 @@ function createReducer (config) {
     },
     [analyzeSampleSuccess]: (state, action) => loop(state, Effects.batch([
       Effects.constant(updateMeta(action.payload)),
-      Effects.constant(saveMeta(action.payload))
+      Effects.constant(saveMeta(action.payload.id))
     ])),
     [analyzeSampleFailure]: (state, action) => ({
       ...state, error: action.payload.message
