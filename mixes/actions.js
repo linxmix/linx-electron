@@ -20,6 +20,7 @@ module.exports = createActions(
   'SET_MIX',
   'CREATE_MIX',
   'CREATE_PRIMARY_TRACK_FROM_FILE',
+  'TEST_ACTION',
   'NAVIGATE_TO_MIX',
   'NAVIGATE_TO_MIX_LIST'
 )

@@ -17,7 +17,7 @@ class SampleListContainer extends React.Component {
     if (files) {
       e.preventDefault()
       e.stopPropagation()
-      forEach(files, createSample)
+      forEach(files, file => createSample({ file }))
     }
   }
 

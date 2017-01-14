@@ -38,6 +38,7 @@ const {
   setMix,
   createMix,
   createPrimaryTrackFromFile,
+  testAction,
   navigateToMix,
   navigateToMixList
 } = require('./actions')
@@ -164,8 +165,18 @@ function createReducer (config) {
         dirty: [...state.dirty, newMix.id]
       }, effects)
     },
-    [createPrimaryTrackFromFile]: (state, action) => loop(state,
-      Effects.constant(createSample(action.payload))),
+    [createPrimaryTrackFromFile]: (state, action) => {
+      const { file, mixChannelId } = action.payload
+
+      const effectCreator = (sampleId) => {
+        return Effects.constant(testAction(sampleId))
+      }
+
+      return loop(state, Effects.constant(createSample({ file, effectCreator })))
+    },
+    [testAction]: (state, action) => {
+      console.log("TEST ACTION", action)
+    },
     [navigateToMix]: (state, action) => loop(state,
       Effects.constant(push(`/mixes/${action.payload}`))),
     [navigateToMixList]: (state, action) => loop(state,

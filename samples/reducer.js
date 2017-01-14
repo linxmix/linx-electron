@@ -81,19 +81,19 @@ function createReducer (config) {
       ...state, loading: without(state.loading, action.payload)
     }),
     [createSample]: (state, action) => {
-      const file = action.payload
+      const { file, effectCreator } = action.payload
       assert(file && file.path, 'Cannot createSample without file && file.path')
       assert(!includes(state.creating, file.path), 'Already creating sample with file.path')
 
       return loop({
         ...state, creating: [...state.creating, file.path]
       }, Effects.batch([
-        Effects.promise(runCreateSample, file),
+        Effects.promise(runCreateSample, { file, effectCreator }),
         Effects.constant(createSampleEnd(file.path))
       ]))
     },
     [createSampleSuccess]: (state, action) => {
-      const { sample, file } = action.payload
+      const { sample, file, effectCreator } = action.payload
       const { id } = sample
       const meta = {
         id,
@@ -110,7 +110,7 @@ function createReducer (config) {
         Effects.constant(createMeta(meta)),
         Effects.constant(saveMeta(id)),
         Effects.constant(analyzeSample(id)),
-        Effects.none() // TODO
+        (effectCreator && effectCreator(id)) || Effects.none()
       ]))
     },
     [createSampleDuplicate]: (state, action) => {
@@ -169,11 +169,11 @@ function createReducer (config) {
       .catch(loadSampleFailure)
   }
 
-  function runCreateSample (file) {
+  function runCreateSample ({ file, effectCreator }) {
     return service.createSample(file)
       .then(({ sample, file, isDuplicate }) => isDuplicate
-        ? createSampleDuplicate({ sample })
-        : createSampleSuccess({ sample, file }))
+        ? createSampleDuplicate({ sample, effectCreator })
+        : createSampleSuccess({ sample, file, effectCreator }))
       .catch(createSampleFailure)
   }
 
