@@ -37,8 +37,6 @@ const {
   deleteMixEnd,
   setMix,
   createMix,
-  createPrimaryTrackFromFile,
-  testAction,
   navigateToMix,
   navigateToMixList
 } = require('./actions')
@@ -93,6 +91,7 @@ function createReducer (config) {
     ])),
     [saveMixSuccess]: (state, action) => loop({
       ...state,
+      // TODO: need to clear channel, clips dirtiness
       dirty: without(state.dirty, action.payload.id)
     }, Effects.constant(saveMeta(action.payload.id))),
     [saveMixFailure]: (state, action) => ({
@@ -149,6 +148,7 @@ function createReducer (config) {
       const newMix = {
         id: uuid(),
         // TODO: this should be createMixChannel
+        // TODO: make sure we are setting a flat mix in state
         channel: { id: uuid(), type: CHANNEL_TYPE_MIX }
       }
 
@@ -164,18 +164,6 @@ function createReducer (config) {
         ...state,
         dirty: [...state.dirty, newMix.id]
       }, effects)
-    },
-    [createPrimaryTrackFromFile]: (state, action) => {
-      const { file, mixChannelId } = action.payload
-
-      const effectCreator = (sampleId) => {
-        return Effects.constant(testAction(sampleId))
-      }
-
-      return loop(state, Effects.constant(createSample({ file, effectCreator })))
-    },
-    [testAction]: (state, action) => {
-      console.log("TEST ACTION", action)
     },
     [navigateToMix]: (state, action) => loop(state,
       Effects.constant(push(`/mixes/${action.payload}`))),

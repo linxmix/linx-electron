@@ -114,11 +114,11 @@ function createReducer (config) {
       ]))
     },
     [createSampleDuplicate]: (state, action) => {
-      const { sample } = action.payload
+      const { sample, effectCreator } = action.payload
 
       return loop(state, Effects.batch([
         Effects.constant(loadSampleSuccess(sample)),
-        Effects.none() // TODO
+        (effectCreator && effectCreator(sample.id)) || Effects.none()
       ]))
     },
     [createSampleFailure]: (state, action) => ({

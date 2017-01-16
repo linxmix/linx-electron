@@ -10,7 +10,7 @@ function nest (mix) {
 }
 
 function nestChannels ({ channelId, channels, clips }) {
-  const channel = channels[channelId]
+  const channel = channels[channelId] || {}
   const { id, type, channelIds: subChannelIds = [], clipIds = [] } = channel
 
   return {

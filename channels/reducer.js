@@ -1,23 +1,43 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { map } = require('lodash')
+const { map, defaults, without, includes, merge } = require('lodash')
+const uuid = require('uuid/v4')
+const assert = require('assert')
 
 const {
   setChannels,
+  setChannel,
   unsetChannels,
-  unsetChannel
+  unsetChannel,
+  createChannel,
+  updateChannel,
+  setChannelParent,
+  createPrimaryTrackFromFile
 } = require('./actions')
-const { unsetClips } = require('../clips/actions')
+const { unsetClips, createClip } = require('../clips/actions')
+const {
+  createSample
+} = require('../samples/actions')
+const {
+  CHANNEL_TYPE_MIX,
+  CHANNEL_TYPE_PRIMARY_TRACK,
+  CHANNEL_TYPES
+} = require('../channels/constants')
 
 module.exports = createReducer
 
 function createReducer (config) {
   return handleActions({
-    [setChannels]: (state, action) => {
-      const { records } = state
-      const { payload: channels } = action
-      return { ...state, records: { ...records, ...channels } }
-    },
+    [setChannels]: (state, action) => loop(state, Effects.batch(
+      map(action.payload, channel => Effects.constant(setChannel(channel))))),
+    [setChannel]: (state, action) => ({
+      ...state,
+      dirty: without(state.dirty, action.payload.id),
+      records: {
+        ...state.records,
+        [action.payload.id]: action.payload
+      }
+    }),
     [unsetChannels]: (state, action) => loop(state, Effects.batch(
       map(action.payload, channel => Effects.constant(unsetChannel(channel))))),
     [unsetChannel]: (state, action) => {
@@ -29,13 +49,87 @@ function createReducer (config) {
 
       return loop({
         ...state,
+        dirty: without(state.dirty, id),
         records: nextRecords
       }, Effects.batch([
         Effects.constant(unsetChannels(channels)),
         Effects.constant(unsetClips(clips))
       ]))
+    },
+    [createPrimaryTrackFromFile]: (state, action) => {
+      const { file, parentChannelId } = action.payload
+
+      const effectCreator = (sampleId) => {
+        const channelId = uuid()
+        const clipId = uuid()
+
+        return Effects.batch([
+          Effects.constant(createClip({ id: clipId, sampleId })),
+          Effects.constant(createChannel({
+            id: channelId,
+            type: CHANNEL_TYPE_PRIMARY_TRACK,
+            clipIds: [clipId] // TODO: maybe setClipChannel in future?
+          })),
+          Effects.constant(setChannelParent({ parentChannelId, channelId }))
+        ])
+      }
+
+      return loop(state, Effects.constant(createSample({ file, effectCreator })))
+    },
+    [createChannel]: (state, action) => {
+      const attrs = defaults(action.payload, { id: uuid() })
+      assert(includes(CHANNEL_TYPES, attrs.type), 'Must have valid type to createChannel')
+
+      return loop({
+        ...state, dirty: [...state.dirty, attrs.id]
+      }, Effects.constant(setChannel(attrs)))
+    },
+    [setChannelParent]: (state, action) => {
+      const { channelId, parentChannelId } = action.payload
+      assert(channelId && parentChannelId, 'Must have both channelId and parentChannelId to setChannelParent')
+
+      const parentChannel = state.records[parentChannelId]
+      return loop(state, Effects.constant(updateChannel({
+        id: parentChannelId,
+        channelIds: [...parentChannel.channelIds, channelId]
+      })))
+    },
+    [updateChannel]: (state, action) => {
+      const { id } = action.payload
+      assert(id, 'Cannot updateChannel without id')
+
+      return {
+        ...state,
+        dirty: [...state.dirty, id],
+        records: {
+          ...state.records,
+          [id]: merge(state.records[id], action.payload)
+        }
+      }
     }
   }, {
+    dirty: [],
     records: {}
   })
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

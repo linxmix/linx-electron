@@ -4,8 +4,9 @@ const { forEach } = require('lodash')
 const FileDrop = require('react-file-drop')
 
 const { getMixProps } = require('../getters')
-const { saveMix, loadMix, deleteMix, createPrimaryTrackFromFile } = require('../actions')
+const { saveMix, loadMix, deleteMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
+const { createPrimaryTrackFromFile } = require('../../channels/actions')
 
 class MixContainer extends React.Component {
   onFilesDrop (e) {
@@ -17,7 +18,7 @@ class MixContainer extends React.Component {
       e.preventDefault()
       e.stopPropagation()
       forEach(files, file =>
-        createPrimaryTrackFromFile({ file, mixChannelId: mix.channel.id }))
+        createPrimaryTrackFromFile({ file, parentChannelId: mix.channel.id }))
     }
   }
 

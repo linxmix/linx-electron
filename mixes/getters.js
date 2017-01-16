@@ -34,6 +34,8 @@ const getMixes = Getter(
           primaryTracks: getPrimaryTracks(nestedMix, metas),
           isLoading: includes(loading, nestedMix.id),
           isSaving: includes(saving, nestedMix.id),
+
+          // TODO: also include dirty channels, dirty clips
           isDirty: includes(dirtyMixes, nestedMix.id) || includes(dirtyMetas, nestedMix.id)
         }
       }
