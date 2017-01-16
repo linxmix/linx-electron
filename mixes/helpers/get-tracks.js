@@ -5,17 +5,17 @@ module.exports = {
   getPrimaryTracks
 }
 
-function getPrimaryTracks (mix, metas) {
-  const allChannels = (mix && mix.channel && mix.channel.channels) || []
+function getPrimaryTracks (nestedChannel = {}, metas = []) {
+  const allChannels = nestedChannel.channels || []
   const primaryTrackChannels = filter(allChannels, { type: CHANNEL_TYPE_PRIMARY_TRACK })
 
-  return sortBy(primaryTrackChannels, ['startBeat', 'id']).map((channel) => {
+  return sortBy(primaryTrackChannels, ['startBeat', 'id']).map(channel => {
     const clips = channel.clips
     const sampleId = clips[0] && clips[0].sampleId
 
     return {
       id: sampleId,
-      meta: metas[sampleId]
+      meta: metas[sampleId] || {}
     }
   })
 }

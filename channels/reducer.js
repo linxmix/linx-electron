@@ -9,6 +9,8 @@ const {
   setChannel,
   unsetChannels,
   unsetChannel,
+  undirtyChannels,
+  undirtyChannel,
   createChannel,
   updateChannel,
   setChannelParent,
@@ -56,6 +58,12 @@ function createReducer (config) {
         Effects.constant(unsetClips(clips))
       ]))
     },
+    [undirtyChannels]: (state, action) => loop(state, Effects.batch(
+      map(action.payload, channel => Effects.constant(undirtyChannel(channel))))),
+    [undirtyChannel]: (state, action) => ({
+      ...state,
+      dirty: without(state.dirty, action.payload.id),
+    }),
     [createPrimaryTrackFromFile]: (state, action) => {
       const { file, parentChannelId } = action.payload
 
@@ -77,7 +85,11 @@ function createReducer (config) {
       return loop(state, Effects.constant(createSample({ file, effectCreator })))
     },
     [createChannel]: (state, action) => {
-      const attrs = defaults(action.payload, { id: uuid() })
+      const attrs = defaults(action.payload, {
+        id: uuid(),
+        clipIds: [],
+        channelIds: []
+      })
       assert(includes(CHANNEL_TYPES, attrs.type), 'Must have valid type to createChannel')
 
       return loop({

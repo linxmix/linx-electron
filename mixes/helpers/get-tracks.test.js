@@ -18,55 +18,53 @@ test('getPrimaryTracks', (t) => {
     }
   }
 
-  const nestedMix = {
-    channel: {
-      id: 0,
+  const nestedChannel = {
+    id: 0,
+    channels: [{
+
+      id: 1,
+      type: 'primary-track',
+
+      startBeat: 90,
+      beatCount: 100,
+
+      clips: [{
+        id: 'track2',
+        sampleId: 'track-2.m4a'
+      }]
+
+    }, {
+      id: 2,
+      type: 'transition',
+
+      startBeat: 90,
+      beatCount: 20,
+
       channels: [{
+        id: 3,
+        type: 'sample-track',
 
-        id: 1,
-        type: 'primary-track',
-
-        startBeat: 90,
-        beatCount: 100,
-
-        clips: [{
-          id: 'track2',
-          sampleId: 'track-2.m4a'
-        }]
-
-      }, {
-        id: 2,
-        type: 'transition',
-
-        startBeat: 90,
-        beatCount: 20,
-
-        channels: [{
-          id: 3,
-          type: 'sample-track',
-
-          startBeat: 5,
-          beatCount: 10,
-
-          clips: [{
-            id: 'beat',
-            sampleId: 'beat.m4a'
-          }]
-        }]
-
-      }, {
-        id: 4,
-        type: 'primary-track',
-
-        startBeat: 0,
-        beatCount: 100,
+        startBeat: 5,
+        beatCount: 10,
 
         clips: [{
-          id: 'track1',
-          sampleId: 'track-1.m4a'
+          id: 'beat',
+          sampleId: 'beat.m4a'
         }]
       }]
-    }
+
+    }, {
+      id: 4,
+      type: 'primary-track',
+
+      startBeat: 0,
+      beatCount: 100,
+
+      clips: [{
+        id: 'track1',
+        sampleId: 'track-1.m4a'
+      }]
+    }]
   }
 
   const expected = [{
@@ -83,6 +81,6 @@ test('getPrimaryTracks', (t) => {
     }
   }]
 
-  const actual = getPrimaryTracks(nestedMix, metas)
+  const actual = getPrimaryTracks(nestedChannel, metas)
   t.deepEqual(actual, expected)
 })

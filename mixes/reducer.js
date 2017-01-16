@@ -11,7 +11,8 @@ const {
   deleteMeta
 } = require('../metas/actions')
 const {
-  unsetChannel
+  unsetChannel,
+  createChannel
 } = require('../channels/actions')
 const {
   createSample
@@ -41,8 +42,8 @@ const {
   navigateToMixList
 } = require('./actions')
 const createService = require('./service')
-const { setChannels } = require('../channels/actions')
-const { setClips } = require('../clips/actions')
+const { setChannels, undirtyChannels } = require('../channels/actions')
+const { setClips, undirtyClips } = require('../clips/actions')
 const flattenMix = require('./helpers/flatten')
 
 module.exports = createReducer
@@ -73,10 +74,20 @@ function createReducer (config) {
       Effects.promise(runLoadMix, action.payload),
       Effects.constant(loadMixEnd(action.payload))
     ])),
-    [loadMixSuccess]: (state, action) => loop({
-      ...state,
-      dirty: without(state.dirty, action.payload.id)
-    }, Effects.constant(setMix(action.payload))),
+    [loadMixSuccess]: (state, action) => {
+      // TODO: convert to flattenChannel, action.payload.channel
+      const { id, channelId, channels, clips } = flattenMix(action.payload)
+      const mix = { id, channelId }
+
+      return loop({
+        ...state,
+        dirty: without(state.dirty, mix.id)
+      }, Effects.batch([
+        Effects.constant(setMix(mix)),
+        Effects.constant(setChannels(channels)),
+        Effects.constant(setClips(clips))
+      ]))
+    },
     [loadMixFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -89,11 +100,18 @@ function createReducer (config) {
       Effects.promise(runSaveMix, action.payload),
       Effects.constant(saveMixEnd(action.payload.id))
     ])),
-    [saveMixSuccess]: (state, action) => loop({
-      ...state,
-      // TODO: need to clear channel, clips dirtiness
-      dirty: without(state.dirty, action.payload.id)
-    }, Effects.constant(saveMeta(action.payload.id))),
+    [saveMixSuccess]: (state, action) => {
+      const { id, channels, clips } = flattenMix(action.payload)
+
+      return loop({
+        ...state,
+        dirty: without(state.dirty, id)
+      }, Effects.batch([
+        Effects.constant(undirtyChannels(channels)),
+        Effects.constant(undirtyClips(clips)),
+        Effects.constant(saveMeta(id)),
+      ]))
+    },
     [saveMixFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -129,41 +147,31 @@ function createReducer (config) {
     [deleteMixEnd]: (state, action) => ({
       ...state, saving: without(state.saving, action.payload)
     }),
-    [setMix]: (state, action) => {
-      const { records } = state
-      const { payload: mix } = action
-      const { channelId, channels, clips } = flattenMix(mix)
-      const effects = Effects.batch([
-        Effects.constant(setChannels(channels)),
-        Effects.constant(setClips(clips))
-      ])
-      const nextRecords = {
-        ...records,
-        [mix.id]: { id: mix.id, channelId }
+    [setMix]: (state, action) => ({
+      ...state,
+      records: {
+        ...state.records,
+        [action.payload.id]: action.payload
       }
-      const nextState = { ...state, records: nextRecords }
-      return loop(nextState, effects)
-    },
+    }),
     [createMix]: (state, action) => {
-      const newMix = {
-        id: uuid(),
-        // TODO: this should be createMixChannel
-        // TODO: make sure we are setting a flat mix in state
-        channel: { id: uuid(), type: CHANNEL_TYPE_MIX }
-      }
+      const newMix = { id: uuid(), channelId: uuid() }
 
-      const effects = Effects.batch([
-        Effects.constant(setMix(newMix)),
+      return loop({
+        ...state,
+        dirty: [...state.dirty, newMix.id]
+      }, Effects.batch([
+        Effects.constant(createChannel({
+          id: newMix.channelId,
+          type: CHANNEL_TYPE_MIX
+        })),
         Effects.constant(createMeta({
           id: newMix.id,
           title: 'new mix title'
         })),
+        Effects.constant(setMix(newMix)),
         Effects.constant(navigateToMix(newMix.id))
-      ])
-      return loop({
-        ...state,
-        dirty: [...state.dirty, newMix.id]
-      }, effects)
+      ]))
     },
     [navigateToMix]: (state, action) => loop(state,
       Effects.constant(push(`/mixes/${action.payload}`))),

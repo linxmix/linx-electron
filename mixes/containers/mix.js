@@ -64,13 +64,11 @@ class MixContainer extends React.Component {
   }
 
   componentDidMount () {
-    // const { loadMix, mix, mixId } = this.props
+    const { loadMix, mix } = this.props
 
-    // TODO: remove this?
-    // note this breaks if we navigate to a new mix which hasnt yet been added to the store.
-    // if (!mix) {
-      // loadMix(mixId)
-    // }
+    if (mix && !mix.channel.type) {
+      loadMix(mix.id)
+    }
   }
 }
 
@@ -90,7 +88,7 @@ module.exports = connect(
       )
     }
 
-    return { ...props, mix, mixId: currentMixId }
+    return { ...props, mix }
   },
   { saveMix, loadMix, deleteMix, updateMeta, createPrimaryTrackFromFile }
 )(MixContainer)

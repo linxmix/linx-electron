@@ -5,5 +5,7 @@ module.exports = createActions(
   'SET_CLIP',
   'UNSET_CLIPS',
   'UNSET_CLIP',
+  'UNDIRTY_CLIPS',
+  'UNDIRTY_CLIP',
   'CREATE_CLIP'
 )

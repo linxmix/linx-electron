@@ -9,6 +9,8 @@ const {
   setClip,
   unsetClips,
   unsetClip,
+  undirtyClips,
+  undirtyClip,
   createClip
 } = require('./actions')
 
@@ -40,6 +42,12 @@ function createReducer (config) {
         records: nextRecords
       }
     },
+    [undirtyClips]: (state, action) => loop(state, Effects.batch(
+      map(action.payload, clip => Effects.constant(undirtyClip(clip))))),
+    [undirtyClip]: (state, action) => ({
+      ...state,
+      dirty: without(state.dirty, action.payload.id),
+    }),
     [createClip]: (state, action) => {
       const attrs = defaults(action.payload, { id: uuid() })
       assert(attrs.sampleId, 'Cannot createClip without sampleId')
