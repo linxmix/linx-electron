@@ -15,6 +15,7 @@ function getPrimaryTracks (nestedChannel = {}, metas = []) {
 
     return {
       id: sampleId,
+      channel,
       meta: metas[sampleId] || {}
     }
   })

@@ -4,7 +4,7 @@ module.exports = nestChannels
 
 function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
   const channel = channels[channelId] || {}
-  const { id, type, channelIds: childChannelIds = [], clipIds = [] } = channel
+  const { id, type, startBeat, channelIds: childChannelIds = [], clipIds = [] } = channel
 
   const childChannels = childChannelIds.map(childChannelId => {
     return nestChannels({ channelId: childChannelId, channels, clips, dirtyChannels })
@@ -14,9 +14,10 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
   return {
     id,
     type,
-    isDirty: (includes(dirtyChannels, id)
-      || some(childChannels, { isDirty: true })
-      || some(childClips, { isDirty: true })),
+    startBeat,
+    isDirty: (includes(dirtyChannels, id) ||
+      some(childChannels, { isDirty: true }) ||
+      some(childClips, { isDirty: true })),
     channels: childChannels,
     clips: childClips
   }

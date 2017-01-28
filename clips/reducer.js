@@ -46,7 +46,7 @@ function createReducer (config) {
       map(action.payload, clip => Effects.constant(undirtyClip(clip))))),
     [undirtyClip]: (state, action) => ({
       ...state,
-      dirty: without(state.dirty, action.payload.id),
+      dirty: without(state.dirty, action.payload.id)
     }),
     [createClip]: (state, action) => {
       const attrs = defaults(action.payload, { id: uuid() })

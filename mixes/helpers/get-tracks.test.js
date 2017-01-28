@@ -72,12 +72,37 @@ test('getPrimaryTracks', (t) => {
     meta: {
       id: 'track-1.m4a',
       title: 'track-1'
+    },
+    channel: {
+      id: 4,
+      type: 'primary-track',
+
+      startBeat: 0,
+      beatCount: 100,
+
+      clips: [{
+        id: 'track1',
+        sampleId: 'track-1.m4a'
+      }]
     }
   }, {
     id: 'track-2.m4a',
     meta: {
       id: 'track-2.m4a',
       title: 'track-2'
+    },
+    channel: {
+
+      id: 1,
+      type: 'primary-track',
+
+      startBeat: 90,
+      beatCount: 100,
+
+      clips: [{
+        id: 'track2',
+        sampleId: 'track-2.m4a'
+      }]
     }
   }]
 

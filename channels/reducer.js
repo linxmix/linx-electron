@@ -21,7 +21,6 @@ const {
   createSample
 } = require('../samples/actions')
 const {
-  CHANNEL_TYPE_MIX,
   CHANNEL_TYPE_PRIMARY_TRACK,
   CHANNEL_TYPES
 } = require('../channels/constants')
@@ -62,10 +61,10 @@ function createReducer (config) {
       map(action.payload, channel => Effects.constant(undirtyChannel(channel))))),
     [undirtyChannel]: (state, action) => ({
       ...state,
-      dirty: without(state.dirty, action.payload.id),
+      dirty: without(state.dirty, action.payload.id)
     }),
     [createPrimaryTrackFromFile]: (state, action) => {
-      const { file, parentChannelId } = action.payload
+      const { file, parentChannelId, attrs = {} } = action.payload
 
       const effectCreator = (sampleId) => {
         const channelId = uuid()
@@ -73,11 +72,11 @@ function createReducer (config) {
 
         return Effects.batch([
           Effects.constant(createClip({ id: clipId, sampleId })),
-          Effects.constant(createChannel({
+          Effects.constant(createChannel(merge({
             id: channelId,
             type: CHANNEL_TYPE_PRIMARY_TRACK,
             clipIds: [clipId] // TODO: maybe setClipChannel in future?
-          })),
+          }, attrs))),
           Effects.constant(setChannelParent({ parentChannelId, channelId }))
         ])
       }
@@ -124,24 +123,4 @@ function createReducer (config) {
     records: {}
   })
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

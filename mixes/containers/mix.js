@@ -1,24 +1,32 @@
 const React = require('react')
 const { connect } = require('react-redux')
-const { forEach } = require('lodash')
+const { forEach, last, get } = require('lodash')
 const FileDrop = require('react-file-drop')
 
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix, deleteMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
+const { validNumberOrDefault } = require('../../lib/number-utils')
 
 class MixContainer extends React.Component {
   onFilesDrop (e) {
     const { mix, createPrimaryTrackFromFile } = this.props
     const files = e && e.dataTransfer && e.dataTransfer.files
+    const lastPrimaryTrack = last(mix.primaryTracks || [])
+    const startBeat = validNumberOrDefault(get(lastPrimaryTrack, 'channel.startBeat'), 0)
 
     console.log('file drop', e)
     if (files) {
       e.preventDefault()
       e.stopPropagation()
-      forEach(files, file =>
-        createPrimaryTrackFromFile({ file, parentChannelId: mix.channel.id }))
+      forEach(files, (file, i) => createPrimaryTrackFromFile({
+        file,
+        parentChannelId: mix.channel.id,
+        attrs: {
+          startBeat: startBeat + i
+        }
+      }))
     }
   }
 

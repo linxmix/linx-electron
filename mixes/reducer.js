@@ -14,9 +14,6 @@ const {
   unsetChannel,
   createChannel
 } = require('../channels/actions')
-const {
-  createSample
-} = require('../samples/actions')
 const { CHANNEL_TYPE_MIX } = require('../channels/constants')
 
 const {
@@ -101,6 +98,7 @@ function createReducer (config) {
       Effects.constant(saveMixEnd(action.payload.id))
     ])),
     [saveMixSuccess]: (state, action) => {
+      // TODO: convert to flattenChannel, action.payload.channel
       const { id, channels, clips } = flattenMix(action.payload)
 
       return loop({
@@ -109,7 +107,7 @@ function createReducer (config) {
       }, Effects.batch([
         Effects.constant(undirtyChannels(channels)),
         Effects.constant(undirtyClips(clips)),
-        Effects.constant(saveMeta(id)),
+        Effects.constant(saveMeta(id))
       ]))
     },
     [saveMixFailure]: (state, action) => ({
