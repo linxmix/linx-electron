@@ -7,7 +7,8 @@ const { Provider } = require('react-redux')
 const { Router, createMemoryHistory } = require('react-router')
 const { routerMiddleware, syncHistoryWithStore } = require('react-router-redux')
 
-require('insert-css')(require('fs').readFileSync('styles/file-drop.css', 'utf-8'))
+const insertCss = require('insert-css')
+insertCss(require('fs').readFileSync('styles/file-drop.css', 'utf-8'))
 
 const config = require('./config')
 const routes = require('./routes')

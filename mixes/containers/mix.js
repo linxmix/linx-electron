@@ -8,6 +8,7 @@ const { saveMix, loadMix, deleteMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { validNumberOrDefault } = require('../../lib/number-utils')
+const PrimaryTrackTable = require('../components/primary-track-table')
 
 class MixContainer extends React.Component {
   onFilesDrop (e) {
@@ -64,9 +65,7 @@ class MixContainer extends React.Component {
         </button>
       </header>
       <section key={mix.id}>
-        {mix.primaryTracks.map(track => {
-          return <div key={track.id} >{track.meta.title}</div>
-        })}
+        <PrimaryTrackTable tracks={mix.primaryTracks} />
       </section>
     </div>
   }
