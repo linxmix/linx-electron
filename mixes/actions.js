@@ -19,6 +19,8 @@ module.exports = createActions(
   'DELETE_MIX_END',
   'SET_MIX',
   'CREATE_MIX',
+  'REORDER_PRIMARY_TRACK',
+  'SWAP_PRIMARY_TRACKS',
   'NAVIGATE_TO_MIX',
   'NAVIGATE_TO_MIX_LIST'
 )

@@ -54,7 +54,11 @@
   "devDependencies": {
     "ava": "^0.17.0",
     "chokidar": "^1.6.1",
+    "classnames": "^2.2.5",
     "electron-connect": "^0.6.1",
+    "react-dnd": "^2.1.4",
+    "react-dnd-html5-backend": "^2.1.2",
+    "react-table": "^4.4.1",
     "standard": "^8.6.0"
   },
   "ava": {

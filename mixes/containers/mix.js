@@ -1,10 +1,10 @@
 const React = require('react')
 const { connect } = require('react-redux')
 const { forEach, last, get } = require('lodash')
-const FileDrop = require('react-file-drop')
+// const FileDrop = require('react-file-drop')
 
 const { getMixProps } = require('../getters')
-const { saveMix, loadMix, deleteMix } = require('../actions')
+const { saveMix, loadMix, deleteMix, reorderPrimaryTrack } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { validNumberOrDefault } = require('../../lib/number-utils')
@@ -18,7 +18,7 @@ class MixContainer extends React.Component {
     const startBeat = validNumberOrDefault(get(lastPrimaryTrack, 'channel.startBeat'), 0)
 
     console.log('file drop', e)
-    if (files) {
+    if (files && files.length) {
       e.preventDefault()
       e.stopPropagation()
       forEach(files, (file, i) => createPrimaryTrackFromFile({
@@ -38,7 +38,7 @@ class MixContainer extends React.Component {
   }
 
   render () {
-    const { mix, error, sampleError, saveMix, deleteMix } = this.props
+    const { mix, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack } = this.props
     if (!mix) { return null }
     console.log('mix', mix)
 
@@ -50,10 +50,12 @@ class MixContainer extends React.Component {
         placeholder='Untitled Mix'
         onChange={this.onChangeMixTitle.bind(this)} />
 
+    // TODO: replace with react-dnd equivalent
+      // <FileDrop
+      //  frame={document}
+      //  onFrameDrop={this.onFilesDrop.bind(this)} />
+
     return <div>
-      <FileDrop
-        frame={document}
-        onFrameDrop={this.onFilesDrop.bind(this)} />
       <header>
         {titleElement}
         <div>{error || sampleError || 'no errors'}</div>
@@ -64,8 +66,12 @@ class MixContainer extends React.Component {
           Delete Mix
         </button>
       </header>
-      <section key={mix.id}>
-        <PrimaryTrackTable tracks={mix.primaryTracks} />
+      <section>
+        <PrimaryTrackTable
+          tracks={mix.primaryTracks}
+          reorderPrimaryTrack={reorderPrimaryTrack}
+          isLoading={isLoading}
+        />
       </section>
     </div>
   }
@@ -97,5 +103,5 @@ module.exports = connect(
 
     return { ...props, mix }
   },
-  { saveMix, loadMix, deleteMix, updateMeta, createPrimaryTrackFromFile }
+  { saveMix, loadMix, deleteMix, updateMeta, createPrimaryTrackFromFile, reorderPrimaryTrack }
 )(MixContainer)

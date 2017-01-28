@@ -3,6 +3,7 @@ const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
 const { pick, without, map } = require('lodash')
 const uuid = require('uuid/v4')
+const assert = require('assert')
 
 const {
   loadMetaList,
@@ -12,7 +13,8 @@ const {
 } = require('../metas/actions')
 const {
   unsetChannel,
-  createChannel
+  createChannel,
+  updateChannel
 } = require('../channels/actions')
 const { CHANNEL_TYPE_MIX } = require('../channels/constants')
 
@@ -35,6 +37,8 @@ const {
   deleteMixEnd,
   setMix,
   createMix,
+  reorderPrimaryTrack,
+  swapPrimaryTracks,
   navigateToMix,
   navigateToMixList
 } = require('./actions')
@@ -169,6 +173,54 @@ function createReducer (config) {
         })),
         Effects.constant(setMix(newMix)),
         Effects.constant(navigateToMix(newMix.id))
+      ]))
+    },
+    [reorderPrimaryTrack]: (state, action) => {
+      const { targetIndex, sourceIndex, tracks } = action.payload
+      if (sourceIndex === targetIndex) { return state }
+
+      assert(sourceIndex >= 0 && sourceIndex < tracks.length, 'Must provide valid sourceIndex')
+      assert(targetIndex >= 0 && targetIndex < tracks.length, 'Must provide valid targetIndex')
+
+      let effects = []
+
+      // forwards swap
+      if (sourceIndex < targetIndex) {
+        for (let i = sourceIndex; i < targetIndex; i++) {
+          // TODO: this does not work.
+          // we need to get the result of previous swap in order to do the next swap
+          // could do that by just passing IDs, and moving swapPrimaryTracks to channel reducer?
+          effects.push(Effects.constant(swapPrimaryTracks({
+            sourceTrack: tracks[i],
+            targetTrack: tracks[i + 1]
+          })))
+        }
+
+      // backwards swap
+      } else {
+        // TODO: implement this
+        console.log('BACKWARDS SWAP not implemented')
+      }
+
+      return loop(state, Effects.batch(effects))
+    },
+    [swapPrimaryTracks]: (state, action) => {
+      // TODO: update both channels, switch startBeats
+      // TODO: also update both associate transitions to same endBeat as track
+      // TODO: anything we need to do with track or transition length?
+
+      const { sourceTrack, targetTrack } = action.payload
+      if (sourceTrack.id === targetTrack.id) { return state }
+
+      return loop(state, Effects.batch([
+        Effects.constant(updateChannel({
+          id: sourceTrack.id,
+          startBeat: targetTrack.channel.startBeat
+        })),
+        Effects.constant(updateChannel({
+          id: targetTrack.id,
+          startBeat: sourceTrack.channel.startBeat
+        }))
       ]))
     },
     [navigateToMix]: (state, action) => loop(state,

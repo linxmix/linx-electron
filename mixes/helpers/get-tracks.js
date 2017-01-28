@@ -14,7 +14,7 @@ function getPrimaryTracks (nestedChannel = {}, metas = []) {
     const sampleId = clips[0] && clips[0].sampleId
 
     return {
-      id: sampleId,
+      id: channel.id,
       channel,
       index: i,
       meta: metas[sampleId] || {}

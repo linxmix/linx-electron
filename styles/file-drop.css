@@ -16,3 +16,7 @@
     background-color: rgba(0,155,0,0.5);
   }
 }
+
+.bg-green {
+  background-color: green !important;
+}

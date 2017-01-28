@@ -68,7 +68,7 @@ test('getPrimaryTracks', (t) => {
   }
 
   const expected = [{
-    id: 'track-1.m4a',
+    id: 4,
     index: 0,
     meta: {
       id: 'track-1.m4a',
@@ -87,7 +87,7 @@ test('getPrimaryTracks', (t) => {
       }]
     }
   }, {
-    id: 'track-2.m4a',
+    id: 1,
     index: 1,
     meta: {
       id: 'track-2.m4a',

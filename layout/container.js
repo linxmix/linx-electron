@@ -1,5 +1,7 @@
 const React = require('react')
 const { Link } = require('react-router')
+const HTML5Backend = require('react-dnd-html5-backend')
+const DragDropContext = require('react-dnd').DragDropContext
 
 class LayoutContainer extends React.Component {
   render () {
@@ -18,4 +20,4 @@ class LayoutContainer extends React.Component {
   }
 }
 
-module.exports = LayoutContainer
+module.exports = DragDropContext(HTML5Backend)(LayoutContainer)
