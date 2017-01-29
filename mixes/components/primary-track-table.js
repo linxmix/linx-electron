@@ -14,7 +14,7 @@ class PrimaryTrackTable extends React.Component {
     const PrimaryTrackRow = createPrimaryTrackRowClass({
       onDragEnter () {},
       onDrop ({ sourceRowId, targetRowId }) {
-        const targetIndex = findIndex(tracks, { id: targetRowId })
+        const targetIndex = targetRowId ? findIndex(tracks, { id: targetRowId }) : 0
         const sourceIndex = findIndex(tracks, { id: sourceRowId })
         reorderPrimaryTrack({ targetIndex, sourceIndex, tracks })
       }
@@ -38,7 +38,7 @@ class PrimaryTrackTable extends React.Component {
       render: props => <span title={props.value}>{props.value}</span>
     }, {
       header: 'Key',
-      accessor: 'channel.startBeat',
+      accessor: 'meta.key',
       minWidth: 70,
       maxWidth: 100
     }, {

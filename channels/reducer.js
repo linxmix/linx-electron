@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { map, defaults, without, includes, merge } = require('lodash')
+const { map, defaults, without, includes, merge, clone } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -14,7 +14,8 @@ const {
   createChannel,
   updateChannel,
   setChannelParent,
-  createPrimaryTrackFromFile
+  createPrimaryTrackFromFile,
+  swapPrimaryTracks
 } = require('./actions')
 const { unsetClips, createClip } = require('../clips/actions')
 const {
@@ -63,26 +64,6 @@ function createReducer (config) {
       ...state,
       dirty: without(state.dirty, action.payload.id)
     }),
-    [createPrimaryTrackFromFile]: (state, action) => {
-      const { file, parentChannelId, attrs = {} } = action.payload
-
-      const effectCreator = (sampleId) => {
-        const channelId = uuid()
-        const clipId = uuid()
-
-        return Effects.batch([
-          Effects.constant(createClip({ id: clipId, sampleId })),
-          Effects.constant(createChannel(merge({
-            id: channelId,
-            type: CHANNEL_TYPE_PRIMARY_TRACK,
-            clipIds: [clipId] // TODO: maybe setClipChannel in future?
-          }, attrs))),
-          Effects.constant(setChannelParent({ parentChannelId, channelId }))
-        ])
-      }
-
-      return loop(state, Effects.constant(createSample({ file, effectCreator })))
-    },
     [createChannel]: (state, action) => {
       const attrs = defaults(action.payload, {
         id: uuid(),
@@ -117,7 +98,50 @@ function createReducer (config) {
           [id]: merge(state.records[id], action.payload)
         }
       }
-    }
+    },
+    [createPrimaryTrackFromFile]: (state, action) => {
+      const { file, parentChannelId, attrs = {} } = action.payload
+
+      const effectCreator = (sampleId) => {
+        const channelId = uuid()
+        const clipId = uuid()
+
+        return Effects.batch([
+          Effects.constant(createClip({ id: clipId, sampleId })),
+          Effects.constant(createChannel(merge({
+            id: channelId,
+            type: CHANNEL_TYPE_PRIMARY_TRACK,
+            clipIds: [clipId] // TODO(FUTURE): maybe setClipChannel?
+          }, attrs))),
+          Effects.constant(setChannelParent({ parentChannelId, channelId }))
+        ])
+      }
+
+      return loop(state, Effects.constant(createSample({ file, effectCreator })))
+    },
+    [swapPrimaryTracks]: (state, action) => {
+      const { sourceId, targetId } = action.payload
+      if (sourceId === targetId) { return state }
+
+      // TODO(FUTURE): also update both associated transitions to same endBeat as track
+      // TODO(FUTURE): anything we need to do with track or transition length?
+      const source = clone(state.records[sourceId])
+      const target = clone(state.records[targetId])
+
+      return {
+        ...state,
+        dirty: [...state.dirty, sourceId, targetId],
+        records: {
+          ...state.records,
+          [sourceId]: merge(state.records[sourceId], {
+            startBeat: target.startBeat,
+          }),
+          [targetId]: merge(state.records[targetId], {
+            startBeat: source.startBeat,
+          }),
+        }
+      }
+    },
   }, {
     dirty: [],
     records: {}

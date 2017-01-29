@@ -7,7 +7,7 @@ class PrimaryTrackRow extends React.Component {
   componentWillReceiveProps (nextProps) {
     // drag enter
     if (this.props.isOverCurrent && !nextProps.isOverCurrent) {
-      const targetRowId = _getRowFromProps(this.props).id
+      const targetRowId = get(_getRowFromProps(this.props), 'id')
       const sourceRowId = get(this, 'props.draggingItem.id')
       this.props.dragEnterAction({ sourceRowId, targetRowId })
     }
@@ -22,15 +22,17 @@ class PrimaryTrackRow extends React.Component {
       canDrop,
       isOverCurrent,
       style,
+      isDragging,
       onClick
     } = this.props
 
-    const dropClassName = (isOverCurrent && canDrop) ? 'bg-green' : ''
+    const dropClassName = (isOverCurrent && canDrop) ? 'primary-track-drag-over' : ''
+    const draggingClassName = isDragging ? 'primary-track-dragging' : ''
     const row = _getRowFromProps(this.props)
 
     return connectDropTarget(connectDragSource(
       <div
-        className={classnames('rt-tr', className, dropClassName)}
+        className={classnames('rt-tr', className, dropClassName, draggingClassName)}
         style={style}
         onClick={onClick}
         key={row && row.id}
@@ -62,8 +64,17 @@ function createPrimaryTrackRowClass ({ onDragEnter = () => {}, onDrop = () => {}
   }
 
   const dropTarget = {
+    canDrop: function (props, monitor, component) {
+      const targetRowId = get(_getRowFromProps(props), 'id')
+      const {
+        id: sourceRowId,
+        index: sourceRowIndex
+      } = monitor.getItem()
+
+      return (targetRowId !== sourceRowId) && (targetRowId || sourceRowIndex > 0)
+    },
     drop: function (props, monitor, component) {
-      const targetRowId = _getRowFromProps(props).id
+      const targetRowId = get(_getRowFromProps(props), 'id')
       return { targetRowId }
     }
   }
@@ -76,17 +87,22 @@ function createPrimaryTrackRowClass ({ onDragEnter = () => {}, onDrop = () => {}
   }
 
   const dragSource = {
-    beginDrag: function (props) {
+    beginDrag: function (props, monitor, component) {
+      const row = _getRowFromProps(props)
       return {
-        id: _getRowFromProps(props).id
+        id: row.id,
+        index: row.index
       }
     },
-
     endDrag: function (props, monitor) {
       if (!monitor.didDrop()) { return }
       const { targetRowId } = monitor.getDropResult()
       const sourceRowId = get(monitor.getItem(), 'id')
       onDrop({ sourceRowId, targetRowId })
+    },
+    canDrag: function (props) {
+      const row = _getRowFromProps(props)
+      return !!row
     }
   }
 

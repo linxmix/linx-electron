@@ -17,6 +17,10 @@
   }
 }
 
-.bg-green {
-  background-color: green !important;
+.primary-track-drag-over {
+  border-bottom: 2px solid green;
+}
+
+.primary-track-dragging {
+  opacity: 0.5
 }
