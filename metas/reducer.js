@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { merge, keyBy, without } = require('lodash')
+const { assign, keyBy, without, omit } = require('lodash')
 const assert = require('assert')
 
 const {
@@ -39,7 +39,7 @@ function createReducer (config) {
     ])),
     [loadMetaListSuccess]: (state, action) => ({
       ...state,
-      records: merge({}, state.records, keyBy(action.payload, 'id'))
+      records: assign({}, state.records, keyBy(action.payload, 'id'))
     }),
     [loadMetaListFailure]: (state, action) => ({
       ...state, error: action.payload.message
@@ -88,18 +88,11 @@ function createReducer (config) {
       Effects.promise(runDeleteMeta, action.payload),
       Effects.constant(deleteMetaEnd(action.payload))
     ])),
-    [deleteMetaSuccess]: (state, action) => {
-      const metaId = action.payload
-
-      const nextRecords = { ...state.records }
-      delete nextRecords[metaId]
-
-      return {
-        ...state,
-        dirty: without(state.dirty, metaId),
-        records: nextRecords
-      }
-    },
+    [deleteMetaSuccess]: (state, action) => ({
+      ...state,
+      dirty: without(state.dirty, action.payload),
+      records: omit(state.records, action.payload)
+    }),
     [deleteMetaFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -130,7 +123,7 @@ function createReducer (config) {
         dirty: [...state.dirty, id],
         records: {
           ...state.records,
-          [id]: merge(state.records[id], action.payload)
+          [id]: assign({}, state.records[id], action.payload)
         }
       }
     }

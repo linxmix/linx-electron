@@ -34,7 +34,7 @@ class PrimaryTrackRow extends React.Component {
 
     return connectDropTarget(connectDragSource(
       <div
-        className={classnames('rt-tr', className, dropClassName,
+        className={classnames('rt-tr', 'primary-track-row', className, dropClassName,
           draggingClassName, draggableClassName)}
         style={style}
         onClick={onClick}

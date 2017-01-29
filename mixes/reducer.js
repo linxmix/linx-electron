@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { pick, without, map } = require('lodash')
+const { pick, without, map, omit } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -38,6 +38,7 @@ const {
   setMix,
   createMix,
   reorderPrimaryTrack,
+  unsetPrimaryTrackFromMix,
   navigateToMix,
   navigateToMixList
 } = require('./actions')
@@ -108,8 +109,8 @@ function createReducer (config) {
         ...state,
         dirty: without(state.dirty, id)
       }, Effects.batch([
-        Effects.constant(undirtyChannels(channels)),
-        Effects.constant(undirtyClips(clips)),
+        Effects.constant(undirtyChannels(map(channels, 'id'))),
+        Effects.constant(undirtyClips(map(clips, 'id'))),
         Effects.constant(saveMeta(id))
       ]))
     },
@@ -120,24 +121,20 @@ function createReducer (config) {
       ...state, saving: without(state.saving, action.payload)
     }),
     [deleteMix]: (state, action) => loop({
-      ...state, saving: [...state.saving, action.payload.id]
+      ...state, saving: [...state.saving, action.payload]
     }, Effects.batch([
       Effects.promise(runDeleteMix, action.payload),
-      Effects.constant(deleteMixEnd(action.payload.id))
+      Effects.constant(deleteMixEnd(action.payload))
     ])),
     [deleteMixSuccess]: (state, action) => {
-      const nestedMix = action.payload
-      const { id, channel } = nestedMix
-
-      const nextRecords = { ...state.records }
-      delete nextRecords[id]
+      const { id, channelId } = state.records[action.payload]
 
       return loop({
         ...state,
         dirty: without(state.dirty, id),
-        records: nextRecords
+        records: omit(state.records, id)
       }, Effects.batch([
-        Effects.constant(unsetChannel(channel)),
+        Effects.constant(unsetChannel(channelId)),
         Effects.constant(deleteMeta(id)),
         Effects.constant(navigateToMixList())
       ]))
@@ -206,6 +203,13 @@ function createReducer (config) {
 
       return loop(state, Effects.batch(effects))
     },
+    [unsetPrimaryTrackFromMix]: (state, action) => {
+      const { id, primaryTrackId } = action.payload
+      assert(id && primaryTrackId, 'Must provide id && primaryTrackId')
+
+      // TODO(FUTURE): remove associated transition and move later tracks forward
+      return loop(state, Effects.constant(unsetChannel(primaryTrackId)))
+    },
     [navigateToMix]: (state, action) => loop(state,
       Effects.constant(push(`/mixes/${action.payload}`))),
     [navigateToMixList]: (state, action) => loop(state,
@@ -237,9 +241,9 @@ function createReducer (config) {
       .catch(saveMixFailure)
   }
 
-  function runDeleteMix (nestedMix) {
-    return service.deleteMix(nestedMix)
-      .then(() => deleteMixSuccess(nestedMix))
+  function runDeleteMix (id) {
+    return service.deleteMix(id)
+      .then(() => deleteMixSuccess(id))
       .catch(deleteMixFailure)
   }
 }

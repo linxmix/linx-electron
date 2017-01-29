@@ -37,8 +37,8 @@ function createService (config) {
     return fs.writeFile(path, JSON.stringify(mix, null, 2), 'utf8')
   }
 
-  function deleteMix (mix) {
-    const path = _getMixPath(mix.id)
+  function deleteMix (id) {
+    const path = _getMixPath(id)
     return fs.unlink(path)
   }
 

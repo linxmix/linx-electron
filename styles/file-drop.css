@@ -17,11 +17,24 @@
   }
 }
 
+
+
 .primary-track-table-drag-over {
   background-color: rgba(0,0,0,0);
-  
+
   animation: glow .5s;
   animation-fill-mode: forwards;
+}
+
+
+
+.primary-track-row .delete-button {
+  visibility: hidden;
+  cursor: pointer;
+}
+
+.primary-track-row:hover .delete-button {
+  visibility: visible;
 }
 
 .primary-track-row-drag-over {

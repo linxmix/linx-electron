@@ -42,16 +42,21 @@ class PrimaryTrackTable extends React.Component {
       isLoading,
       isOver,
       canDrop,
-      connectDropTarget
+      connectDropTarget,
+      removeTrack
     } = this.props
 
     const columns = [{
       id: 'index',
       header: '#',
+      sort: 'asc',
       accessor: track => track.index + 1,
       // providing this render function allows PrimaryTrackRow to access the track object
-      render: props => <span>{props.value}</span>,
-      width: 30
+      render: props => <span>
+        {props.value}
+        <button className='delete-button' onClick={() => removeTrack(props.row.id)}>x</button>
+      </span>,
+      width: 60
     }, {
       header: 'Title',
       accessor: 'meta.title',
@@ -63,14 +68,19 @@ class PrimaryTrackTable extends React.Component {
       minWidth: 100,
       render: props => <span title={props.value}>{props.value}</span>
     }, {
-      header: 'Key',
-      accessor: 'meta.key',
+      header: 'Start',
+      accessor: 'channel.startBeat',
       minWidth: 70,
       maxWidth: 100
     }, {
       header: 'Bpm',
       accessor: 'meta.bpm',
       minWidth: 50,
+      maxWidth: 100
+    }, {
+      header: 'Key',
+      accessor: 'meta.key',
+      minWidth: 70,
       maxWidth: 100
     }]
 

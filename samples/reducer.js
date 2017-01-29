@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { merge, keyBy, without, includes } = require('lodash')
+const { assign, keyBy, without, includes } = require('lodash')
 const assert = require('assert')
 
 const {
@@ -45,7 +45,7 @@ function createReducer (config) {
     ])),
     [loadSampleListSuccess]: (state, action) => ({
       ...state,
-      records: merge({}, state.records, keyBy(action.payload, 'id'))
+      records: assign({}, state.records, keyBy(action.payload, 'id'))
     }),
     [loadSampleListFailure]: (state, action) => ({
       ...state, error: action.payload.message

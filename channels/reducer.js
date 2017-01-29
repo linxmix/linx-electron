@@ -1,6 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { map, defaults, without, includes, merge, clone } = require('lodash')
+const { map, defaults, without, includes,
+  clone, filter, values, omit, assign } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -41,31 +42,38 @@ function createReducer (config) {
       }
     }),
     [unsetChannels]: (state, action) => loop(state, Effects.batch(
-      map(action.payload, channel => Effects.constant(unsetChannel(channel))))),
+      map(action.payload, id => Effects.constant(unsetChannel(id))))),
     [unsetChannel]: (state, action) => {
-      const channel = action.payload
-      const { id, channels, clips } = channel
+      const channel = state.records[action.payload]
+      const { id, channelIds = [], clipIds = [] } = channel
 
-      const nextRecords = state.records
-      delete nextRecords[id]
+      // remove this channel from all parent channels
+      // TODO: is this necessary? what if we just assume an empty id doesnt exist?
+      const parentChannels = filter(values(state.records), channel =>
+        includes(channel.channelIds, id))
+      const parentChannelEffects = map(parentChannels, channel =>
+        Effects.constant(updateChannel({
+          id: channel.id,
+          channelIds: without(channel.channelIds, id)
+        })))
 
       return loop({
         ...state,
         dirty: without(state.dirty, id),
-        records: nextRecords
-      }, Effects.batch([
-        Effects.constant(unsetChannels(channels)),
-        Effects.constant(unsetClips(clips))
-      ]))
+        records: omit(state.records, id)
+      }, Effects.batch(parentChannelEffects.concat([
+        Effects.constant(unsetChannels(channelIds)),
+        Effects.constant(unsetClips(clipIds))
+      ])))
     },
     [undirtyChannels]: (state, action) => loop(state, Effects.batch(
-      map(action.payload, channel => Effects.constant(undirtyChannel(channel))))),
+      map(action.payload, id => Effects.constant(undirtyChannel(id))))),
     [undirtyChannel]: (state, action) => ({
       ...state,
-      dirty: without(state.dirty, action.payload.id)
+      dirty: without(state.dirty, action.payload)
     }),
     [createChannel]: (state, action) => {
-      const attrs = defaults(action.payload, {
+      const attrs = defaults({}, action.payload, {
         id: uuid(),
         clipIds: [],
         channelIds: []
@@ -95,7 +103,7 @@ function createReducer (config) {
         dirty: [...state.dirty, id],
         records: {
           ...state.records,
-          [id]: merge(state.records[id], action.payload)
+          [id]: assign({}, state.records[id], action.payload)
         }
       }
     },
@@ -108,7 +116,7 @@ function createReducer (config) {
 
         return Effects.batch([
           Effects.constant(createClip({ id: clipId, sampleId })),
-          Effects.constant(createChannel(merge({
+          Effects.constant(createChannel(assign({
             id: channelId,
             type: CHANNEL_TYPE_PRIMARY_TRACK,
             clipIds: [clipId] // TODO(FUTURE): maybe setClipChannel?
@@ -133,10 +141,10 @@ function createReducer (config) {
         dirty: [...state.dirty, sourceId, targetId],
         records: {
           ...state.records,
-          [sourceId]: merge(state.records[sourceId], {
+          [sourceId]: assign({}, state.records[sourceId], {
             startBeat: target.startBeat
           }),
-          [targetId]: merge(state.records[targetId], {
+          [targetId]: assign({}, state.records[targetId], {
             startBeat: source.startBeat
           })
         }
