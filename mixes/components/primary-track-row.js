@@ -6,7 +6,7 @@ const { get } = require('lodash')
 class PrimaryTrackRow extends React.Component {
   componentWillReceiveProps (nextProps) {
     // drag enter
-    if (this.props.isOverCurrent && !nextProps.isOverCurrent) {
+    if (!this.props.isOverCurrent && nextProps.isOverCurrent) {
       const targetRowId = get(_getRowFromProps(this.props), 'id')
       const sourceRowId = get(this, 'props.draggingItem.id')
       this.props.dragEnterAction({ sourceRowId, targetRowId })
@@ -27,9 +27,9 @@ class PrimaryTrackRow extends React.Component {
       onClick
     } = this.props
 
-    const dropClassName = (isOverCurrent && canDrop) ? 'primary-track-drag-over' : ''
-    const draggableClassName = canDrag ? 'primary-track-draggable' : ''
-    const draggingClassName = isDragging ? 'primary-track-dragging' : ''
+    const dropClassName = (isOverCurrent && canDrop) ? 'primary-track-row-drag-over' : ''
+    const draggableClassName = canDrag ? 'primary-track-row-draggable' : ''
+    const draggingClassName = isDragging ? 'primary-track-row-dragging' : ''
     const row = _getRowFromProps(this.props)
 
     return connectDropTarget(connectDragSource(
@@ -72,13 +72,15 @@ function createPrimaryTrackRowClass ({
 
   const dropTarget = {
     canDrop: function (props, monitor, component) {
-      const targetRowId = get(_getRowFromProps(props), 'id')
+      const targetRow = _getRowFromProps(props)
+      const targetRowIndex = get(targetRow, 'index') || 0
       const {
-        id: sourceRowId,
         index: sourceRowIndex
       } = monitor.getItem()
 
-      return (targetRowId !== sourceRowId) && (targetRowId || sourceRowIndex > 0)
+      // ignore cases that result in no movement
+      return (targetRowIndex !== sourceRowIndex) &&
+        (targetRowIndex + 1 !== sourceRowIndex)
     },
     drop: function (props, monitor, component) {
       const targetRowId = get(_getRowFromProps(props), 'id')

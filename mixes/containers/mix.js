@@ -1,34 +1,30 @@
 const React = require('react')
 const { connect } = require('react-redux')
 const { forEach, last, get } = require('lodash')
-// const FileDrop = require('react-file-drop')
 
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix, deleteMix, reorderPrimaryTrack } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
-const { validNumberOrDefault } = require('../../lib/number-utils')
+const { isValidNumber } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
 
 class MixContainer extends React.Component {
-  onFilesDrop (e) {
+  onFilesDrop ({ files }) {
     const { mix, createPrimaryTrackFromFile } = this.props
-    const files = e && e.dataTransfer && e.dataTransfer.files
     const lastPrimaryTrack = last(mix.primaryTracks || [])
-    const startBeat = validNumberOrDefault(get(lastPrimaryTrack, 'channel.startBeat'), 0)
+    const lastPrimaryTrackStartBeat = get(lastPrimaryTrack, 'channel.startBeat')
+    const startBeat = isValidNumber(lastPrimaryTrackStartBeat)
+      ? lastPrimaryTrackStartBeat + 1
+      : 0
 
-    console.log('file drop', e)
-    if (files && files.length) {
-      e.preventDefault()
-      e.stopPropagation()
-      forEach(files, (file, i) => createPrimaryTrackFromFile({
-        file,
-        parentChannelId: mix.channel.id,
-        attrs: {
-          startBeat: startBeat + i
-        }
-      }))
-    }
+    forEach(files, (file, i) => createPrimaryTrackFromFile({
+      file,
+      parentChannelId: mix.channel.id,
+      attrs: {
+        startBeat: startBeat + i
+      }
+    }))
   }
 
   onChangeMixTitle (e) {
@@ -50,11 +46,6 @@ class MixContainer extends React.Component {
         placeholder='Untitled Mix'
         onChange={this.onChangeMixTitle.bind(this)} />
 
-    // TODO: replace with react-dnd equivalent
-      // <FileDrop
-      //  frame={document}
-      //  onFrameDrop={this.onFilesDrop.bind(this)} />
-
     return <div>
       <header>
         {titleElement}
@@ -71,6 +62,7 @@ class MixContainer extends React.Component {
           tracks={mix.primaryTracks}
           reorderPrimaryTrack={reorderPrimaryTrack}
           isLoading={isLoading}
+          onFilesDrop={this.onFilesDrop.bind(this)}
         />
       </section>
     </div>

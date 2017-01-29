@@ -178,8 +178,10 @@ function createReducer (config) {
       const { targetIndex, sourceIndex, tracks } = action.payload
       if (sourceIndex === targetIndex) { return state }
 
-      assert(sourceIndex >= 0 && sourceIndex < tracks.length, 'Must provide valid sourceIndex')
-      assert(targetIndex >= 0 && targetIndex < tracks.length, 'Must provide valid targetIndex')
+      assert(sourceIndex >= 0 && sourceIndex < tracks.length,
+        'Must provide valid sourceIndex')
+      assert(targetIndex >= -1 && targetIndex < tracks.length,
+        'Must provide valid targetIndex')
 
       let effects = []
 
@@ -194,7 +196,7 @@ function createReducer (config) {
 
       // backward swap
       } else {
-        for (let i = sourceIndex - 1; i >= targetIndex; i--) {
+        for (let i = sourceIndex; i > targetIndex; i--) {
           effects.push(Effects.constant(swapPrimaryTracks({
             sourceId: tracks[sourceIndex].id,
             targetId: tracks[i].id

@@ -17,14 +17,21 @@
   }
 }
 
-.primary-track-drag-over {
+.primary-track-table-drag-over {
+  background-color: rgba(0,0,0,0);
+  
+  animation: glow .5s;
+  animation-fill-mode: forwards;
+}
+
+.primary-track-row-drag-over {
   border-bottom: 2px solid green;
 }
 
-.primary-track-dragging {
+.primary-track-row-dragging {
   opacity: 0.5;
 }
 
-.primary-track-draggable:hover {
+.primary-track-row-draggable:hover {
   cursor: pointer;
 }
