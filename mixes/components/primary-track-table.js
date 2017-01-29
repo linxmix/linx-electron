@@ -1,6 +1,6 @@
 const React = require('react')
-const ReactTable = require('react-table').default
-const { findIndex } = require('lodash')
+const { default: ReactTable } = require('react-table')
+const { findIndex, isEmpty, isEqual } = require('lodash')
 
 const {
   createPrimaryTrackRowClass
@@ -9,7 +9,7 @@ const {
 class PrimaryTrackTable extends React.Component {
   render () {
     const { tracks, isLoading, reorderPrimaryTrack } = this.props
-    console.log('tracks', tracks)
+    let tableSorting = []
 
     const PrimaryTrackRow = createPrimaryTrackRowClass({
       onDragEnter () {},
@@ -17,14 +17,18 @@ class PrimaryTrackTable extends React.Component {
         const targetIndex = targetRowId ? findIndex(tracks, { id: targetRowId }) : 0
         const sourceIndex = findIndex(tracks, { id: sourceRowId })
         reorderPrimaryTrack({ targetIndex, sourceIndex, tracks })
+      },
+      canDrag () {
+        return isEmpty(tableSorting) || isEqual(tableSorting[0], { asc: true, id: 'index' })
       }
     })
 
     const columns = [{
-      id: 'number',
+      id: 'index',
       header: '#',
-      accessor: track => track.index,
-      render: props => <span title={props.value}>{props.value + 1}</span>,
+      accessor: track => track.index + 1,
+      // providing this render function allows PrimaryTrackRow to access the track object
+      render: props => <span>{props.value}</span>,
       width: 30
     }, {
       header: 'Title',
@@ -56,7 +60,12 @@ class PrimaryTrackTable extends React.Component {
       showPagination={false}
       minRows={0}
       className='-striped -highlight'
-    />
+    >
+      {(state, makeTable, instance) => {
+        tableSorting = state.sorting
+        return makeTable()
+      }}
+    </ReactTable>
   }
 }
 

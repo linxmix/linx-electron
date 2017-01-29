@@ -134,14 +134,14 @@ function createReducer (config) {
         records: {
           ...state.records,
           [sourceId]: merge(state.records[sourceId], {
-            startBeat: target.startBeat,
+            startBeat: target.startBeat
           }),
           [targetId]: merge(state.records[targetId], {
-            startBeat: source.startBeat,
-          }),
+            startBeat: source.startBeat
+          })
         }
       }
-    },
+    }
   }, {
     dirty: [],
     records: {}

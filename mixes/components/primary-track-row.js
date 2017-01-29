@@ -20,6 +20,7 @@ class PrimaryTrackRow extends React.Component {
       children,
       className,
       canDrop,
+      canDrag,
       isOverCurrent,
       style,
       isDragging,
@@ -27,12 +28,14 @@ class PrimaryTrackRow extends React.Component {
     } = this.props
 
     const dropClassName = (isOverCurrent && canDrop) ? 'primary-track-drag-over' : ''
+    const draggableClassName = canDrag ? 'primary-track-draggable' : ''
     const draggingClassName = isDragging ? 'primary-track-dragging' : ''
     const row = _getRowFromProps(this.props)
 
     return connectDropTarget(connectDragSource(
       <div
-        className={classnames('rt-tr', className, dropClassName, draggingClassName)}
+        className={classnames('rt-tr', className, dropClassName,
+          draggingClassName, draggableClassName)}
         style={style}
         onClick={onClick}
         key={row && row.id}
@@ -51,7 +54,11 @@ function _getRowFromProps (props) {
 }
 
 // allows binding of actions to this component from outside
-function createPrimaryTrackRowClass ({ onDragEnter = () => {}, onDrop = () => {} }) {
+function createPrimaryTrackRowClass ({
+  onDragEnter = () => {},
+  onDrop = () => {},
+  canDrag = () => {}
+}) {
   function collectDrop (connect, monitor) {
     return {
       dragEnterAction: onDragEnter,
@@ -82,7 +89,8 @@ function createPrimaryTrackRowClass ({ onDragEnter = () => {}, onDrop = () => {}
   function collectDrag (connect, monitor) {
     return {
       connectDragSource: connect.dragSource(),
-      isDragging: monitor.isDragging()
+      isDragging: monitor.isDragging(),
+      canDrag: monitor.canDrag()
     }
   }
 
@@ -96,13 +104,14 @@ function createPrimaryTrackRowClass ({ onDragEnter = () => {}, onDrop = () => {}
     },
     endDrag: function (props, monitor) {
       if (!monitor.didDrop()) { return }
+
       const { targetRowId } = monitor.getDropResult()
       const sourceRowId = get(monitor.getItem(), 'id')
       onDrop({ sourceRowId, targetRowId })
     },
     canDrag: function (props) {
       const row = _getRowFromProps(props)
-      return !!row
+      return !!row && canDrag()
     }
   }
 

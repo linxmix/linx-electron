@@ -14,7 +14,6 @@ const {
 const {
   unsetChannel,
   createChannel,
-  updateChannel,
   swapPrimaryTracks
 } = require('../channels/actions')
 const { CHANNEL_TYPE_MIX } = require('../channels/constants')
