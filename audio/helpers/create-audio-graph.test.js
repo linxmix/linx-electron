@@ -30,22 +30,22 @@ test('createAudioGraph', (t) => {
   }
 
   const expected = {
-    'masterChannelId': ['channelMerger', 'output', { numberOfInputs: 2 }],
+    'masterChannelId': ['channelMerger', 'output', { numberOfOutputs: 2 }],
     'channel1Id': ['channelMerger',
-      { key: 'masterChannelId' },
-      { numberOfInputs: 2 }
+      { key: 'masterChannelId', outputs: [0], inputs: [0] },
+      { numberOfOutputs: 2 }
     ],
     'channel2Id': ['channelMerger',
-      { key: 'channel1Id' },
-      { numberOfInputs: 0 }
+      { key: 'channel1Id', outputs: [0], inputs: [0] },
+      { numberOfOutputs: 0 }
     ],
     'channel3Id': ['channelMerger',
-      { key: 'channel1Id' },
-      { numberOfInputs: 0 }
+      { key: 'channel1Id', outputs: [1], inputs: [0] },
+      { numberOfOutputs: 0 }
     ],
     'channel4Id': ['channelMerger',
-      { key: 'masterChannelId' },
-      { numberOfInputs: 0 }
+      { key: 'masterChannelId', outputs: [1], inputs: [0] },
+      { numberOfOutputs: 0 }
     ],
     'clip1Id': ['oscillator', 'channel3Id', {
       type: 'square',
@@ -54,6 +54,7 @@ test('createAudioGraph', (t) => {
       stopTime: currentTime + 2
     }]
   }
+
 
   const actual = createAudioGraph({
     channel: masterChannel,

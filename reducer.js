@@ -10,6 +10,7 @@ function createReducer (config) {
     samples: require('./samples/reducer')(config),
     channels: require('./channels/reducer')(config),
     clips: require('./clips/reducer')(config),
-    metas: require('./metas/reducer')(config)
+    metas: require('./metas/reducer')(config),
+    audio: require('./audio/reducer')(config)
   })
 }

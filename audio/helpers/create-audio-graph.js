@@ -10,16 +10,18 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output' }) {
     createAudioGraph({
       channel: nestedChannel,
       audioContext,
-      outputs: { key: channel.id } // outputs: [0], inputs: [i]
+      outputs: { key: channel.id, outputs: [i], inputs: [0] }
     })
   )
 
-  // create clip nodes
+  // TODO:
+  // create clip nodes (soundtouch source node)
   // create FX chain
-  // create channel merge input (how many inputs?)
+  // add automations
 
   const audioGraph = {
-    [channel.id]: ['channelMerger', outputs, { numberOfInputs: nestedChannels.length }],
+    // NOTE: virtual-audio-graph interprets numberOfOutputs here as the # of merger inputs
+    [channel.id]: ['channelMerger', outputs, { numberOfOutputs: nestedChannels.length }],
   }
 
   forEach(channel.clips, clip => {

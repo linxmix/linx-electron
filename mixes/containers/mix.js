@@ -6,6 +6,7 @@ const { getMixProps } = require('../getters')
 const { saveMix, loadMix, deleteMix,
   reorderPrimaryTrack, unsetPrimaryTrackFromMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
+const { updateAudioGraph } = require('../../audio/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { isValidNumber } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
@@ -36,7 +37,7 @@ class MixContainer extends React.Component {
 
   render () {
     const { mix, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack,
-      unsetPrimaryTrackFromMix } = this.props
+      unsetPrimaryTrackFromMix, updateAudioGraph } = this.props
     if (!mix) { return null }
     console.log('mix', mix)
 
@@ -57,6 +58,9 @@ class MixContainer extends React.Component {
         </button>
         <button disabled={isLoading || isSaving} onClick={() => deleteMix(mix.id)}>
           Delete Mix
+        </button>
+        <button onClick={() => updateAudioGraph(mix && mix.channel)}>
+          Play Mix
         </button>
       </header>
       <section>
@@ -106,6 +110,7 @@ module.exports = connect(
     updateMeta,
     createPrimaryTrackFromFile,
     reorderPrimaryTrack,
-    unsetPrimaryTrackFromMix
+    unsetPrimaryTrackFromMix,
+    updateAudioGraph
   }
 )(MixContainer)
