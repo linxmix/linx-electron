@@ -42,12 +42,19 @@ class MixContainer extends React.Component {
     console.log('mix', mix)
 
     const { isSaving, isLoading, isDirty } = mix
-    const titleElement = isLoading
-      ? <div>'{mix.meta.title}' is loading</div>
-      : <input type='text'
+    const { status: masterChannelStatus } = mix.channel
+
+    let titleElement
+    if (isLoading) {
+      titleElement = <div>'{mix.meta.title}' is loading…</div>
+    } else if (masterChannelStatus === 'loading') {
+      titleElement = <div>loading audio…</div>
+    } else {
+      titleElement = <input type='text'
         value={mix.meta.title}
         placeholder='Untitled Mix'
         onChange={this.onChangeMixTitle.bind(this)} />
+    }
 
     return <div>
       <header>
@@ -59,7 +66,9 @@ class MixContainer extends React.Component {
         <button disabled={isLoading || isSaving} onClick={() => deleteMix(mix.id)}>
           Delete Mix
         </button>
-        <button onClick={() => updateAudioGraph(mix && mix.channel)}>
+        <button
+          disabled={masterChannelStatus !== 'loaded'}
+          onClick={() => updateAudioGraph(mix && mix.channel)}>
           Play Mix
         </button>
       </header>

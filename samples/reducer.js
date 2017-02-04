@@ -60,7 +60,12 @@ function createReducer (config) {
         return state
       } else {
         return loop({
-          ...state, loading: [...state.loading, id]
+          ...state,
+          loading: [...state.loading, id],
+          records: {
+            ...state.records,
+            [id]: state.records[id] || { id }
+          }
         }, Effects.batch([
           Effects.promise(runLoadSample, id),
           Effects.constant(loadSampleEnd(id))

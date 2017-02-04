@@ -14,22 +14,21 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output' }) {
     })
   )
 
-  // TODO:
+  // TODO(FUTURE):
   // create clip nodes (soundtouch source node)
   // create FX chain
   // add automations
 
   const audioGraph = {
     // NOTE: virtual-audio-graph interprets numberOfOutputs here as the # of merger inputs
-    [channel.id]: ['channelMerger', outputs, { numberOfOutputs: nestedChannels.length }],
+    [channel.id]: ['channelMerger', outputs, { numberOfOutputs: nestedChannels.length }]
   }
 
   forEach(channel.clips, clip => {
-    audioGraph[clip.id] = ['oscillator', channel.id, {
-      type: 'square',
-      frequency: 440,
+    audioGraph[clip.id] = ['bufferSource', channel.id, {
+      buffer: clip.sample.audioBuffer,
       startTime: currentTime + 1,
-      stopTime: currentTime + 2
+      stopTime: currentTime + 100
     }]
   })
 

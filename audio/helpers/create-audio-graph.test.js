@@ -19,7 +19,10 @@ test('createAudioGraph', (t) => {
         type: 'type3',
         clips: [{
           id: 'clip1Id',
-          sampleId: 'beat.wav'
+          sampleId: 'beat.wav',
+          sample: {
+            audioBuffer: 'clip1AudioBuffer'
+          }
         }]
       }]
     }, {
@@ -47,14 +50,12 @@ test('createAudioGraph', (t) => {
       { key: 'masterChannelId', outputs: [1], inputs: [0] },
       { numberOfOutputs: 0 }
     ],
-    'clip1Id': ['oscillator', 'channel3Id', {
-      type: 'square',
-      frequency: 440,
+    'clip1Id': ['bufferSource', 'channel3Id', {
+      buffer: 'clip1AudioBuffer',
       startTime: currentTime + 1,
-      stopTime: currentTime + 2
+      stopTime: currentTime + 100
     }]
   }
-
 
   const actual = createAudioGraph({
     channel: masterChannel,

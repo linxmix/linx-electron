@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { map, defaults, without, omit } = require('lodash')
 const createVirtualAudioGraph = require('virtual-audio-graph')
+const assert = require('assert')
 
 const {
   updateAudioGraph,
@@ -15,6 +15,8 @@ function createReducer (config) {
   return handleActions({
     [updateAudioGraph]: (state, action) => {
       const channel = action.payload
+      assert(channel.status === 'loaded', 'Requires loaded channel to updateAudioGraph')
+
       const audioGraph = createAudioGraph({ channel, audioContext: state.audioContext })
 
       return loop({
@@ -48,6 +50,6 @@ function createReducer (config) {
   }, {
     audioGraphs: {},
     virtualAudioGraphs: {},
-    audioContext: config.audioContext,
+    audioContext: config.audioContext
   })
 }
