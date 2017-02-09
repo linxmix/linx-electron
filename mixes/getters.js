@@ -4,7 +4,6 @@ const { mapValues, values, includes } = require('lodash')
 const { getMetas } = require('../metas/getters')
 const { getChannels } = require('../channels/getters')
 const { getSamplesError } = require('../samples/getters')
-const { getClips } = require('../clips/getters')
 const { getPrimaryTracks } = require('./helpers/get-tracks')
 
 const getMixesRecords = (state) => state.mixes.records
@@ -18,11 +17,10 @@ const getMixes = Getter(
   getMixesRecords,
   getMetas,
   getChannels,
-  getClips,
   getMixesSaving,
   getMixesLoading,
   getMixesDirty,
-  (mixes, metas, channels, clips, saving, loading, dirtyMixes) => {
+  (mixes, metas, channels, saving, loading, dirtyMixes) => {
     return mapValues(mixes, ({ id, channelId }) => {
       const meta = metas[id] || {}
       const channel = channels[channelId] || {}

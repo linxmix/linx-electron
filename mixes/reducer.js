@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { pick, without, map, omit } = require('lodash')
+const { pick, without, map, omit, values } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -16,6 +16,9 @@ const {
   createChannel,
   swapPrimaryTracks
 } = require('../channels/actions')
+const {
+  loadSample
+} = require('../samples/actions')
 const { CHANNEL_TYPE_MIX } = require('../channels/constants')
 
 const {
@@ -71,14 +74,13 @@ function createReducer (config) {
     }),
     [loadMix]: (state, action) => loop({
       ...state, loading: [...state.loading, action.payload]
-    }, Effects.batch([
-      Effects.promise(runLoadMix, action.payload),
-      Effects.constant(loadMixEnd(action.payload))
-    ])),
+    }, Effects.promise(runLoadMix, action.payload)),
     [loadMixSuccess]: (state, action) => {
       // TODO: convert to flattenChannel, action.payload.channel
       const { id, channelId, channels, clips } = flattenMix(action.payload)
       const mix = { id, channelId }
+
+      const loadSampleEffects = map(values(clips), clip => Effects.constant(loadSample(clip.sampleId)))
 
       return loop({
         ...state,
@@ -86,12 +88,13 @@ function createReducer (config) {
       }, Effects.batch([
         Effects.constant(setMix(mix)),
         Effects.constant(setChannels(channels)),
-        Effects.constant(setClips(clips))
-      ]))
+        Effects.constant(setClips(clips)),
+        Effects.constant(loadMixEnd(id))
+      ].concat(loadSampleEffects)))
     },
-    [loadMixFailure]: (state, action) => ({
-      ...state, error: action.payload.message
-    }),
+    [loadMixFailure]: (state, action) => loop({
+      ...state, error: action.payload.error.message
+    }, Effects.constant(loadMixEnd(action.payload.id))),
     [loadMixEnd]: (state, action) => ({
       ...state, loading: without(state.loading, action.payload)
     }),
@@ -232,7 +235,7 @@ function createReducer (config) {
   function runLoadMix (id) {
     return service.readMix(id)
       .then(loadMixSuccess)
-      .catch(loadMixFailure)
+      .catch(error => loadMixFailure({ error, id }))
   }
 
   function runSaveMix (nestedMix) {

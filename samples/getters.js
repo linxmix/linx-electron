@@ -42,6 +42,7 @@ const getSampleProps = Struct({
 })
 
 module.exports = {
+  getSamples,
   getSampleListProps,
   getSampleProps,
   getSamplesError
