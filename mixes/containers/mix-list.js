@@ -7,11 +7,11 @@ const { loadMixList, createMix } = require('../actions')
 
 class MixListContainer extends React.Component {
   render () {
-    const { mixList, isLoadingList, error, createMix } = this.props
+    const { mixList, isLoading, error, createMix } = this.props
 
     return <div>
       <header>
-        <div>mixes are {isLoadingList ? 'loading' : 'here'}</div>
+        <div>mixes are {isLoading ? 'loading' : 'here'}</div>
         <div>{error || 'no errors'}</div>
         <button onClick={createMix}>Create Mix</button>
       </header>

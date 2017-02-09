@@ -2,11 +2,10 @@ const React = require('react')
 const { connect } = require('react-redux')
 const { Link } = require('react-router')
 const FileDrop = require('react-file-drop')
-const { forEach, filter, isEmpty } = require('lodash')
+const { forEach } = require('lodash')
 
 const { getSampleListProps } = require('../getters')
 const { loadSampleList, createSample } = require('../actions')
-const { pluralize } = require('../../lib/string-utils')
 
 class SampleListContainer extends React.Component {
   onFilesDrop (e) {
@@ -22,13 +21,7 @@ class SampleListContainer extends React.Component {
   }
 
   render () {
-    const { sampleList, isLoadingList, creatingSamples, error } = this.props
-    const analyzingSamples = filter(sampleList, { isAnalyzing: true })
-    const isAnalyzing = !isEmpty(analyzingSamples)
-    const isCreating = !isEmpty(creatingSamples)
-
-    const creatingText = `creating ${creatingSamples.length} ${pluralize(creatingSamples.length, 'sample')}…`
-    const analyzingText = `analyzing ${analyzingSamples.length} ${pluralize(analyzingSamples.length, 'sample')}…`
+    const { sampleList, isLoading, isCreating, isAnalyzing, error } = this.props
 
     console.log('sampleList', sampleList)
 
@@ -37,9 +30,9 @@ class SampleListContainer extends React.Component {
         frame={document}
         onFrameDrop={this.onFilesDrop.bind(this)} />
       <header>
-        <div>samples are {isLoadingList ? 'loading' : 'here'}</div>
-        {isCreating && <div>{creatingText}</div>}
-        {isAnalyzing && <div>{analyzingText}</div>}
+        <div>samples are {isLoading ? 'loading' : 'here'}</div>
+        {isCreating && <div>'creating samples…'</div>}
+        {isAnalyzing && <div>'analyzing samples…'</div>}
         <div>{error || 'no errors'}</div>
       </header>
       {sampleList.map(sample => {
