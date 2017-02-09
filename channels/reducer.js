@@ -48,7 +48,6 @@ function createReducer (config) {
       const { id, channelIds = [], clipIds = [] } = channel
 
       // remove this channel from all parent channels
-      // TODO: is this necessary? what if we just assume an empty id doesnt exist?
       const parentChannels = filter(values(state.records), channel =>
         includes(channel.channelIds, id))
       const parentChannelEffects = map(parentChannels, channel =>
