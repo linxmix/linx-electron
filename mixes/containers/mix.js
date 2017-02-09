@@ -13,10 +13,11 @@ class MixContainer extends React.Component {
   }
 
   render () {
-    const { mix, isLoading, isSaving, error, saveMix, deleteMix } = this.props
+    const { mix, error, saveMix, deleteMix } = this.props
     if (!mix) { return null }
-
     console.log('mix', mix)
+
+    const { isSaving, isLoading, isDirty } = mix
     const titleElement = isLoading
       ? <div>'{mix.meta.title}' is loading</div>
       : <input type='text'
@@ -28,7 +29,7 @@ class MixContainer extends React.Component {
       <header>
         {titleElement}
         <div>{error || 'no errors'}</div>
-        <button disabled={isLoading || isSaving} onClick={() => saveMix(mix)}>
+        <button disabled={!isDirty || (isLoading || isSaving)} onClick={() => saveMix(mix)}>
           Save Mix
         </button>
         <button disabled={isLoading || isSaving} onClick={() => deleteMix(mix)}>
@@ -58,7 +59,20 @@ module.exports = connect(
   (state, ownProps) => {
     const props = getMixProps(state)
     const currentMixId = ownProps.params.mixId
-    return { ...props, mixId: currentMixId, mix: props.mixes[currentMixId] }
+    const { router, route } = ownProps
+    const mix = props.mixes[currentMixId]
+
+    if (mix) {
+      router.setRouteLeaveHook(
+        route,
+        // TODO: do i need to back out all changes if confirm? how to do that cleanly - LOAD_MIX? ROLLBACK_MIX?
+        () => !mix.isDirty ||
+          window.confirm('You have unsaved changes that will be lost if you leave this page.')
+      )
+    }
+
+    console.log('OWN PROPS', ownProps)
+    return { ...props, mix, mixId: currentMixId }
   },
   { saveMix, loadMix, deleteMix, updateMeta }
 )(MixContainer)

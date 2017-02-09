@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { merge, keyBy, omit } = require('lodash')
+const { merge, keyBy, without, includes } = require('lodash')
 const assert = require('assert')
 
 const {
@@ -37,7 +37,7 @@ function createReducer (config) {
 
   return handleActions({
     [loadSampleList]: (state, action) => loop({
-      ...state, isLoading: true
+      ...state, isLoadingList: true
     }, Effects.batch([
       Effects.constant(loadMetaList()),
       Effects.promise(runLoadSampleList),
@@ -51,7 +51,7 @@ function createReducer (config) {
       ...state, error: action.payload.message
     }),
     [loadSampleListEnd]: (state, action) => ({
-      ...state, isLoading: false
+      ...state, isLoadingList: false
     }),
     [loadSample]: (state, action) => {
       const id = action.payload
@@ -60,10 +60,10 @@ function createReducer (config) {
         return state
       } else {
         return loop({
-          ...state, isLoading: true
+          ...state, loading: [...state.loading, id]
         }, Effects.batch([
-          Effects.promise(runLoadSample, action.payload.id),
-          Effects.constant(loadSampleEnd())
+          Effects.promise(runLoadSample, id),
+          Effects.constant(loadSampleEnd(id))
         ]))
       }
     },
@@ -78,21 +78,23 @@ function createReducer (config) {
       ...state, error: action.payload.message
     }),
     [loadSampleEnd]: (state, action) => ({
-      ...state, isLoading: false
+      ...state, loading: without(state.loading, action.payload)
     }),
     [createSample]: (state, action) => {
       const file = action.payload
       assert(file && file.path, 'Cannot createSample without file && file.path')
+      assert(!includes(state.creating, file.path), 'Already creating sample with file.path')
 
       return loop({
-        ...state, isCreating: true
+        ...state, creating: [...state.creating, file.path]
       }, Effects.batch([
         Effects.promise(runCreateSample, file),
-        Effects.constant(createSampleEnd())
+        Effects.constant(createSampleEnd(file.path))
       ]))
     },
     [createSampleSuccess]: (state, action) => {
-      const { id, file } = action.payload
+      const { sample, file } = action.payload
+      const { id } = sample
       const meta = {
         id,
         title: file.name
@@ -102,7 +104,7 @@ function createReducer (config) {
         ...state,
         records: {
           ...state.records,
-          [id]: action.payload
+          [id]: sample
         }
       }, Effects.batch([
         Effects.constant(createMeta(meta)),
@@ -121,17 +123,17 @@ function createReducer (config) {
       ...state, error: action.payload.message
     }),
     [createSampleEnd]: (state, action) => ({
-      ...state, isCreating: false
+      ...state, creating: without(state.creating, action.payload)
     }),
     [analyzeSample]: (state, action) => {
       const id = action.payload
       assert(id, 'Cannot analyzeSample without id')
 
       return loop({
-        ...state, isAnalyzing: true
+        ...state, analyzing: [...state.analyzing, id]
       }, Effects.batch([
         Effects.promise(runAnalyzeSample, id),
-        Effects.constant(analyzeSampleEnd())
+        Effects.constant(analyzeSampleEnd(id))
       ]))
     },
     [analyzeSampleSuccess]: (state, action) => loop(state, Effects.batch([
@@ -142,12 +144,13 @@ function createReducer (config) {
       ...state, error: action.payload.message
     }),
     [analyzeSampleEnd]: (state, action) => ({
-      ...state, isAnalyzing: false
+      ...state, analyzing: without(state.analyzing, action.payload)
     })
   }, {
-    isLoading: false,
-    isCreating: false,
-    isAnalyzing: false,
+    isLoadingList: false,
+    creating: [],
+    loading: [],
+    analyzing: [],
     records: {},
     error: null
   })
@@ -160,17 +163,14 @@ function createReducer (config) {
 
   function runLoadSample (id) {
     return service.readSample(id)
-      .then(sample => loadSampleSuccess(omit(sample, 'data')))
+      .then(({ sample }) => loadSampleSuccess(sample))
       .catch(loadSampleFailure)
   }
 
   function runCreateSample (file) {
     return service.createSample(file)
-      .then(sample => {
-        return sample.isDuplicateSample
-          ? createSampleDuplicate(omit(sample, 'data', 'isDuplicateSample'))
-          : createSampleSuccess(omit(sample, 'data'))
-      })
+      .then(({ sample, file, isDuplicate }) =>
+        isDuplicate ? createSampleDuplicate(sample) : createSampleSuccess({ sample, file }))
       .catch(createSampleFailure)
   }
 

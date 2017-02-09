@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { pick } = require('lodash')
+const { pick, without } = require('lodash')
 const uuid = require('uuid/v4')
 
 const {
@@ -46,7 +46,7 @@ function createReducer (config) {
 
   return handleActions({
     [loadMixList]: (state, action) => loop({
-      ...state, isLoading: true
+      ...state, isLoadingList: true
     }, Effects.batch([
       Effects.constant(loadMetaList()),
       Effects.promise(runLoadMixList),
@@ -59,41 +59,45 @@ function createReducer (config) {
       ...state, error: action.payload.message
     }),
     [loadMixListEnd]: (state, action) => ({
-      ...state, isLoading: false
+      ...state, isLoadingList: false
     }),
     [loadMix]: (state, action) => loop({
-      ...state, isLoading: true
+      ...state, loading: [...state.loading, action.payload]
     }, Effects.batch([
       Effects.promise(runLoadMix, action.payload),
-      Effects.constant(loadMixEnd())
+      Effects.constant(loadMixEnd(action.payload))
     ])),
-    [loadMixSuccess]: (state, action) => loop(state,
-      Effects.constant(setMix(action.payload))),
+    [loadMixSuccess]: (state, action) => loop({
+      ...state,
+      dirty: without(state.dirty, action.payload.id)
+    }, Effects.constant(setMix(action.payload))),
     [loadMixFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
     [loadMixEnd]: (state, action) => ({
-      ...state, isLoading: false
+      ...state, loading: without(state.loading, action.payload)
     }),
     [saveMix]: (state, action) => loop({
-      ...state, isSaving: true
+      ...state, saving: [...state.saving, action.payload.id]
     }, Effects.batch([
       Effects.promise(runSaveMix, action.payload),
-      Effects.constant(saveMixEnd())
+      Effects.constant(saveMixEnd(action.payload.id))
     ])),
-    [saveMixSuccess]: (state, action) => loop(state,
-      Effects.constant(saveMeta(action.payload.id))),
+    [saveMixSuccess]: (state, action) => loop({
+      ...state,
+      dirty: without(state.dirty, action.payload.id)
+    }, Effects.constant(saveMeta(action.payload.id))),
     [saveMixFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
     [saveMixEnd]: (state, action) => ({
-      ...state, isSaving: false
+      ...state, saving: without(state.saving, action.payload)
     }),
     [deleteMix]: (state, action) => loop({
-      ...state, isSaving: true
+      ...state, saving: [...state.saving, action.payload.id]
     }, Effects.batch([
       Effects.promise(runDeleteMix, action.payload),
-      Effects.constant(deleteMixEnd())
+      Effects.constant(deleteMixEnd(action.payload.id))
     ])),
     [deleteMixSuccess]: (state, action) => {
       const nestedMix = action.payload
@@ -103,7 +107,11 @@ function createReducer (config) {
 
       // TODO: we need to do the inverse of setChannels, setClips. how?
 
-      return loop({ ...state, records: nextRecords }, Effects.batch([
+      return loop({
+        ...state,
+        dirty: without(state.dirty, nestedMix.id),
+        records: nextRecords
+      }, Effects.batch([
         Effects.constant(deleteMeta(nestedMix.id)),
         Effects.constant(navigateToMixList())
       ]))
@@ -112,7 +120,7 @@ function createReducer (config) {
       ...state, error: action.payload.message
     }),
     [deleteMixEnd]: (state, action) => ({
-      ...state, isSaving: false
+      ...state, saving: without(state.saving, action.payload)
     }),
     [setMix]: (state, action) => {
       const { records } = state
@@ -142,15 +150,20 @@ function createReducer (config) {
         })),
         Effects.constant(navigateToMix(newMix.id))
       ])
-      return loop(state, effects)
+      return loop({
+        ...state,
+        dirty: [...state.dirty, newMix.id]
+      }, effects)
     },
     [navigateToMix]: (state, action) => loop(state,
       Effects.constant(push(`/mixes/${action.payload}`))),
     [navigateToMixList]: (state, action) => loop(state,
       Effects.constant(push('/mixes/')))
   }, {
-    isLoading: false,
-    isSaving: false,
+    isLoadingList: false,
+    loading: [],
+    saving: [],
+    dirty: [],
     records: {},
     error: null
   })

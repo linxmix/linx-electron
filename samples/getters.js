@@ -1,21 +1,26 @@
 const { createSelector: Getter, createStructuredSelector: Struct } = require('reselect')
-const { mapValues, values, omitBy, isNil } = require('lodash')
+const { mapValues, values, includes } = require('lodash')
 
 const { getMetas } = require('../metas/getters')
 
 const getSamplesRecords = (state) => state.samples.records
-const getSamplesIsLoading = (state) => state.samples.isLoading
-const getSamplesIsCreating = (state) => state.samples.isCreating
-const getSamplesIsAnalyzing = (state) => state.samples.isAnalyzing
+const getSampleListIsLoading = (state) => state.samples.isLoadingList
+const getSamplesCreating = (state) => state.samples.creating
+const getSamplesAnalyzing = (state) => state.samples.analyzing
+const getSamplesLoading = (state) => state.samples.loading
 const getSamplesError = (state) => state.samples.error
 
 const getSamples = Getter(
   getSamplesRecords,
   getMetas,
-  (samples, metas) => omitBy(mapValues(samples, (sample, sampleId) => ({
+  getSamplesAnalyzing,
+  getSamplesLoading,
+  (samples, metas, analyzing, loading) => mapValues(samples, (sample, sampleId) => ({
     ...sample,
-    meta: metas[sampleId] || {}
-  })), isNil)
+    meta: metas[sampleId] || {},
+    isAnalyzing: includes(analyzing, sampleId),
+    isLoading: includes(loading, sampleId)
+  }))
 )
 
 const getSampleList = Getter(
@@ -26,17 +31,13 @@ const getSampleList = Getter(
 const getSampleListProps = Struct({
   samples: getSamples,
   sampleList: getSampleList,
-  isLoading: getSamplesIsLoading,
-  isCreating: getSamplesIsCreating,
-  isAnalyzing: getSamplesIsAnalyzing,
+  isLoadingList: getSampleListIsLoading,
+  creatingSamples: getSamplesCreating,
   error: getSamplesError
 })
 
 const getSampleProps = Struct({
   samples: getSamples,
-  isLoading: getSamplesIsLoading,
-  isCreating: getSamplesIsCreating,
-  isAnalyzing: getSamplesIsAnalyzing,
   error: getSamplesError
 })
 
