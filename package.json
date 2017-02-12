@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/linxmix/linx-electron#readme",
   "dependencies": {
+    "audio-worker-node": "^0.4.0",
     "babel-code-frame": "^6.16.0",
     "babel-messages": "^6.8.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.18.0",
