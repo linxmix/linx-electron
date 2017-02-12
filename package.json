@@ -50,7 +50,7 @@
     "redux-loop": "^2.2.2",
     "reselect": "^2.5.4",
     "uuid": "^3.0.1",
-    "virtual-audio-graph": "^0.18.4"
+    "virtual-audio-graph": "github:linxmix/virtual-audio-graph#master"
   },
   "devDependencies": {
     "ava": "^0.17.0",
