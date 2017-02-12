@@ -6,6 +6,8 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output' }) {
   const { channels: nestedChannels = [] } = channel
   const { currentTime } = audioContext
 
+  audioContext.createSoundtouchSource = createSoundtouchSource
+
   const nestedAudioGraphs = map(nestedChannels, (nestedChannel, i) =>
     createAudioGraph({
       channel: nestedChannel,
@@ -15,7 +17,6 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output' }) {
   )
 
   // TODO(FUTURE):
-  // create clip nodes (soundtouch source node)
   // create FX chain
   // add automations
 
@@ -25,12 +26,18 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output' }) {
   }
 
   forEach(channel.clips, clip => {
-    audioGraph[clip.id] = ['bufferSource', channel.id, {
+    audioGraph[clip.id] = ['soundtouchSource', channel.id, {
       buffer: clip.sample.audioBuffer,
-      startTime: currentTime + 1,
-      stopTime: currentTime + 100
+      startTime: currentTime,
+      offsetTime: 5,
     }]
   })
 
   return merge(audioGraph, ...nestedAudioGraphs)
+}
+
+function createSoundtouchSource(...args) {
+  const thing = { start() { console.log('start', arguments)} }
+  console.log('createSoundtouchSource', args, thing)
+  return thing
 }
