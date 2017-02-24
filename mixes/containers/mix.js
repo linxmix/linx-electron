@@ -10,6 +10,7 @@ const { play, pause } = require('../../audio/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { isValidNumber } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
+const MixOverviewWave = require('../../svgs/components/mix-overview-wave')
 
 class MixContainer extends React.Component {
   onFilesDrop ({ files }) {
@@ -83,6 +84,7 @@ class MixContainer extends React.Component {
         </button>
         {playButton}
       </header>
+
       <section>
         <PrimaryTrackTable
           tracks={mix.primaryTracks}
@@ -91,6 +93,12 @@ class MixContainer extends React.Component {
           onFilesDrop={this.onFilesDrop.bind(this)}
           removeTrack={primaryTrackId => unsetPrimaryTrackFromMix({
             id: mix.id, primaryTrackId })}
+        />
+      </section>
+
+      <section>
+        <MixOverviewWave
+          mix={mix}
         />
       </section>
     </div>
