@@ -11,7 +11,7 @@ module.exports = getPeaks
 // returns an array of arrays of [ymin, ymax] values of the waveform
 //  from startTime to endTime when broken into length subranges
 function getPeaks ({ audioBuffer, startTime, endTime, length }) {
-  console.log('getPeaks', { audioBuffer, startTime, endTime, length })
+  // console.log('getPeaks', { audioBuffer, startTime, endTime, length })
   assert(audioBuffer, 'Must provide audioBuffer to getPeaks')
   assert(isValidNumber(length), 'Must provide length to getPeaks')
 

@@ -9,7 +9,7 @@ const { loadSampleList, createSample } = require('../actions')
 const { pluralize } = require('../../lib/string-utils')
 
 class SampleListContainer extends React.Component {
-  onFilesDrop (e) {
+  handleFilesDrop (e) {
     const { createSample } = this.props
     const files = e && e.dataTransfer && e.dataTransfer.files
 
@@ -35,7 +35,7 @@ class SampleListContainer extends React.Component {
     return <div>
       <FileDrop
         frame={document}
-        onFrameDrop={this.onFilesDrop.bind(this)} />
+        onFrameDrop={this.handleFilesDrop.bind(this)} />
       <header>
         <div>samples are {isLoadingList ? 'loading' : 'here'}</div>
         {isCreating && <div>{creatingText}</div>}

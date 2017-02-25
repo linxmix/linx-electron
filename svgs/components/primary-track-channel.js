@@ -1,5 +1,6 @@
 const React = require('react')
 const { map } = require('lodash')
+
 const SampleClip = require('./sample-clip')
 
 const {
@@ -14,22 +15,19 @@ function isSampleClip(clip) {
 
 class PrimaryTrackChannel extends React.Component {
   render () {
-    const { channel, xScale } = this.props
+    const { channel, color } = this.props
     if (!channel) { return null }
 
-    const translateX = xScale * channel.startBeat
-    const transform = `translate(${translateX})`
-
-    return <g transform={transform}>
-      {map(channel.clips, (clip) => 
-        isSampleClip(clip) && <SampleClip key={clip.id} clip={clip} />
+    return <g transform={`translate(${channel.startBeat})`}>
+      {map(channel.clips, clip => 
+        isSampleClip(clip) && <SampleClip
+            key={clip.id}
+            clip={clip}
+            color={color}
+          />
       )}
     </g>
   }
-}
-
-PrimaryTrackChannel.defaultProps = {
-  xScale: 1
 }
 
 module.exports = PrimaryTrackChannel
