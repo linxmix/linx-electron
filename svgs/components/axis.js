@@ -5,8 +5,6 @@ class Axis extends React.Component {
   render () {
     const { scale, tickCount, height, strokeWidth, stroke } = this.props
 
-    console.log('axis', { strokeWidth, stroke })
-
     return <g>
       {map(range(0, tickCount), tick => <line
         y1={0}

@@ -108,6 +108,17 @@ class MixOverviewArrangement extends React.Component {
     })
   }
 
+  handleClick (e) {
+    const { mix, seekToBeat } = this.props
+    const { translateX, scaleX } = this.state
+    const mouseX = e.nativeEvent.offsetX
+
+    seekToBeat({
+      channel: mix.channel,
+      seekBeat: (mouseX - translateX) / scaleX
+    })
+  }
+
   render () {
     const { mix, audioContext, height } = this.props
     const { scaleX, translateX } = this.state
@@ -121,16 +132,19 @@ class MixOverviewArrangement extends React.Component {
       .range([0, mixBeatCount])
 
     return <div
-        onMouseDown={this.handleMouseDown.bind(this)}
-        onMouseUp={this.handleMouseUp.bind(this)}
-        onWheel={this.handleMouseWheel.bind(this)}>
+      
+      onMouseDown={this.handleMouseDown.bind(this)}
+      onMouseUp={this.handleMouseUp.bind(this)}
+      onWheel={this.handleMouseWheel.bind(this)}>
+
       <svg
+      onClick={this.handleClick.bind(this)}
         width='100%'
         height={height}
         style={{ border: '1px solid gray' }}
         ref='svg'>
 
-        <g transform={transform}>
+        <g transform={transform} >
           <Axis
             scale={phraseScale}
             tickCount={mixPhraseCount}

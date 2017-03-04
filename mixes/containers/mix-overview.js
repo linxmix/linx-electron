@@ -12,6 +12,7 @@ const { validNumberOrDefault } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
 const MixOverviewArrangement = require('../../svgs/components/mix-overview-arrangement')
 const { PLAY_STATE_PLAYING } = require('../../audio/constants')
+const { seekToBeat } = require('../../audio/actions')
 
 class MixOverviewContainer extends React.Component {
   handleFilesDrop ({ files }) {
@@ -36,7 +37,7 @@ class MixOverviewContainer extends React.Component {
 
   render () {
     const { mix, audioContext, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack,
-      unsetPrimaryTrackFromMix, play, pause } = this.props
+      unsetPrimaryTrackFromMix, seekToBeat, play, pause } = this.props
     if (!mix) { return null }
     console.log('mix', mix)
 
@@ -99,6 +100,7 @@ class MixOverviewContainer extends React.Component {
         <MixOverviewArrangement
           mix={mix}
           audioContext={audioContext}
+          seekToBeat={seekToBeat}
         />
       </section>
     </div>
@@ -139,6 +141,7 @@ module.exports = connect(
     createPrimaryTrackFromFile,
     reorderPrimaryTrack,
     unsetPrimaryTrackFromMix,
+    seekToBeat,
     play,
     pause
   }
