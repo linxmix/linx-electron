@@ -2,6 +2,7 @@ const React = require('react')
 const { map, sortBy } = require('lodash')
 const d3 = require('d3')
 
+const Playhead = require('./playhead')
 const PrimaryTrackChannel = require('./primary-track-channel')
 const TransitionChannel = require('./transition-channel')
 const {
@@ -107,7 +108,7 @@ class MixOverviewArrangement extends React.Component {
   }
 
   render () {
-    const { mix } = this.props
+    const { mix, audioContext, height } = this.props
     const { scaleX, translateX } = this.state
     const transform = `translate(${translateX}) scale(${scaleX}, 1)`
 
@@ -117,9 +118,9 @@ class MixOverviewArrangement extends React.Component {
         onWheel={this.handleMouseWheel.bind(this)}>
       <svg
         width='100%'
-        height={100}
+        height={height}
         style={{ border: '1px solid gray' }}
-        ref="svg">
+        ref='svg'>
 
         <g transform={transform}>
           {map(sortBy(mix.channel.channels, ['startBeat', 'id']), (channel, i, channels) => {
@@ -136,10 +137,21 @@ class MixOverviewArrangement extends React.Component {
                 color={d3.interpolateCool(i / channels.length)}
               /> : null
           })}
+
+          <Playhead
+            playState={mix.playState}
+            audioContext={audioContext}
+            height={height}
+            strokeWidth={1.5 / scaleX}
+          />
         </g>
       </svg>
     </div>
   }
+}
+
+MixOverviewArrangement.defaultProps = {
+  height: 100
 }
 
 module.exports = MixOverviewArrangement

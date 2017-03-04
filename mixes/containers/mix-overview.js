@@ -11,6 +11,7 @@ const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { isValidNumber } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
 const MixOverviewArrangement = require('../../svgs/components/mix-overview-arrangement')
+const { PLAY_STATE_PLAYING } = require('../../audio/constants')
 
 class MixOverviewContainer extends React.Component {
   handleFilesDrop ({ files }) {
@@ -37,12 +38,12 @@ class MixOverviewContainer extends React.Component {
   }
 
   render () {
-    const { mix, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack,
+    const { mix, audioContext, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack,
       unsetPrimaryTrackFromMix, play, pause } = this.props
     if (!mix) { return null }
     console.log('mix', mix)
 
-    const { isSaving, isLoading, isDirty, isPlaying } = mix
+    const { playState, isSaving, isLoading, isDirty } = mix
     const { status: masterChannelStatus } = mix.channel
 
     let titleElement
@@ -58,7 +59,7 @@ class MixOverviewContainer extends React.Component {
     }
 
     let playButton
-    if (!isPlaying) {
+    if (playState.status !== PLAY_STATE_PLAYING) {
       playButton = <button
         disabled={masterChannelStatus !== 'loaded'}
         onClick={() => (mix && play({ channel: mix.channel }))}>
@@ -100,6 +101,7 @@ class MixOverviewContainer extends React.Component {
       <section>
         <MixOverviewArrangement
           mix={mix}
+          audioContext={audioContext}
         />
       </section>
     </div>

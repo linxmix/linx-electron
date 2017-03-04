@@ -11,6 +11,7 @@ const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { isValidNumber } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
 const MixDetailArrangement = require('../../svgs/components/mix-detail-arrangement')
+const { PLAY_STATE_PLAYING } = require('../../audio/constants')
 
 class MixDetailContainer extends React.Component {
   render () {
@@ -18,11 +19,11 @@ class MixDetailContainer extends React.Component {
     if (!mix) { return null }
     console.log('mix detail', { mix, fromTrack, toTrack })
 
-    const { isSaving, isLoading, isDirty, isPlaying } = mix
+    const { playState, isSaving, isLoading, isDirty } = mix
     const { status: masterChannelStatus } = mix.channel
 
     let playButton
-    if (!isPlaying) {
+    if (playState.status !== PLAY_STATE_PLAYING) {
       playButton = <button
         disabled={masterChannelStatus !== 'loaded'}
         onClick={() => (mix && play({ channel: mix.channel }))}>
