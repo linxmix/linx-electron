@@ -1,9 +1,10 @@
 const React = require('react')
+const { Link } = require('react-router')
 const { default: ReactTable, ReactTableDefaults } = require('react-table')
-const classnames = require('classnames')
-const { findIndex, isEmpty, isEqual } = require('lodash')
 const HTML5Backend = require('react-dnd-html5-backend')
 const { DropTarget } = require('react-dnd')
+const classnames = require('classnames')
+const { findIndex, isEmpty, isEqual } = require('lodash')
 
 const {
   createPrimaryTrackRowClass
@@ -38,6 +39,7 @@ class PrimaryTrackTable extends React.Component {
 
   render () {
     const {
+      mixId,
       tracks,
       isLoading,
       isOver,
@@ -54,7 +56,14 @@ class PrimaryTrackTable extends React.Component {
       // providing this render function allows PrimaryTrackRow to access the track object
       render: props => <span>
         {props.value}
-        <button className='delete-button' onClick={() => removeTrack(props.row.id)}>x</button>
+        <span className='edit-buttons'>
+          <button className='delete-button' onClick={() => removeTrack(props.row.id)}>
+            x
+          </button>
+          <Link to={`/mixes/${mixId}/tracks/${props.row.id}`}>
+            <button className='edit-button'>e</button>
+          </Link>
+        </span>
       </span>,
       width: 60
     }, {

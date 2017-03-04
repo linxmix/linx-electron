@@ -8,18 +8,17 @@ const { saveMix, loadMix, deleteMix,
 const { updateMeta } = require('../../metas/actions')
 const { play, pause } = require('../../audio/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
-const { isValidNumber } = require('../../lib/number-utils')
+const { validNumberOrDefault } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
-const MixOverviewWave = require('../../svgs/components/mix-overview-wave')
+const MixOverviewArrangement = require('../../svgs/components/mix-overview-arrangement')
+const { PLAY_STATE_PLAYING } = require('../../audio/constants')
+const { seekToBeat } = require('../../audio/actions')
 
-class MixContainer extends React.Component {
+class MixOverviewContainer extends React.Component {
   handleFilesDrop ({ files }) {
     const { mix, createPrimaryTrackFromFile } = this.props
-    const lastPrimaryTrack = last(mix.primaryTracks || [])
-    const lastPrimaryTrackStartBeat = get(lastPrimaryTrack, 'channel.startBeat')
-    const startBeat = isValidNumber(lastPrimaryTrackStartBeat)
-      ? lastPrimaryTrackStartBeat + 1
-      : 0
+    const mixBeatCount = mix && mix.channel && mix.channel.beatCount
+    const startBeat = validNumberOrDefault(mixBeatCount + 1, 0)
 
     forEach(files, (file, i) => createPrimaryTrackFromFile({
       file,
@@ -37,12 +36,12 @@ class MixContainer extends React.Component {
   }
 
   render () {
-    const { mix, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack,
-      unsetPrimaryTrackFromMix, play, pause } = this.props
+    const { mix, audioContext, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack,
+      unsetPrimaryTrackFromMix, seekToBeat, play, pause } = this.props
     if (!mix) { return null }
     console.log('mix', mix)
 
-    const { isSaving, isLoading, isDirty, isPlaying } = mix
+    const { playState, isSaving, isLoading, isDirty } = mix
     const { status: masterChannelStatus } = mix.channel
 
     let titleElement
@@ -58,7 +57,7 @@ class MixContainer extends React.Component {
     }
 
     let playButton
-    if (!isPlaying) {
+    if (playState.status !== PLAY_STATE_PLAYING) {
       playButton = <button
         disabled={masterChannelStatus !== 'loaded'}
         onClick={() => (mix && play({ channel: mix.channel }))}>
@@ -87,7 +86,8 @@ class MixContainer extends React.Component {
 
       <section>
         <PrimaryTrackTable
-          tracks={mix.primaryTracks}
+          mixId={mix.id}
+          tracks={mix.tracks}
           reorderPrimaryTrack={reorderPrimaryTrack}
           isLoading={isLoading}
           handleFilesDrop={this.handleFilesDrop.bind(this)}
@@ -97,8 +97,10 @@ class MixContainer extends React.Component {
       </section>
 
       <section>
-        <MixOverviewWave
+        <MixOverviewArrangement
           mix={mix}
+          audioContext={audioContext}
+          seekToBeat={seekToBeat}
         />
       </section>
     </div>
@@ -139,7 +141,8 @@ module.exports = connect(
     createPrimaryTrackFromFile,
     reorderPrimaryTrack,
     unsetPrimaryTrackFromMix,
+    seekToBeat,
     play,
     pause
   }
-)(MixContainer)
+)(MixOverviewContainer)

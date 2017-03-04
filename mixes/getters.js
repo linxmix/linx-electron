@@ -1,12 +1,11 @@
 const { createSelector: Getter, createStructuredSelector: Struct } = require('reselect')
 const { mapValues, values, includes } = require('lodash')
 
-const { getPlayStates } = require('../audio/getters')
+const { getPlayStates, getAudioContext } = require('../audio/getters')
 const { getMetas } = require('../metas/getters')
 const { getChannels } = require('../channels/getters')
 const { getSamplesError } = require('../samples/getters')
 const { getPrimaryTracks } = require('./helpers/get-tracks')
-const { PLAY_STATE_PLAYING } = require('../audio/constants')
 
 const getMixesRecords = (state) => state.mixes.records
 const getMixesIsLoadingList = (state) => state.mixes.isLoadingList
@@ -33,8 +32,8 @@ const getMixes = Getter(
         id,
         channel,
         meta,
-        primaryTracks: getPrimaryTracks(channel, metas),
-        isPlaying: playState.status === PLAY_STATE_PLAYING,
+        playState,
+        tracks: getPrimaryTracks(channel, metas),
         isLoading: includes(loading, id),
         isSaving: includes(saving, id),
         isDirty: includes(dirtyMixes, id) ||
@@ -59,7 +58,8 @@ const getMixListProps = Struct({
 const getMixProps = Struct({
   mixes: getMixes,
   sampleError: getSamplesError,
-  error: getMixesError
+  error: getMixesError,
+  audioContext: getAudioContext
 })
 
 module.exports = {

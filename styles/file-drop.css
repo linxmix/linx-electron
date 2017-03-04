@@ -27,13 +27,19 @@
 }
 
 
-
 .primary-track-row .delete-button {
-  visibility: hidden;
   cursor: pointer;
 }
 
-.primary-track-row:hover .delete-button {
+.primary-track-row .edit-button {
+  cursor: pointer;
+}
+
+.primary-track-row .edit-buttons {
+  visibility: hidden;
+}
+
+.primary-track-row:hover .edit-buttons {
   visibility: visible;
 }
 

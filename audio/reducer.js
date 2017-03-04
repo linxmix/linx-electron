@@ -12,6 +12,7 @@ const { PLAY_STATE_PLAYING, PLAY_STATE_PAUSED } = require('./constants')
 const {
   play,
   pause,
+  seekToBeat,
   updatePlayState,
   updateAudioGraph,
   updateVirtualAudioGraph
@@ -82,8 +83,24 @@ function createReducer (config) {
         Effects.constant(updateVirtualAudioGraph(channel.id)),
       ]))
     },
+    [seekToBeat]: (state, action) => {
+      const { channel, seekBeat } = action.payload
+
+      return loop(state, Effects.batch([
+        Effects.constant(updatePlayState({
+          channelId: channel.id,
+          playState: {
+            seekBeat: seekBeat,
+            absSeekTime: state.audioContext.currentTime
+          }
+        })),
+        Effects.constant(updateAudioGraph(channel)),
+        Effects.constant(updateVirtualAudioGraph(channel.id))
+      ]))
+    },
     [updatePlayState]: (state, action) => {
       const { channelId, playState } = action.payload
+      assert(!!channelId, 'Must provide channelId to updatePlayState')
 
       return {
         ...state,
@@ -93,13 +110,19 @@ function createReducer (config) {
         }
       }
     },
+
+    // TODO: should this all be in channels reducer? so we dont have to pass full channel
     [updateAudioGraph]: (state, action) => {
       const channel = action.payload
       const playState = state.playStates[channel.id]
       assert(channel.status === 'loaded', 'Requires loaded channel to updateAudioGraph')
       assert(!!playState, 'Requires playState to updateAudioGraph')
 
-      const audioGraph = createAudioGraph({ channel, audioContext: state.audioContext, playState })
+      const audioGraph = createAudioGraph({
+        channel,
+        playState,
+        audioContext: state.audioContext
+      })
 
       return {
         ...state,
