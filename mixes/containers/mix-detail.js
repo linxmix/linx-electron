@@ -73,7 +73,7 @@ module.exports = connect(
   (state, ownProps) => {
     const { router, route } = ownProps
     const props = getMixProps(state)
-    
+
     const currentMixId = ownProps.params.mixId
     const mix = props.mixes[currentMixId]
     const currentTrackId = ownProps.params.trackId

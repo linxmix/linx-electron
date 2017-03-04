@@ -55,13 +55,13 @@ function _getRowFromProps (props) {
 
 // allows binding of actions to this component from outside
 function createPrimaryTrackRowClass ({
-  onDragEnter = () => {},
-  onDrop = () => {},
+  handleDragEnter = () => {},
+  handleDrop = () => {},
   canDrag = () => {}
 }) {
   function collectDrop (connect, monitor) {
     return {
-      dragEnterAction: onDragEnter,
+      dragEnterAction: handleDragEnter,
       connectDropTarget: connect.dropTarget(),
       isOverCurrent: monitor.isOver({ shallow: true }),
       canDrop: monitor.canDrop(),
@@ -109,7 +109,7 @@ function createPrimaryTrackRowClass ({
 
       const { targetRowId } = monitor.getDropResult()
       const sourceRowId = get(monitor.getItem(), 'id')
-      onDrop({ sourceRowId, targetRowId })
+      handleDrop({ sourceRowId, targetRowId })
     },
     canDrag: function (props) {
       const row = _getRowFromProps(props)

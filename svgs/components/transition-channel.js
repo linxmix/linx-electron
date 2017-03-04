@@ -5,8 +5,7 @@ class TransitionChannel extends React.Component {
     const { channel } = this.props
 
     // TODO
-    return <g>
-    </g>
+    return <g />
   }
 }
 

@@ -21,8 +21,8 @@ class PrimaryTrackTable extends React.Component {
 
   componentWillMount () {
     const PrimaryTrackRow = createPrimaryTrackRowClass({
-      onDragEnter: () => {},
-      onDrop: ({ sourceRowId, targetRowId }) => {
+      handleDragEnter: () => {},
+      handleDrop: ({ sourceRowId, targetRowId }) => {
         const tracks = this.props.tracks
         const targetIndex = findIndex(tracks, { id: targetRowId })
         const sourceIndex = findIndex(tracks, { id: sourceRowId })
@@ -131,7 +131,7 @@ function collectDrop (connect, monitor) {
 
 const dropTarget = {
   drop: function (props, monitor, component) {
-    props.onFilesDrop(monitor.getItem())
+    props.handleFilesDrop(monitor.getItem())
   }
 }
 
