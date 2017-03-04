@@ -1,4 +1,5 @@
 const React = require('react')
+const { Link } = require('react-router')
 const { default: ReactTable, ReactTableDefaults } = require('react-table')
 const classnames = require('classnames')
 const { findIndex, isEmpty, isEqual } = require('lodash')
@@ -38,6 +39,7 @@ class PrimaryTrackTable extends React.Component {
 
   render () {
     const {
+      mixId,
       tracks,
       isLoading,
       isOver,
@@ -52,9 +54,12 @@ class PrimaryTrackTable extends React.Component {
       sort: 'asc',
       accessor: track => track.index + 1,
       // providing this render function allows PrimaryTrackRow to access the track object
-      render: props => <span>
+      render: props => <span className='edit-buttons'>
         {props.value}
         <button className='delete-button' onClick={() => removeTrack(props.row.id)}>x</button>
+        <Link to={`/mixes/${mixId}/tracks/${props.row.id}`}>
+          <button className='edit-button'>e</button>
+        </Link>
       </span>,
       width: 60
     }, {

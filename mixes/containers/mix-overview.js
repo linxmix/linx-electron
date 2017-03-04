@@ -87,6 +87,7 @@ class MixContainer extends React.Component {
 
       <section>
         <PrimaryTrackTable
+          mixId={mix.id}
           tracks={mix.primaryTracks}
           reorderPrimaryTrack={reorderPrimaryTrack}
           isLoading={isLoading}
