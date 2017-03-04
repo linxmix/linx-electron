@@ -1,10 +1,13 @@
 const { map, merge, forEach } = require('lodash')
 
 const createSoundtouchSource = require('./create-soundtouch-source')
+const { PLAY_STATE_PLAYING } = require('../constants')
+const { beatToTime, validNumberOrDefault } = require('../../lib/number-utils')
 
 module.exports = createAudioGraph
 
-function createAudioGraph ({ channel, audioContext, outputs = 'output' }) {
+function createAudioGraph ({ channel, audioContext, outputs = 'output', playState, startBeat }) {
+  startBeat = validNumberOrDefault(startBeat, 0)
   const { channels: nestedChannels = [] } = channel
   const { currentTime } = audioContext
 
@@ -14,6 +17,8 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output' }) {
     createAudioGraph({
       channel: nestedChannel,
       audioContext,
+      playState,
+      startBeat: startBeat + validNumberOrDefault(nestedChannel.startBeat, 0),
       outputs: { key: channel.id, outputs: [i], inputs: [0] }
     })
   )
@@ -27,26 +32,47 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output' }) {
     [channel.id]: ['channelMerger', outputs, { numberOfOutputs: nestedChannels.length }]
   }
 
+  // TODO: pass this in from reducer, computed from masterChannel beatGrid
+  function _beatToTime(beat) {
+    return beatToTime(beat, 128)
+  }
+
   forEach(channel.clips, clip => {
-    let startTime = currentTime, endTime, offsetTime
 
-    switch(clip.sample.meta.title) {
-      case 'I Could Be the One (Original Mix)':
-        startTime = currentTime;
-        offsetTime = 0.07503117913832208;
-        break;
-      case 'Alive':
-        startTime = currentTime;
-        offsetTime = 0.009240362811791386;
-        break;
+    // TODO: how does web audio playback work?
+    //       if i specify a time in the past, does it auto correct offsetTime?
+    // const absClipStartTime = Math.max(playState.absSeekTime + clipStartTime, audioContext.currentTime);
+
+    const clipStartBeat = startBeat + clip.startBeat
+    const clipEndBeat = clipStartBeat + clip.beatCount
+
+    let startTime, stopTime, offsetTime
+    if (clipStartBeat >= playState.seekBeat) {
+
+      startTime = _beatToTime(clipStartBeat - playState.seekBeat)
+      stopTime = _beatToTime(clipEndBeat - playState.seekBeat)
+      offsetTime = clip.audioStartTime
+    } else {
+      // // curate args
+      // if (offsetTime < 0) {
+      //   startTime -= offsetTime;
+      //   offsetTime = 0;
+      // }
     }
+    console.log({
+      name: clip.sample.meta.title,
+      clipStartBeat, clipEndBeat, 'playState.seekBeat': playState.seekBeat,
+      startTime, stopTime, offsetTime
+    })
 
-    audioGraph[clip.id] = ['soundtouchSource', channel.id, {
-      buffer: clip.sample.audioBuffer,
-      startTime,
-      offsetTime,
-      stopTime: currentTime + 100
-    }]
+    if (playState.status === PLAY_STATE_PLAYING) {
+      audioGraph[clip.id] = ['soundtouchSource', channel.id, {
+        buffer: clip.sample.audioBuffer,
+        offsetTime,
+        startTime: playState.absSeekTime + startTime,
+        stopTime: playState.absSeekTime + stopTime
+      }]
+    }
   })
 
   return merge(audioGraph, ...nestedAudioGraphs)

@@ -6,7 +6,7 @@ const { getMixProps } = require('../getters')
 const { saveMix, loadMix, deleteMix,
   reorderPrimaryTrack, unsetPrimaryTrackFromMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
-const { updateAudioGraph } = require('../../audio/actions')
+const { play, pause } = require('../../audio/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { isValidNumber } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
@@ -37,11 +37,11 @@ class MixContainer extends React.Component {
 
   render () {
     const { mix, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack,
-      unsetPrimaryTrackFromMix, updateAudioGraph } = this.props
+      unsetPrimaryTrackFromMix, play, pause } = this.props
     if (!mix) { return null }
     console.log('mix', mix)
 
-    const { isSaving, isLoading, isDirty } = mix
+    const { isSaving, isLoading, isDirty, isPlaying } = mix
     const { status: masterChannelStatus } = mix.channel
 
     let titleElement
@@ -56,6 +56,21 @@ class MixContainer extends React.Component {
         onChange={this.onChangeMixTitle.bind(this)} />
     }
 
+    let playButton
+    if (!isPlaying) {
+      playButton = <button
+        disabled={masterChannelStatus !== 'loaded'}
+        onClick={() => (mix && play({ channel: mix.channel }))}>
+        Play Mix
+      </button>
+    } else {
+      playButton = <button
+        disabled={masterChannelStatus !== 'loaded'}
+        onClick={() => (mix && pause({ channel: mix.channel }))}>
+        Pause Mix
+      </button>
+    }
+
     return <div>
       <header>
         {titleElement}
@@ -66,11 +81,7 @@ class MixContainer extends React.Component {
         <button disabled={isLoading || isSaving} onClick={() => deleteMix(mix.id)}>
           Delete Mix
         </button>
-        <button
-          disabled={masterChannelStatus !== 'loaded'}
-          onClick={() => updateAudioGraph(mix && mix.channel)}>
-          Play Mix
-        </button>
+        {playButton}
       </header>
       <section>
         <PrimaryTrackTable
@@ -120,6 +131,7 @@ module.exports = connect(
     createPrimaryTrackFromFile,
     reorderPrimaryTrack,
     unsetPrimaryTrackFromMix,
-    updateAudioGraph
+    play,
+    pause
   }
 )(MixContainer)
