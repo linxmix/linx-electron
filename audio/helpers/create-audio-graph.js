@@ -1,10 +1,14 @@
 const { map, merge, forEach } = require('lodash')
 
+const createSoundtouchSource = require('./create-soundtouch-source')
+
 module.exports = createAudioGraph
 
 function createAudioGraph ({ channel, audioContext, outputs = 'output' }) {
   const { channels: nestedChannels = [] } = channel
   const { currentTime } = audioContext
+
+  audioContext.createSoundtouchSource = () => createSoundtouchSource(audioContext)
 
   const nestedAudioGraphs = map(nestedChannels, (nestedChannel, i) =>
     createAudioGraph({
@@ -15,7 +19,6 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output' }) {
   )
 
   // TODO(FUTURE):
-  // create clip nodes (soundtouch source node)
   // create FX chain
   // add automations
 
@@ -25,9 +28,23 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output' }) {
   }
 
   forEach(channel.clips, clip => {
-    audioGraph[clip.id] = ['bufferSource', channel.id, {
+    let startTime = currentTime, endTime, offsetTime
+
+    switch(clip.sample.meta.title) {
+      case 'I Could Be the One (Original Mix)':
+        startTime = currentTime;
+        offsetTime = 0.07503117913832208;
+        break;
+      case 'Alive':
+        startTime = currentTime;
+        offsetTime = 0.009240362811791386;
+        break;
+    }
+
+    audioGraph[clip.id] = ['soundtouchSource', channel.id, {
       buffer: clip.sample.audioBuffer,
-      startTime: currentTime + 1,
+      startTime,
+      offsetTime,
       stopTime: currentTime + 100
     }]
   })

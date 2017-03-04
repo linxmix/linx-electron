@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/linxmix/linx-electron#readme",
   "dependencies": {
+    "audio-worker-node": "^0.4.0",
     "babel-code-frame": "^6.16.0",
     "babel-messages": "^6.8.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.18.0",
@@ -50,7 +51,7 @@
     "redux-loop": "^2.2.2",
     "reselect": "^2.5.4",
     "uuid": "^3.0.1",
-    "virtual-audio-graph": "^0.18.4"
+    "virtual-audio-graph": "github:linxmix/virtual-audio-graph#master"
   },
   "devDependencies": {
     "ava": "^0.17.0",
