@@ -3,13 +3,14 @@ const { map, sortBy } = require('lodash')
 const d3 = require('d3')
 
 const Playhead = require('./playhead')
+const Axis = require('./axis')
 const PrimaryTrackChannel = require('./primary-track-channel')
 const TransitionChannel = require('./transition-channel')
 const {
   CHANNEL_TYPE_PRIMARY_TRACK,
   CHANNEL_TYPE_TRANSITION
 } = require('../../channels/constants')
-const { isValidNumber } = require('../../lib/number-utils')
+const { validNumberOrDefault } = require('../../lib/number-utils')
 
 const ZOOM_STEP = .2
 const MIN_SCALE_X = .1
@@ -110,7 +111,14 @@ class MixOverviewArrangement extends React.Component {
   render () {
     const { mix, audioContext, height } = this.props
     const { scaleX, translateX } = this.state
+    if (!mix) { return null }
+      
     const transform = `translate(${translateX}) scale(${scaleX}, 1)`
+    const mixBeatCount = validNumberOrDefault(mix.channel && mix.channel.beatCount, 0)
+    const mixPhraseCount = mixBeatCount / 32  // TODO: need to round?
+    const phraseScale = d3.scaleLinear()
+      .domain([0, mixPhraseCount])
+      .range([0, mixBeatCount])
 
     return <div
         onMouseDown={this.handleMouseDown.bind(this)}
@@ -123,6 +131,13 @@ class MixOverviewArrangement extends React.Component {
         ref='svg'>
 
         <g transform={transform}>
+          <Axis
+            scale={phraseScale}
+            tickCount={mixPhraseCount}
+            height={height}
+            strokeWidth={1 / scaleX}
+          />
+
           {map(sortBy(mix.channel.channels, ['startBeat', 'id']), (channel, i, channels) => {
             let Element
             switch(channel.type) {
