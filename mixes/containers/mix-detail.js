@@ -1,39 +1,25 @@
 const React = require('react')
 const { connect } = require('react-redux')
-const { forEach, last, get } = require('lodash')
+const { Link } = require('react-router')
+const { forEach, last, get, findIndex } = require('lodash')
 
 const { getMixProps } = require('../getters')
-const { saveMix, loadMix, deleteMix,
-  reorderPrimaryTrack, unsetPrimaryTrackFromMix } = require('../actions')
+const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { play, pause } = require('../../audio/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { isValidNumber } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
-const MixOverviewWave = require('../../svgs/components/mix-overview-wave')
+const MixDetailArrangement = require('../../svgs/components/mix-detail-arrangement')
 
-class MixContainer extends React.Component {
+class MixDetailContainer extends React.Component {
   render () {
-    return <div>HI HI HI </div>
-    const { mix, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack,
-      unsetPrimaryTrackFromMix, play, pause } = this.props
+    const { mix, fromTrack, toTrack, error, sampleError, saveMix, play, pause } = this.props
     if (!mix) { return null }
-    console.log('mix', mix)
+    console.log('mix detail', { mix, fromTrack, toTrack })
 
     const { isSaving, isLoading, isDirty, isPlaying } = mix
     const { status: masterChannelStatus } = mix.channel
-
-    let titleElement
-    if (isLoading) {
-      titleElement = <div>'{mix.meta.title}' is loading…</div>
-    } else if (masterChannelStatus === 'loading') {
-      titleElement = <div>loading audio…</div>
-    } else {
-      titleElement = <input type='text'
-        value={mix.meta.title}
-        placeholder='Untitled Mix'
-        onChange={this.handleChangeMixTitle.bind(this)} />
-    }
 
     let playButton
     if (!isPlaying) {
@@ -51,31 +37,22 @@ class MixContainer extends React.Component {
     }
 
     return <div>
-      <header>
-        {titleElement}
+      <header style={{ border: '1px solid gray' }}>
+        <h3>
+          {fromTrack && fromTrack.meta.title} - {toTrack && toTrack.meta.title}
+        </h3>
+        <Link to={`/mixes/${mix.id}`}>
+          Back to Mix
+        </Link>
         <div>{error || sampleError || 'no errors'}</div>
         <button disabled={!isDirty || (isLoading || isSaving)} onClick={() => saveMix(mix)}>
           Save Mix
-        </button>
-        <button disabled={isLoading || isSaving} onClick={() => deleteMix(mix.id)}>
-          Delete Mix
         </button>
         {playButton}
       </header>
 
       <section>
-        <PrimaryTrackTable
-          tracks={mix.primaryTracks}
-          reorderPrimaryTrack={reorderPrimaryTrack}
-          isLoading={isLoading}
-          handleFilesDrop={this.handleFilesDrop.bind(this)}
-          removeTrack={primaryTrackId => unsetPrimaryTrackFromMix({
-            id: mix.id, primaryTrackId })}
-        />
-      </section>
-
-      <section>
-        <MixOverviewWave
+        <MixDetailArrangement
           mix={mix}
         />
       </section>
@@ -93,31 +70,23 @@ class MixContainer extends React.Component {
 
 module.exports = connect(
   (state, ownProps) => {
-    const props = getMixProps(state)
-    const currentMixId = ownProps.params.mixId
     const { router, route } = ownProps
+    const props = getMixProps(state)
+    
+    const currentMixId = ownProps.params.mixId
     const mix = props.mixes[currentMixId]
+    const currentTrackId = ownProps.params.trackId
+    const currentTrackIndex = findIndex(mix.tracks, { id: currentTrackId })
+    const fromTrack = mix.tracks[currentTrackIndex]
+    const toTrack = mix.tracks[currentTrackIndex + 1]
 
-    if (mix) {
-      router.setRouteLeaveHook(
-        route,
-        // TODO: do i need to back out all changes if confirm? how to do that cleanly - LOAD_MIX? ROLLBACK_MIX?
-        () => !mix.isDirty ||
-          window.confirm('You have unsaved changes that will be lost if you leave this page.')
-      )
-    }
-
-    return { ...props, mix }
+    return { ...props, mix, fromTrack, toTrack }
   },
   {
     saveMix,
     loadMix,
-    deleteMix,
     updateMeta,
-    createPrimaryTrackFromFile,
-    reorderPrimaryTrack,
-    unsetPrimaryTrackFromMix,
     play,
     pause
   }
-)(MixContainer)
+)(MixDetailContainer)

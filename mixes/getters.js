@@ -33,7 +33,7 @@ const getMixes = Getter(
         id,
         channel,
         meta,
-        primaryTracks: getPrimaryTracks(channel, metas),
+        tracks: getPrimaryTracks(channel, metas),
         isPlaying: playState.status === PLAY_STATE_PLAYING,
         isLoading: includes(loading, id),
         isSaving: includes(saving, id),

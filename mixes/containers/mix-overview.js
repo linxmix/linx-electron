@@ -10,12 +10,12 @@ const { play, pause } = require('../../audio/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { isValidNumber } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
-const MixOverviewWave = require('../../svgs/components/mix-overview-wave')
+const MixOverviewArrangement = require('../../svgs/components/mix-overview-arrangement')
 
-class MixContainer extends React.Component {
+class MixOverviewContainer extends React.Component {
   handleFilesDrop ({ files }) {
     const { mix, createPrimaryTrackFromFile } = this.props
-    const lastPrimaryTrack = last(mix.primaryTracks || [])
+    const lastPrimaryTrack = last(mix.tracks || [])
     const lastPrimaryTrackStartBeat = get(lastPrimaryTrack, 'channel.startBeat')
     const startBeat = isValidNumber(lastPrimaryTrackStartBeat)
       ? lastPrimaryTrackStartBeat + 1
@@ -88,7 +88,7 @@ class MixContainer extends React.Component {
       <section>
         <PrimaryTrackTable
           mixId={mix.id}
-          tracks={mix.primaryTracks}
+          tracks={mix.tracks}
           reorderPrimaryTrack={reorderPrimaryTrack}
           isLoading={isLoading}
           handleFilesDrop={this.handleFilesDrop.bind(this)}
@@ -98,7 +98,7 @@ class MixContainer extends React.Component {
       </section>
 
       <section>
-        <MixOverviewWave
+        <MixOverviewArrangement
           mix={mix}
         />
       </section>
@@ -143,4 +143,4 @@ module.exports = connect(
     play,
     pause
   }
-)(MixContainer)
+)(MixOverviewContainer)

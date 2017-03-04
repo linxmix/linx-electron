@@ -18,7 +18,7 @@ function _isNegative (n) {
   return ((n = +n) || 1 / n) < 0;
 }
 
-class MixOverviewWave extends React.Component {
+class MixOverviewArrangement extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -142,4 +142,4 @@ class MixOverviewWave extends React.Component {
   }
 }
 
-module.exports = MixOverviewWave
+module.exports = MixOverviewArrangement
