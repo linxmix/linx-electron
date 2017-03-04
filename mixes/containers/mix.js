@@ -10,9 +10,10 @@ const { play, pause } = require('../../audio/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { isValidNumber } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
+const MixOverviewWave = require('../../svgs/components/mix-overview-wave')
 
 class MixContainer extends React.Component {
-  onFilesDrop ({ files }) {
+  handleFilesDrop ({ files }) {
     const { mix, createPrimaryTrackFromFile } = this.props
     const lastPrimaryTrack = last(mix.primaryTracks || [])
     const lastPrimaryTrackStartBeat = get(lastPrimaryTrack, 'channel.startBeat')
@@ -29,7 +30,7 @@ class MixContainer extends React.Component {
     }))
   }
 
-  onChangeMixTitle (e) {
+  handleChangeMixTitle (e) {
     const newTitle = e && e.target && e.target.value
     const { mix, updateMeta } = this.props
     updateMeta({ id: mix.id, title: newTitle })
@@ -53,7 +54,7 @@ class MixContainer extends React.Component {
       titleElement = <input type='text'
         value={mix.meta.title}
         placeholder='Untitled Mix'
-        onChange={this.onChangeMixTitle.bind(this)} />
+        onChange={this.handleChangeMixTitle.bind(this)} />
     }
 
     let playButton
@@ -83,14 +84,21 @@ class MixContainer extends React.Component {
         </button>
         {playButton}
       </header>
+
       <section>
         <PrimaryTrackTable
           tracks={mix.primaryTracks}
           reorderPrimaryTrack={reorderPrimaryTrack}
           isLoading={isLoading}
-          onFilesDrop={this.onFilesDrop.bind(this)}
+          handleFilesDrop={this.handleFilesDrop.bind(this)}
           removeTrack={primaryTrackId => unsetPrimaryTrackFromMix({
             id: mix.id, primaryTrackId })}
+        />
+      </section>
+
+      <section>
+        <MixOverviewWave
+          mix={mix}
         />
       </section>
     </div>
