@@ -4,7 +4,7 @@ const createVirtualAudioGraph = require('virtual-audio-graph')
 const assert = require('assert')
 const { merge } = require('lodash')
 
-const { isValidNumber } = require ('../lib/number-utils');
+const { isValidNumber } = require('../lib/number-utils')
 const timeToBeat = require('./helpers/time-to-beat')
 const beatToTime = require('./helpers/beat-to-time')
 const { PLAY_STATE_PLAYING, PLAY_STATE_PAUSED } = require('./constants')
@@ -45,11 +45,11 @@ function createReducer (config) {
           playState: {
             status: PLAY_STATE_PLAYING,
             absSeekTime: state.audioContext.currentTime,
-            seekBeat,
+            seekBeat
           }
         })),
         Effects.constant(updateAudioGraph(channel)),
-        Effects.constant(updateVirtualAudioGraph(channel.id)),
+        Effects.constant(updateVirtualAudioGraph(channel.id))
       ]))
     },
     [pause]: (state, action) => {
@@ -80,7 +80,7 @@ function createReducer (config) {
           }
         })),
         Effects.constant(updateAudioGraph(channel)),
-        Effects.constant(updateVirtualAudioGraph(channel.id)),
+        Effects.constant(updateVirtualAudioGraph(channel.id))
       ]))
     },
     [seekToBeat]: (state, action) => {

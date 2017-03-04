@@ -4,7 +4,7 @@ const { timeToBeat, validNumberOrDefault } = require('../../lib/number-utils')
 const { PLAY_STATE_PLAYING } = require('../../audio/constants')
 
 // TODO: pass this in from reducer, computed from masterChannel beatGrid
-function _timeToBeat(time) {
+function _timeToBeat (time) {
   return timeToBeat(time, 128)
 }
 

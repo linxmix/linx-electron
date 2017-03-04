@@ -10,12 +10,12 @@ const {
 } = require('../../channels/constants')
 const { isValidNumber } = require('../../lib/number-utils')
 
-const ZOOM_STEP = .2
-const MIN_SCALE_X = .1
+const ZOOM_STEP = 0.2
+const MIN_SCALE_X = 0.1
 
 function _isNegative (n) {
   // So we can handle the mousewheel returning -0 or 0
-  return ((n = +n) || 1 / n) < 0;
+  return ((n = +n) || 1 / n) < 0
 }
 
 class MixDetailArrangement extends React.Component {
@@ -71,7 +71,7 @@ class MixDetailArrangement extends React.Component {
 
   handleMouseMove (e) {
     if (!this.state.isDragging) { return }
-      
+
     e.preventDefault()
     e.stopPropagation()
 
@@ -112,28 +112,28 @@ class MixDetailArrangement extends React.Component {
     const transform = `translate(${translateX}) scale(${scaleX}, 1)`
 
     return <div
-        onMouseDown={this.handleMouseDown.bind(this)}
-        onMouseUp={this.handleMouseUp.bind(this)}
-        onWheel={this.handleMouseWheel.bind(this)}>
+      onMouseDown={this.handleMouseDown.bind(this)}
+      onMouseUp={this.handleMouseUp.bind(this)}
+      onWheel={this.handleMouseWheel.bind(this)}>
       <svg
         width='100%'
         height={100}
         style={{ border: '1px solid gray' }}
-        ref="svg">
+        ref='svg'>
 
         <g transform={transform}>
           {map(sortBy(mix.channel.channels, ['startBeat', 'id']), (channel, i, channels) => {
             let Element
-            switch(channel.type) {
+            switch (channel.type) {
               case CHANNEL_TYPE_PRIMARY_TRACK:
-                Element = PrimaryTrackChannel; break;
+                Element = PrimaryTrackChannel; break
               case CHANNEL_TYPE_TRANSITION:
-                Element = TransitionChannel; break;
+                Element = TransitionChannel; break
             }
             return Element ? <Element
-                key={channel.id}
-                channel={channel}
-                color={d3.interpolateCool(i / channels.length)}
+              key={channel.id}
+              channel={channel}
+              color={d3.interpolateCool(i / channels.length)}
               /> : null
           })}
         </g>

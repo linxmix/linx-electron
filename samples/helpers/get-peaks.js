@@ -27,7 +27,6 @@ function getPeaks ({ audioBuffer, startTime, endTime, length }) {
   //   return cached;
   // }
 
-
   // TODO(FUTURE): update to use multiple channels
   // TODO(FUTURE): job.spawn still helpful?
   const peaks = _calculatePeaks({
@@ -42,31 +41,31 @@ function getPeaks ({ audioBuffer, startTime, endTime, length }) {
   return peaks
 }
 
-function _calculatePeaks({ length, samples, startSample, endSample }) {
-  const sampleSize = (endSample - startSample) / length;
-  const sampleStep = ~~(sampleSize / 10) || 1; // reduce granularity with small length
-  const peaks = [];
+function _calculatePeaks ({ length, samples, startSample, endSample }) {
+  const sampleSize = (endSample - startSample) / length
+  const sampleStep = ~~(sampleSize / 10) || 1 // reduce granularity with small length
+  const peaks = []
 
   for (let i = 0; i < length; i++) {
-    const start = ~~(startSample + i * sampleSize);
-    const end = ~~(start + sampleSize);
-    let min = samples[start] || 0;
-    let max = samples[start] || 0;
+    const start = ~~(startSample + i * sampleSize)
+    const end = ~~(start + sampleSize)
+    let min = samples[start] || 0
+    let max = samples[start] || 0
 
     // calculate max and min in this sample
     for (let j = start; j < end; j += sampleStep) {
-      const value = samples[j] || 0;
+      const value = samples[j] || 0
 
       if (value > max) {
-        max = value;
+        max = value
       }
       if (value < min) {
-        min = value;
+        min = value
       }
     }
 
     // add to peaks
-    peaks[i] = [min, max];
+    peaks[i] = [min, max]
   }
 
   return peaks

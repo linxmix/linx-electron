@@ -9,7 +9,7 @@ const {
 } = require('../../channels/constants')
 
 // TODO: abstract identifiers
-function isSampleClip(clip) {
+function isSampleClip (clip) {
   return clip && clip.sample
 }
 
@@ -19,11 +19,11 @@ class PrimaryTrackChannel extends React.Component {
     if (!channel) { return null }
 
     return <g transform={`translate(${channel.startBeat})`}>
-      {map(channel.clips, clip => 
+      {map(channel.clips, clip =>
         isSampleClip(clip) && <SampleClip
-            key={clip.id}
-            clip={clip}
-            color={color}
+          key={clip.id}
+          clip={clip}
+          color={color}
           />
       )}
     </g>

@@ -12,12 +12,12 @@ const {
 } = require('../../channels/constants')
 const { validNumberOrDefault } = require('../../lib/number-utils')
 
-const ZOOM_STEP = .2
-const MIN_SCALE_X = .1
+const ZOOM_STEP = 0.2
+const MIN_SCALE_X = 0.1
 
 function _isNegative (n) {
   // So we can handle the mousewheel returning -0 or 0
-  return ((n = +n) || 1 / n) < 0;
+  return ((n = +n) || 1 / n) < 0
 }
 
 class MixOverviewArrangement extends React.Component {
@@ -73,7 +73,7 @@ class MixOverviewArrangement extends React.Component {
 
   handleMouseMove (e) {
     if (!this.state.isDragging) { return }
-      
+
     e.preventDefault()
     e.stopPropagation()
 
@@ -123,7 +123,7 @@ class MixOverviewArrangement extends React.Component {
     const { mix, audioContext, height } = this.props
     const { scaleX, translateX } = this.state
     if (!mix) { return null }
-      
+
     const transform = `translate(${translateX}) scale(${scaleX}, 1)`
     const mixBeatCount = validNumberOrDefault(mix.channel && mix.channel.beatCount, 0)
     const mixPhraseCount = mixBeatCount / 32  // TODO: need to round?
@@ -132,13 +132,12 @@ class MixOverviewArrangement extends React.Component {
       .range([0, mixBeatCount])
 
     return <div
-      
       onMouseDown={this.handleMouseDown.bind(this)}
       onMouseUp={this.handleMouseUp.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
 
       <svg
-      onClick={this.handleClick.bind(this)}
+        onClick={this.handleClick.bind(this)}
         width='100%'
         height={height}
         style={{ border: '1px solid gray' }}
@@ -154,16 +153,16 @@ class MixOverviewArrangement extends React.Component {
 
           {map(sortBy(mix.channel.channels, ['startBeat', 'id']), (channel, i, channels) => {
             let Element
-            switch(channel.type) {
+            switch (channel.type) {
               case CHANNEL_TYPE_PRIMARY_TRACK:
-                Element = PrimaryTrackChannel; break;
+                Element = PrimaryTrackChannel; break
               case CHANNEL_TYPE_TRANSITION:
-                Element = TransitionChannel; break;
+                Element = TransitionChannel; break
             }
             return Element ? <Element
-                key={channel.id}
-                channel={channel}
-                color={d3.interpolateCool(i / channels.length)}
+              key={channel.id}
+              channel={channel}
+              color={d3.interpolateCool(i / channels.length)}
               /> : null
           })}
 

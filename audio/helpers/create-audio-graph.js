@@ -33,12 +33,11 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output', playStat
   }
 
   // TODO: pass this in from reducer, computed from masterChannel beatGrid
-  function _beatToTime(beat) {
+  function _beatToTime (beat) {
     return beatToTime(beat, 128)
   }
 
   forEach(channel.clips, clip => {
-
     // TODO: how does web audio playback work?
     //       if i specify a time in the past, does it auto correct offsetTime?
     // const absClipStartTime = Math.max(playState.absSeekTime + clipStartTime, audioContext.currentTime);
@@ -48,12 +47,11 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output', playStat
 
     let startTime, stopTime, offsetTime
     if (clipStartBeat >= playState.seekBeat) {
-
       startTime = _beatToTime(clipStartBeat - playState.seekBeat)
       stopTime = _beatToTime(clipEndBeat - playState.seekBeat)
       offsetTime = clip.audioStartTime
     } else {
-      // // curate args
+      // // TODO: curate args
       // if (offsetTime < 0) {
       //   startTime -= offsetTime;
       //   offsetTime = 0;
