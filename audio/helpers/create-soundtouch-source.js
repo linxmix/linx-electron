@@ -4,7 +4,7 @@
 const AudioWorkerNode = require('audio-worker-node')
 const { assign } = require('lodash')
 
-const { isValidNumber } = require('../../lib/number-utils')
+const { isValidNumber, validNumberOrDefault } = require('../../lib/number-utils')
 
 const MAX_BUFFER_SIZE = 16384
 const BUFFER_SIZE = MAX_BUFFER_SIZE / 8
@@ -195,7 +195,13 @@ const createSoundtouchSource = module.exports = function (audioContext) {
     stopTime: null,
 
     start (startTime, offsetTime) {
+      if (!isValidNumber(startTime)) {
+        console.warn('Invalid startTime given to soundtouchNode.start', startTime)
+        return
+      }
+
       const audioContext = this.audioContext
+      offsetTime = validNumberOrDefault(offsetTime, 0)
 
       const sampleRate = this.sampleRate = audioContext.sampleRate || 44100
       this.startSample = ~~(offsetTime * sampleRate)
@@ -209,7 +215,8 @@ const createSoundtouchSource = module.exports = function (audioContext) {
     },
 
     stop (stopTime) {
-      this.isPlaying.setValueAtTime(0, stopTime || this.audioContext.currentTime)
+      stopTime = Math.max(0, validNumberOrDefault(stopTime, this.audioContext.currentTime))
+      this.isPlaying.setValueAtTime(0, stopTime)
     }
   })
 }
