@@ -1,5 +1,5 @@
 const React = require('react')
-const { map, sortBy } = require('lodash')
+const { map } = require('lodash')
 const d3 = require('d3')
 
 const Playhead = require('./playhead')
@@ -27,7 +27,9 @@ class MixArrangementOverview extends React.Component {
       scaleX: 1,
       translateX: 1,
       mouseMoveHandler: null,
-      mouseUpHandler: null
+      mouseUpHandler: null,
+      isDragging: false,
+      dragCoords: null
     }
   }
 
@@ -56,7 +58,6 @@ class MixArrangementOverview extends React.Component {
 
   handleMouseDown (e) {
     this.setState({
-      isDragging: true,
       dragCoords: {
         x: e.pageX,
         y: e.pageY
@@ -65,25 +66,26 @@ class MixArrangementOverview extends React.Component {
   }
 
   handleMouseUp (e) {
-    if (this.state.isDragging) {
+    if (this.state.dragCoords) {
       e.preventDefault()
       e.stopPropagation()
     }
 
     this.setState({
       isDragging: false,
-      dragCoords: {}
+      dragCoords: null
     })
   }
 
   handleMouseMove (e) {
-    if (!this.state.isDragging) { return }
+    if (!this.state.dragCoords) { return }
 
     e.preventDefault()
     e.stopPropagation()
 
     const xDiff = this.state.dragCoords.x - e.pageX
     this.setState({
+      isDragging: true,
       translateX: this.state.translateX - xDiff,
       dragCoords: {
         x: e.pageX,
@@ -114,6 +116,8 @@ class MixArrangementOverview extends React.Component {
   }
 
   handleClick (e) {
+    if (this.state.isDragging) { return }
+
     const { mix, seekToBeat } = this.props
     const { translateX, scaleX } = this.state
     const mouseX = e.nativeEvent.offsetX
@@ -138,11 +142,10 @@ class MixArrangementOverview extends React.Component {
 
     return <div
       onMouseDown={this.handleMouseDown.bind(this)}
-      onMouseUp={this.handleMouseUp.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
 
       <svg
-        onClick={this.handleClick.bind(this)}
+        onMouseUp={this.handleClick.bind(this)}
         width='100%'
         height={height}
         style={{ border: '1px solid gray' }}
@@ -156,7 +159,7 @@ class MixArrangementOverview extends React.Component {
             strokeWidth={1 / scaleX}
           />
 
-          {map(sortBy(mix.channel.channels, ['startBeat', 'id']), (channel, i, channels) => {
+          {map(mix.channel.channels, (channel, i, channels) => {
             let Element
             switch (channel.type) {
               case CHANNEL_TYPE_PRIMARY_TRACK:

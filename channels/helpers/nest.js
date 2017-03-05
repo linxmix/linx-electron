@@ -1,4 +1,4 @@
-const { includes, some, every, map, concat } = require('lodash')
+const { includes, some, every, map, concat, sortBy } = require('lodash')
 
 const { validNumberOrDefault } = require('../../lib/number-utils')
 
@@ -37,7 +37,7 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
     isDirty: (includes(dirtyChannels, id) ||
       some(childChannels, { isDirty: true }) ||
       some(childClips, { isDirty: true })),
-    channels: childChannels,
-    clips: childClips
+    channels: sortBy(childChannels, ['startBeat', 'id']),
+    clips: sortBy(childClips, ['startBeat', 'id'])
   }
 }
