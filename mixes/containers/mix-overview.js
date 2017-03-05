@@ -81,21 +81,6 @@ class MixOverviewContainer extends React.Component {
         onChange={this.handleChangeMixTitle.bind(this)} />
     }
 
-    let playButton
-    if (playState.status !== PLAY_STATE_PLAYING) {
-      playButton = <button
-        disabled={masterChannelStatus !== 'loaded'}
-        onClick={() => (mix && play({ channel: mix.channel }))}>
-        Play Mix
-      </button>
-    } else {
-      playButton = <button
-        disabled={masterChannelStatus !== 'loaded'}
-        onClick={() => (mix && pause({ channel: mix.channel }))}>
-        Pause Mix
-      </button>
-    }
-
     return <div>
       <header>
         {titleElement}
