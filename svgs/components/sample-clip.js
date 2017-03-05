@@ -2,6 +2,7 @@ const React = require('react')
 const d3 = require('d3')
 
 const getPeaks = require('../../samples/helpers/get-peaks')
+const { beatToTime } = require('../../lib/number-utils')
 
 class SampleClip extends React.Component {
   render () {
@@ -9,11 +10,11 @@ class SampleClip extends React.Component {
     if (!clip || (clip.status !== 'loaded')) { return null }
 
     const { sample, audioStartTime, beatCount } = clip
-    const { audioBuffer } = sample
+    const { audioBuffer, meta: { bpm: audioBpm } } = sample
     const peaks = getPeaks({
       audioBuffer,
       startTime: audioStartTime,
-      endTime: audioBuffer.duration, // TODO: calculate from beatCount
+      endTime: audioStartTime + beatToTime(beatCount, audioBpm),
       length: beatCount * resolution
     })
 

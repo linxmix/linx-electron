@@ -6,6 +6,11 @@ const { beatToTime, validNumberOrDefault } = require('../../lib/number-utils')
 
 module.exports = createAudioGraph
 
+// TODO: pass this in from reducer, computed from masterChannel beatGrid
+function _beatToTime (beat) {
+  return beatToTime(beat, 128)
+}
+
 function createAudioGraph ({ channel, audioContext, outputs = 'output', playState, startBeat }) {
   startBeat = validNumberOrDefault(startBeat, 0)
   const { channels: nestedChannels = [] } = channel
@@ -30,11 +35,6 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output', playStat
   const audioGraph = {
     // NOTE: virtual-audio-graph interprets numberOfOutputs here as the # of merger inputs
     [channel.id]: ['channelMerger', outputs, { numberOfOutputs: nestedChannels.length }]
-  }
-
-  // TODO: pass this in from reducer, computed from masterChannel beatGrid
-  function _beatToTime (beat) {
-    return beatToTime(beat, 128)
   }
 
   forEach(channel.clips, clip => {
