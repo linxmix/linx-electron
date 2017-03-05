@@ -20,7 +20,7 @@ function _isNegative (n) {
   return ((n = +n) || 1 / n) < 0
 }
 
-class MixOverviewArrangement extends React.Component {
+class MixArrangementOverview extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -64,7 +64,12 @@ class MixOverviewArrangement extends React.Component {
     })
   }
 
-  handleMouseUp () {
+  handleMouseUp (e) {
+    if (this.state.isDragging) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
     this.setState({
       isDragging: false,
       dragCoords: {}
@@ -178,8 +183,8 @@ class MixOverviewArrangement extends React.Component {
   }
 }
 
-MixOverviewArrangement.defaultProps = {
+MixArrangementOverview.defaultProps = {
   height: 100
 }
 
-module.exports = MixOverviewArrangement
+module.exports = MixArrangementOverview

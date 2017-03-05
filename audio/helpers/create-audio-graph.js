@@ -38,25 +38,17 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output', playStat
   }
 
   forEach(channel.clips, clip => {
-    // TODO: how does web audio playback work?
-    //       if i specify a time in the past, does it auto correct offsetTime?
-    // const absClipStartTime = Math.max(playState.absSeekTime + clipStartTime, audioContext.currentTime);
-
     const clipStartBeat = startBeat + clip.startBeat
     const clipEndBeat = clipStartBeat + clip.beatCount
 
-    let startTime, stopTime, offsetTime
-    if (clipStartBeat >= playState.seekBeat) {
-      startTime = _beatToTime(clipStartBeat - playState.seekBeat)
-      stopTime = _beatToTime(clipEndBeat - playState.seekBeat)
-      offsetTime = clip.audioStartTime
-    } else {
-      // // TODO: curate args
-      // if (offsetTime < 0) {
-      //   startTime -= offsetTime;
-      //   offsetTime = 0;
-      // }
+    let startTime = _beatToTime(clipStartBeat - playState.seekBeat)
+    const stopTime = _beatToTime(clipEndBeat - playState.seekBeat)
+    let offsetTime = clip.audioStartTime
+    if (startTime < 0) {
+      offsetTime -= startTime;
+      startTime = 0;
     }
+    
     console.log({
       name: clip.sample.meta.title,
       clipStartBeat, clipEndBeat, 'playState.seekBeat': playState.seekBeat,
