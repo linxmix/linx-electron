@@ -95,6 +95,7 @@ function onaudioprocess ({
   if (isValidNumber(pitch)) {
     soundtouch.pitchSemitones = pitch
   }
+  console.log("TEMPO", tempo)
   if (isValidNumber(tempo)) {
     soundtouch.tempo = tempo
   }

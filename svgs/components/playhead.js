@@ -1,12 +1,8 @@
 const React = require('react')
 
-const { timeToBeat, validNumberOrDefault } = require('../../lib/number-utils')
+const { validNumberOrDefault } = require('../../lib/number-utils')
 const { PLAY_STATE_PLAYING } = require('../../audio/constants')
-
-// TODO: pass this in from reducer, computed from masterChannel beatGrid
-function _timeToBeat (time) {
-  return timeToBeat(time, 128)
-}
+const timeToBeat = require('../../audio/helpers/time-to-beat')
 
 class Playhead extends React.Component {
   constructor (props) {
@@ -18,18 +14,18 @@ class Playhead extends React.Component {
   }
 
   getCurrentBeat () {
-    const { playState, audioContext} = this.props
+    const { playState, beatScale, audioContext} = this.props
 
     let currentBeat = playState.seekBeat
     if (playState.status === PLAY_STATE_PLAYING) {
-      currentBeat += _timeToBeat(audioContext.currentTime - playState.absSeekTime)
+      currentBeat += timeToBeat(beatScale, audioContext.currentTime - playState.absSeekTime)
     }
 
     return validNumberOrDefault(currentBeat, 0)
   }
 
   render () {
-    const { playState, audioContext, height, strokeWidth, stroke } = this.props
+    const { playState, beatScale, audioContext, height, strokeWidth, stroke } = this.props
     const { seekBeat } = this.state
 
     return <line

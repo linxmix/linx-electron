@@ -131,10 +131,11 @@ class MixArrangementOverview extends React.Component {
   render () {
     const { mix, audioContext, height } = this.props
     const { scaleX, translateX } = this.state
-    if (!mix) { return null }
+    if (!(mix && mix.channel)) { return null }
 
     const transform = `translate(${translateX}) scale(${scaleX}, 1)`
-    const mixBeatCount = validNumberOrDefault(mix.channel && mix.channel.beatCount, 0)
+    const beatScale = mix.channel.beatScale
+    const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
     const mixPhraseCount = mixBeatCount / 32  // TODO: need to round?
     const phraseScale = d3.scaleLinear()
       .domain([0, mixPhraseCount])
@@ -169,6 +170,7 @@ class MixArrangementOverview extends React.Component {
             }
             return Element ? <Element
               key={channel.id}
+              beatScale={beatScale}
               channel={channel}
               color={d3.interpolateCool(i / channels.length)}
               /> : null
@@ -176,6 +178,7 @@ class MixArrangementOverview extends React.Component {
 
           <Playhead
             playState={mix.playState}
+            beatScale={beatScale}
             audioContext={audioContext}
             height={height}
             strokeWidth={1.5 / scaleX}

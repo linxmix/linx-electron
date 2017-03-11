@@ -42,11 +42,9 @@ function createReducer (config) {
       return loop(state, Effects.batch([
         Effects.constant(updatePlayState({
           channelId: channel.id,
-          playState: {
-            status: PLAY_STATE_PLAYING,
-            absSeekTime: state.audioContext.currentTime,
-            seekBeat
-          }
+          status: PLAY_STATE_PLAYING,
+          absSeekTime: state.audioContext.currentTime,
+          seekBeat
         })),
         Effects.constant(updateAudioGraph(channel)),
         Effects.constant(updateVirtualAudioGraph(channel.id))
@@ -62,22 +60,21 @@ function createReducer (config) {
       assert(playState.status !== PLAY_STATE_PAUSED,
         'Cannot pause channel that is already paused')
 
+      const { beatScale } = channel
       let { absSeekTime, seekBeat } = playState
       if (updateSeek) {
         const currentTime = state.audioContext.currentTime
-        seekBeat = timeToBeat(channel,
-          beatToTime(channel, seekBeat) + currentTime - absSeekTime)
+        seekBeat = timeToBeat(beatScale,
+          beatToTime(beatScale, seekBeat) + currentTime - absSeekTime)
         absSeekTime = currentTime
       }
 
       return loop(state, Effects.batch([
         Effects.constant(updatePlayState({
           channelId: channel.id,
-          playState: {
-            status: PLAY_STATE_PAUSED,
-            absSeekTime,
-            seekBeat
-          }
+          status: PLAY_STATE_PAUSED,
+          absSeekTime,
+          seekBeat
         })),
         Effects.constant(updateAudioGraph(channel)),
         Effects.constant(updateVirtualAudioGraph(channel.id))
@@ -89,17 +86,16 @@ function createReducer (config) {
       return loop(state, Effects.batch([
         Effects.constant(updatePlayState({
           channelId: channel.id,
-          playState: {
-            seekBeat: seekBeat,
-            absSeekTime: state.audioContext.currentTime
-          }
+          seekBeat: seekBeat,
+          absSeekTime: state.audioContext.currentTime
         })),
         Effects.constant(updateAudioGraph(channel)),
         Effects.constant(updateVirtualAudioGraph(channel.id))
       ]))
     },
     [updatePlayState]: (state, action) => {
-      const { channelId, playState } = action.payload
+      const playState = action.payload
+      const { channelId } = playState
       assert(!!channelId, 'Must provide channelId to updatePlayState')
 
       return {
@@ -121,6 +117,7 @@ function createReducer (config) {
       const audioGraph = createAudioGraph({
         channel,
         playState,
+        beatScale: channel.beatScale,
         audioContext: state.audioContext
       })
 

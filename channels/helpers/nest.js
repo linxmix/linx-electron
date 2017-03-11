@@ -1,6 +1,7 @@
 const { includes, some, every, map, concat, sortBy } = require('lodash')
+const d3 = require('d3')
 
-const { validNumberOrDefault } = require('../../lib/number-utils')
+const { validNumberOrDefault, beatToTime } = require('../../lib/number-utils')
 
 module.exports = nestChannels
 
@@ -28,11 +29,24 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
     ({ startBeat, beatCount }) => startBeat + beatCount,
   ))
 
+  // TODO: update to use BPM automation, and only show on master channel(?)
+  const bpm = validNumberOrDefault(channel.bpm, 0)
+  const bpmScale = d3.scaleLinear()
+    .domain([0, beatCount])
+    .range([bpm, bpm])
+
+  const beatScale = d3.scaleLinear()
+    .domain([0, beatCount])
+    .range([0, beatToTime(beatCount, bpm)])
+
+
   return {
     id,
     type,
     status,
     beatCount,
+    beatScale,
+    bpmScale,
     startBeat: validNumberOrDefault(startBeat, 0),
     isDirty: (includes(dirtyChannels, id) ||
       some(childChannels, { isDirty: true }) ||
