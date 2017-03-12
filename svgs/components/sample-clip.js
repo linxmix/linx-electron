@@ -22,8 +22,10 @@ class SampleClip extends React.Component {
     const area = d3.area()
       .x((peak, i) => {
         const percent = i / peaks.length
-        const beat = percent * beatCount
-        return beat
+        const audioBeat = percent * beatCount
+
+        // TODO: reverse process of what happens in createAudioGraph? map from audioBeat to mixBeat
+        return audioBeat
       })
       .y0(([ ymin, ymax ]) => median + ymin * median)
       .y1(([ ymin, ymax ]) => median + ymax * median)
@@ -37,7 +39,7 @@ class SampleClip extends React.Component {
 SampleClip.defaultProps = {
   height: 100,
   color: 'green',
-  resolution: 1
+  resolution: 3
 }
 
 module.exports = SampleClip

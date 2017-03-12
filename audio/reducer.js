@@ -118,6 +118,7 @@ function createReducer (config) {
         channel,
         playState,
         beatScale: channel.beatScale,
+        bpmScale: channel.bpmScale,
         audioContext: state.audioContext
       })
 

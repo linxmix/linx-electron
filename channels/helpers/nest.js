@@ -2,6 +2,7 @@ const { includes, some, every, map, concat, sortBy } = require('lodash')
 const d3 = require('d3')
 
 const { validNumberOrDefault, beatToTime } = require('../../lib/number-utils')
+const { CHANNEL_TYPE_MIX } = require('../constants')
 
 module.exports = nestChannels
 
@@ -29,15 +30,18 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
     ({ startBeat, beatCount }) => startBeat + beatCount,
   ))
 
-  // TODO: update to use BPM automation, and only show on master channel(?)
-  const bpm = validNumberOrDefault(channel.bpm, 0)
-  const bpmScale = d3.scaleLinear()
-    .domain([0, beatCount])
-    .range([bpm, bpm])
+  let beatScale, bpmScale
+  if (type === CHANNEL_TYPE_MIX) {
+    // TODO: update to use BPM automation
+    const bpm = validNumberOrDefault(channel.bpm, 128)
+    bpmScale = d3.scaleLinear()
+      .domain([0, beatCount])
+      .range([bpm, bpm])
 
-  const beatScale = d3.scaleLinear()
-    .domain([0, beatCount])
-    .range([0, beatToTime(beatCount, bpm)])
+    beatScale = d3.scaleLinear()
+      .domain([0, beatCount])
+      .range([0, beatToTime(beatCount, bpm)])
+  }
 
 
   return {

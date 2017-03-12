@@ -95,7 +95,6 @@ function onaudioprocess ({
   if (isValidNumber(pitch)) {
     soundtouch.pitchSemitones = pitch
   }
-  console.log("TEMPO", tempo)
   if (isValidNumber(tempo)) {
     soundtouch.tempo = tempo
   }
@@ -112,7 +111,10 @@ function onaudioprocess ({
   // if playing, calculate expected vs actual position
   if (extractFrameCount !== 0) {
     const actualElapsedSamples = Math.max(0, filter.position + extractFrameCount)
-    const elapsedTime = Math.min(audioContext.currentTime, node.stopTime) - node.startTime
+
+    // TODO: is this right? doesnt this change if tempo is not constnat?
+    const elapsedTime = Math.min(playbackTime, node.stopTime) - node.startTime
+
     const expectedElapsedSamples = Math.max(0, elapsedTime * node.sampleRate)
     const sampleDelta = ~~(expectedElapsedSamples - actualElapsedSamples)
 
@@ -120,10 +122,10 @@ function onaudioprocess ({
     if (Math.abs(sampleDelta) >= SAMPLE_DRIFT_TOLERANCE) {
       // console.log('actualElapsedSamples', actualElapsedSamples);
       // console.log('expectedElapsedSamples', expectedElapsedSamples);
+      // console.log("DRIFT", sampleDelta, extractFrameCount, BUFFER_SIZE);
 
       // if we're behind where we should be, extract dummy frames to catch up
       if (sampleDelta > 0) {
-        // console.log("DRIFT", sampleDelta, extractFrameCount, BUFFER_SIZE);
         const dummySamples = new Float32Array(sampleDelta * CHANNEL_COUNT)
         const dummyFramesExtracted = filter.extract(dummySamples, sampleDelta)
 
