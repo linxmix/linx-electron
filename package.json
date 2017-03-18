@@ -6,9 +6,9 @@
   "scripts": {
     "start": "electron .",
     "start:dev": "NODE_ENV=development node dev",
-    "test:lint": "standard",
-    "test:lint:fix": "standard --fix",
-    "test:unit": "ava",
+    "test:lint": "NODE_ENV=test standard",
+    "test:lint:fix": "NODE_ENV=test standard --fix",
+    "test:unit": "NODE_ENV=test ava",
     "test": "npm-run-all -p test:*"
   },
   "repository": {

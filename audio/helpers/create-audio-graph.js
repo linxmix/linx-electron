@@ -1,7 +1,10 @@
 const { map, merge, forEach, filter } = require('lodash')
 const d3 = require('d3')
 
-const createSoundtouchSource = require('./create-soundtouch-source')
+const createSoundtouchSource = (process.env.NODE_ENV === 'test') ?
+  () => {} :
+  require('./create-soundtouch-source')
+
 const { PLAY_STATE_PLAYING } = require('../constants')
 const getValueCurve = require('./get-value-curve')
 const {
@@ -24,6 +27,7 @@ function createAudioGraph ({
   startBeat = validNumberOrDefault(startBeat, 0)
   const { channels: nestedChannels = [] } = channel
 
+  // hack to add createSoundtouchSource to audioContext
   audioContext.createSoundtouchSource = () => createSoundtouchSource(audioContext)
 
   const nestedAudioGraphs = map(nestedChannels, (nestedChannel, i) =>
@@ -87,8 +91,6 @@ function createAudioGraph ({
       startTime,
       stopTime,
       offsetTime,
-      tempoScale,
-      tempoCurve,
       audioBpm: clip.sample.meta.bpm
     })
 
