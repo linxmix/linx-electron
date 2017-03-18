@@ -3,11 +3,6 @@ const { map } = require('lodash')
 
 const SampleClip = require('./sample-clip')
 
-const {
-  CHANNEL_TYPE_PRIMARY_TRACK,
-  CHANNEL_TYPE_TRANSITION
-} = require('../../channels/constants')
-
 // TODO: abstract identifiers
 function isSampleClip (clip) {
   return clip && clip.sample

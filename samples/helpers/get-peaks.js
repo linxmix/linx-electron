@@ -2,9 +2,6 @@ const assert = require('assert')
 
 const { isValidNumber, validNumberOrDefault } = require('../../lib/number-utils')
 
-const SAMPLE_RATE = 44100
-const BEAT_OFFSET = 45.0 / 1000.0
-
 module.exports = getPeaks
 
 // TODO: add caching? here or in store?

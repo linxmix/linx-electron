@@ -13,7 +13,7 @@ class Playhead extends React.Component {
   }
 
   getCurrentBeat () {
-    const { playState, beatScale, audioContext} = this.props
+    const { playState, beatScale, audioContext } = this.props
 
     let currentBeat = playState.seekBeat
     if (playState.status === PLAY_STATE_PLAYING) {
@@ -24,7 +24,7 @@ class Playhead extends React.Component {
   }
 
   render () {
-    const { playState, beatScale, audioContext, height, strokeWidth, stroke } = this.props
+    const { height, strokeWidth, stroke } = this.props
     const { seekBeat } = this.state
 
     return <line
@@ -36,7 +36,7 @@ class Playhead extends React.Component {
   }
 
   animate () {
-    const playheadAnimationId = requestAnimationFrame(this.animate.bind(this))
+    const playheadAnimationId = window.requestAnimationFrame(this.animate.bind(this))
 
     this.setState({
       playheadAnimationId,
@@ -49,7 +49,7 @@ class Playhead extends React.Component {
   }
 
   componentWillUnmount () {
-    cancelAnimationFrame(this.state.playheadAnimationId)
+    window.cancelAnimationFrame(this.state.playheadAnimationId)
     this.setState({
       playheadAnimationId: null
     })

@@ -77,7 +77,6 @@ function onaudioprocess ({
   node: processor
 }) {
   const node = processor.node
-  const audioContext = node.audioContext
   const filter = node.filter
 
   if (!filter) { return }
@@ -127,7 +126,7 @@ function onaudioprocess ({
       // if we're behind where we should be, extract dummy frames to catch up
       if (sampleDelta > 0) {
         const dummySamples = new Float32Array(sampleDelta * CHANNEL_COUNT)
-        const dummyFramesExtracted = filter.extract(dummySamples, sampleDelta)
+        filter.extract(dummySamples, sampleDelta)
 
       // if we're ahead of where we should be, rewind
       } else if (sampleDelta < 0) {
@@ -137,7 +136,7 @@ function onaudioprocess ({
   }
 
   const samples = new Float32Array(BUFFER_SIZE * CHANNEL_COUNT)
-  const framesExtracted = extractFrameCount > 0 ? filter.extract(samples, extractFrameCount) : 0
+  extractFrameCount > 0 ? filter.extract(samples, extractFrameCount) : 0
 
   // map extracted frames onto output
   let filterFrame = 0
@@ -148,7 +147,7 @@ function onaudioprocess ({
   }
 };
 
-const createSoundtouchSource = module.exports = function (audioContext) {
+module.exports = function (audioContext) {
   const processor = {}
   const node = new AudioWorkerNode(audioContext, onaudioprocess, {
     numberOfInputs: 2,
@@ -213,7 +212,7 @@ const createSoundtouchSource = module.exports = function (audioContext) {
 
       // update filter if we have one
       if (this.filter) {
-        filter.sourcePosition = this.startSample
+        this.filter.sourcePosition = this.startSample
       }
     },
 

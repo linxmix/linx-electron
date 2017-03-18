@@ -1,15 +1,12 @@
 const React = require('react')
 const { connect } = require('react-redux')
 const { Link } = require('react-router')
-const { forEach, last, get, findIndex } = require('lodash')
+const { findIndex } = require('lodash')
 
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { play, pause } = require('../../audio/actions')
-const { createPrimaryTrackFromFile } = require('../../channels/actions')
-const { isValidNumber } = require('../../lib/number-utils')
-const PrimaryTrackTable = require('../components/primary-track-table')
 const MixDetailArrangement = require('../../svgs/components/mix-detail-arrangement')
 const { PLAY_STATE_PLAYING } = require('../../audio/constants')
 
@@ -71,7 +68,6 @@ class MixDetailContainer extends React.Component {
 
 module.exports = connect(
   (state, ownProps) => {
-    const { router, route } = ownProps
     const props = getMixProps(state)
 
     const currentMixId = ownProps.params.mixId

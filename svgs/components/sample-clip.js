@@ -6,7 +6,7 @@ const { beatToTime } = require('../../lib/number-utils')
 
 class SampleClip extends React.Component {
   render () {
-    const { clip, beatScale, height, color, resolution } = this.props
+    const { clip, height, color, resolution } = this.props
     if (!clip || (clip.status !== 'loaded')) { return null }
 
     const { sample, audioStartTime, beatCount } = clip

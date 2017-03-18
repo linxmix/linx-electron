@@ -1,6 +1,6 @@
 const React = require('react')
 const { connect } = require('react-redux')
-const { forEach, last, get } = require('lodash')
+const { forEach, get } = require('lodash')
 const keymaster = require('keymaster')
 
 const { getMixProps } = require('../getters')
@@ -62,7 +62,7 @@ class MixOverviewContainer extends React.Component {
 
   render () {
     const { mix, audioContext, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack,
-      unsetPrimaryTrackFromMix, seekToBeat, play, pause } = this.props
+      unsetPrimaryTrackFromMix, seekToBeat } = this.props
     if (!mix) { return null }
     console.log('mix', mix)
 

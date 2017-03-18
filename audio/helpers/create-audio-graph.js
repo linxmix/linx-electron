@@ -23,7 +23,6 @@ function createAudioGraph ({
 }) {
   startBeat = validNumberOrDefault(startBeat, 0)
   const { channels: nestedChannels = [] } = channel
-  const { currentTime } = audioContext
 
   audioContext.createSoundtouchSource = () => createSoundtouchSource(audioContext)
 
@@ -54,9 +53,9 @@ function createAudioGraph ({
     const audioBpm = clip.sample.meta.bpm
 
     // if not playing or seek is beyond clip, stop here
-    if ((playState.status !== PLAY_STATE_PLAYING)
-      || (playState.seekBeat > clipEndBeat)) {
-      return;
+    if ((playState.status !== PLAY_STATE_PLAYING) ||
+      (playState.seekBeat > clipEndBeat)) {
+      return
     }
 
     const tempoScale = _getSampleClipTempoScale({
@@ -82,8 +81,15 @@ function createAudioGraph ({
 
     console.log({
       name: clip.sample.meta.title,
-      clipStartBeat, clipEndBeat, 'playState.seekBeat': playState.seekBeat,
-      startTime, stopTime, offsetTime, tempoScale, tempoCurve, audioBpm: clip.sample.meta.bpm
+      clipStartBeat,
+      clipEndBeat,
+      'playState.seekBeat': playState.seekBeat,
+      startTime,
+      stopTime,
+      offsetTime,
+      tempoScale,
+      tempoCurve,
+      audioBpm: clip.sample.meta.bpm
     })
 
     audioGraph[clip.id] = ['soundtouchSource', channel.id, {
@@ -98,7 +104,7 @@ function createAudioGraph ({
   return merge(audioGraph, ...nestedAudioGraphs)
 }
 
-function _getSampleClipTempoScale({ bpmScale, audioBpm, startBeat, endBeat }) {
+function _getSampleClipTempoScale ({ bpmScale, audioBpm, startBeat, endBeat }) {
   const tempoScaleDomain = [startBeat]
     .concat(filter(bpmScale.domain(), beat => (beat > startBeat && beat < endBeat)))
     .concat([endBeat])

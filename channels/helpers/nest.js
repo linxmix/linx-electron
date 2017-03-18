@@ -43,7 +43,6 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
       .range([0, beatToTime(beatCount, bpm)])
   }
 
-
   return {
     id,
     type,
