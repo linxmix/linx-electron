@@ -3,12 +3,11 @@ const d3 = require('d3')
 
 const createSoundtouchSource = require('./create-soundtouch-source')
 const { PLAY_STATE_PLAYING } = require('../constants')
-const beatToTime = require('./beat-to-time')
 const getValueCurve = require('./get-value-curve')
 const {
   validNumberOrDefault,
   isValidNumber,
-  beatToTime: staticBeatToTime
+  beatToTime
 } = require('../../lib/number-utils')
 
 module.exports = createAudioGraph
@@ -71,14 +70,14 @@ function createAudioGraph ({
       beatCount: clip.beatCount
     })
 
-    let startTime = beatToTime(beatScale, clipStartBeat - playState.seekBeat)
+    let startTime = beatScale(clipStartBeat - playState.seekBeat)
     let offsetTime = clip.audioStartTime
-    const stopTime = beatToTime(beatScale, clipEndBeat - playState.seekBeat)
+    const stopTime = beatScale(clipEndBeat - playState.seekBeat)
 
     // if seek in middle of clip, start now and adjust offsetTime
     if (playState.seekBeat > clipStartBeat) {
       startTime = 0
-      offsetTime += staticBeatToTime(playState.seekBeat - clipStartBeat, audioBpm)
+      offsetTime += beatToTime(playState.seekBeat - clipStartBeat, audioBpm)
     }
 
     console.log({

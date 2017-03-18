@@ -2,7 +2,6 @@ const React = require('react')
 
 const { validNumberOrDefault } = require('../../lib/number-utils')
 const { PLAY_STATE_PLAYING } = require('../../audio/constants')
-const timeToBeat = require('../../audio/helpers/time-to-beat')
 
 class Playhead extends React.Component {
   constructor (props) {
@@ -18,7 +17,7 @@ class Playhead extends React.Component {
 
     let currentBeat = playState.seekBeat
     if (playState.status === PLAY_STATE_PLAYING) {
-      currentBeat += timeToBeat(beatScale, audioContext.currentTime - playState.absSeekTime)
+      currentBeat += beatScale.invert(audioContext.currentTime - playState.absSeekTime)
     }
 
     return validNumberOrDefault(currentBeat, 0)
