@@ -2,10 +2,15 @@ const React = require('react')
 
 class TransitionChannel extends React.Component {
   render () {
-    // const { channel } = this.props
+    const { channel } = this.props
 
-    // TODO
-    return <g />
+    return <g transform={`translate(${channel.startBeat})`}>
+      <rect
+        width={channel.beatCount}
+        height="100%"
+        style={{ fill: 'rgba(0,0,255,0.2)' }}
+      />
+    </g>
   }
 }
 

@@ -24,6 +24,11 @@ class MixArrangementDetail extends React.Component {
       audioContext={audioContext}
       height={height}>
 
+      <TransitionChannel
+        key={transition.id}
+        channel={transition}
+      />
+
       <PrimaryTrackChannel
         key={fromTrack.id}
         channel={fromTrack.channel}
