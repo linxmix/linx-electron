@@ -1,5 +1,4 @@
 const React = require('react')
-const { map } = require('lodash')
 const d3 = require('d3')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
@@ -34,9 +33,9 @@ class MixArrangementDetail extends React.Component {
         channel={fromTrack.channel}
         beatScale={beatScale}
         translateY={0}
-        canDrag={true}
+        canDrag
         moveClip={moveClip}
-        color={d3.interpolateCool(.25)}
+        color={d3.interpolateCool(0.25)}
       />
 
       <PrimaryTrackChannel
@@ -44,9 +43,9 @@ class MixArrangementDetail extends React.Component {
         channel={toTrack.channel}
         beatScale={beatScale}
         translateY={rowHeight}
-        canDrag={true}
+        canDrag
         moveClip={moveClip}
-        color={d3.interpolateCool(.75)}
+        color={d3.interpolateCool(0.75)}
       />
     </MixArrangementLayout>
   }

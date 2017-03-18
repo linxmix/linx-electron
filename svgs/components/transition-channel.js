@@ -7,7 +7,7 @@ class TransitionChannel extends React.Component {
     return <g transform={`translate(${channel.startBeat})`}>
       <rect
         width={channel.beatCount}
-        height="100%"
+        height='100%'
         style={{ fill: 'rgba(0,0,255,0.2)' }}
       />
     </g>

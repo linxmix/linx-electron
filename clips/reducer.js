@@ -71,7 +71,7 @@ function createReducer (config) {
         id,
         startBeat: beats + state.records[id].startBeat
       })))
-    },
+    }
   }, {
     dirty: [],
     records: {}

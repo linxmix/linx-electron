@@ -1,7 +1,7 @@
 const React = require('react')
 const { connect } = require('react-redux')
 const { Link } = require('react-router')
-const { findIndex, get } = require('lodash')
+const { findIndex } = require('lodash')
 const { DragDropContext } = require('react-dnd')
 const MouseBackEnd = require('react-dnd-mouse-backend')
 
