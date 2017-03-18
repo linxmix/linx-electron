@@ -1,4 +1,4 @@
-const { includes, some, every, map, concat, sortBy } = require('lodash')
+const { includes, some, every, map, concat, sortBy, omitBy, isNil } = require('lodash')
 const d3 = require('d3')
 
 const { validNumberOrDefault, beatToTime } = require('../../lib/number-utils')
@@ -25,11 +25,12 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
   }
 
   // compute beatCount
-  const beatCount = Math.max.apply(Math, map(
+  const beatCount = validNumberOrDefault(Math.max.apply(Math, map(
     concat(childChannels, childClips),
     ({ startBeat, beatCount }) => startBeat + beatCount,
-  ))
+  )), 0)
 
+  // compute beatScale, bpmScale
   let beatScale, bpmScale
   if (type === CHANNEL_TYPE_MIX) {
     // TODO: update to use BPM automation
@@ -43,7 +44,7 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
       .range([0, beatToTime(beatCount, bpm)])
   }
 
-  return {
+  return omitBy({
     id,
     type,
     status,
@@ -56,5 +57,5 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
       some(childClips, { isDirty: true })),
     channels: sortBy(childChannels, ['startBeat', 'id']),
     clips: sortBy(childClips, ['startBeat', 'id'])
-  }
+  }, isNil)
 }
