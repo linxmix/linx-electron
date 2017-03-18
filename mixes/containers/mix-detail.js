@@ -1,20 +1,20 @@
 const React = require('react')
 const { connect } = require('react-redux')
 const { Link } = require('react-router')
-const { findIndex } = require('lodash')
+const { findIndex, get } = require('lodash')
 
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
-const { play, pause } = require('../../audio/actions')
-const MixDetailArrangement = require('../../svgs/components/mix-detail-arrangement')
+const { play, pause, seekToBeat } = require('../../audio/actions')
+const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
 const { PLAY_STATE_PLAYING } = require('../../audio/constants')
 
 class MixDetailContainer extends React.Component {
   render () {
-    const { mix, fromTrack, toTrack, error, sampleError, saveMix, play, pause } = this.props
+    const { mix, audioContext, fromTrack, toTrack, error,
+      sampleError, saveMix, play, pause, seekToBeat } = this.props
     if (!mix) { return null }
-    console.log('mix detail', { mix, fromTrack, toTrack })
 
     const { playState, isSaving, isLoading, isDirty } = mix
     const { status: masterChannelStatus } = mix.channel
@@ -50,8 +50,12 @@ class MixDetailContainer extends React.Component {
       </header>
 
       <section>
-        <MixDetailArrangement
+        <MixArrangementDetail
           mix={mix}
+          audioContext={audioContext}
+          seekToBeat={seekToBeat}
+          fromTrack={fromTrack}
+          toTrack={toTrack}
         />
       </section>
     </div>
@@ -84,6 +88,7 @@ module.exports = connect(
     loadMix,
     updateMeta,
     play,
-    pause
+    pause,
+    seekToBeat
   }
 )(MixDetailContainer)

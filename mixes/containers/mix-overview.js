@@ -7,13 +7,12 @@ const { getMixProps } = require('../getters')
 const { saveMix, loadMix, deleteMix,
   reorderPrimaryTrack, unsetPrimaryTrackFromMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
-const { play, pause } = require('../../audio/actions')
+const { play, pause, seekToBeat } = require('../../audio/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { validNumberOrDefault } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
 const MixArrangementOverview = require('../../svgs/components/mix-arrangement-overview')
 const { PLAY_STATE_PLAYING } = require('../../audio/constants')
-const { seekToBeat } = require('../../audio/actions')
 
 class MixOverviewContainer extends React.Component {
   componentDidMount () {

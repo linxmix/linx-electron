@@ -10,10 +10,10 @@ function isSampleClip (clip) {
 
 class PrimaryTrackChannel extends React.Component {
   render () {
-    const { channel, color, beatScale } = this.props
+    const { channel, color, beatScale, translateY } = this.props
     if (!channel) { return null }
 
-    return <g transform={`translate(${channel.startBeat})`}>
+    return <g transform={`translate(${channel.startBeat},${translateY})`}>
       {map(channel.clips, clip =>
         isSampleClip(clip) && <SampleClip
           key={clip.id}
@@ -24,6 +24,10 @@ class PrimaryTrackChannel extends React.Component {
       )}
     </g>
   }
+}
+
+PrimaryTrackChannel.defaultProps = {
+  translateY: 0
 }
 
 module.exports = PrimaryTrackChannel

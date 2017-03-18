@@ -39,7 +39,7 @@ class SampleClip extends React.Component {
 SampleClip.defaultProps = {
   height: 100,
   color: 'green',
-  resolution: 3
+  resolution: 1
 }
 
 module.exports = SampleClip

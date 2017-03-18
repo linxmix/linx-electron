@@ -25,19 +25,20 @@ const getClips = Getter(
         status = 'loaded'
       }
 
-      // compute beatCount
-      let beatCount = clip.beatCount
-      if (!isValidNumber(beatCount)) {
-        if (sample.meta) {
-          const computedBeatCount = timeToBeat(get(sample, 'meta.duration'), get(sample, 'meta.bpm'))
-          beatCount = validNumberOrDefault(computedBeatCount, DEFAULT_BEAT_COUNT)
-        }
-      }
-
       // compute audioStartTime
       let audioStartTime = clip.audioStartTime
       if (!isValidNumber(audioStartTime)) {
         audioStartTime = validNumberOrDefault(get(sample, 'meta.barGridTime'), 0)
+      }
+
+      // compute beatCount
+      let beatCount = clip.beatCount
+      if (!isValidNumber(beatCount)) {
+        if (sample.meta) {
+          const computedBeatCount = timeToBeat(get(sample, 'meta.duration') - audioStartTime,
+            get(sample, 'meta.bpm'))
+          beatCount = validNumberOrDefault(computedBeatCount, DEFAULT_BEAT_COUNT)
+        }
       }
 
       return {
