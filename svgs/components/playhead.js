@@ -1,12 +1,7 @@
 const React = require('react')
 
-const { timeToBeat, validNumberOrDefault } = require('../../lib/number-utils')
+const { validNumberOrDefault } = require('../../lib/number-utils')
 const { PLAY_STATE_PLAYING } = require('../../audio/constants')
-
-// TODO: pass this in from reducer, computed from masterChannel beatGrid
-function _timeToBeat (time) {
-  return timeToBeat(time, 128)
-}
 
 class Playhead extends React.Component {
   constructor (props) {
@@ -18,18 +13,18 @@ class Playhead extends React.Component {
   }
 
   getCurrentBeat () {
-    const { playState, audioContext} = this.props
+    const { playState, beatScale, audioContext } = this.props
 
     let currentBeat = playState.seekBeat
     if (playState.status === PLAY_STATE_PLAYING) {
-      currentBeat += _timeToBeat(audioContext.currentTime - playState.absSeekTime)
+      currentBeat += beatScale.invert(audioContext.currentTime - playState.absSeekTime)
     }
 
     return validNumberOrDefault(currentBeat, 0)
   }
 
   render () {
-    const { playState, audioContext, height, strokeWidth, stroke } = this.props
+    const { height, strokeWidth, stroke } = this.props
     const { seekBeat } = this.state
 
     return <line
@@ -41,7 +36,7 @@ class Playhead extends React.Component {
   }
 
   animate () {
-    const playheadAnimationId = requestAnimationFrame(this.animate.bind(this))
+    const playheadAnimationId = window.requestAnimationFrame(this.animate.bind(this))
 
     this.setState({
       playheadAnimationId,
@@ -54,7 +49,7 @@ class Playhead extends React.Component {
   }
 
   componentWillUnmount () {
-    cancelAnimationFrame(this.state.playheadAnimationId)
+    window.cancelAnimationFrame(this.state.playheadAnimationId)
     this.setState({
       playheadAnimationId: null
     })

@@ -4,7 +4,7 @@
 const AudioWorkerNode = require('audio-worker-node')
 const { assign } = require('lodash')
 
-const { isValidNumber } = require('../../lib/number-utils')
+const { isValidNumber, validNumberOrDefault } = require('../../lib/number-utils')
 
 const MAX_BUFFER_SIZE = 16384
 const BUFFER_SIZE = MAX_BUFFER_SIZE / 8
@@ -77,7 +77,6 @@ function onaudioprocess ({
   node: processor
 }) {
   const node = processor.node
-  const audioContext = node.audioContext
   const filter = node.filter
 
   if (!filter) { return }
@@ -111,7 +110,10 @@ function onaudioprocess ({
   // if playing, calculate expected vs actual position
   if (extractFrameCount !== 0) {
     const actualElapsedSamples = Math.max(0, filter.position + extractFrameCount)
-    const elapsedTime = Math.min(audioContext.currentTime, node.stopTime) - node.startTime
+
+    // TODO: is this right? doesnt this change if tempo is not constnat?
+    const elapsedTime = Math.min(playbackTime, node.stopTime) - node.startTime
+
     const expectedElapsedSamples = Math.max(0, elapsedTime * node.sampleRate)
     const sampleDelta = ~~(expectedElapsedSamples - actualElapsedSamples)
 
@@ -119,12 +121,12 @@ function onaudioprocess ({
     if (Math.abs(sampleDelta) >= SAMPLE_DRIFT_TOLERANCE) {
       // console.log('actualElapsedSamples', actualElapsedSamples);
       // console.log('expectedElapsedSamples', expectedElapsedSamples);
+      // console.log("DRIFT", sampleDelta, extractFrameCount, BUFFER_SIZE);
 
       // if we're behind where we should be, extract dummy frames to catch up
       if (sampleDelta > 0) {
-        // console.log("DRIFT", sampleDelta, extractFrameCount, BUFFER_SIZE);
         const dummySamples = new Float32Array(sampleDelta * CHANNEL_COUNT)
-        const dummyFramesExtracted = filter.extract(dummySamples, sampleDelta)
+        filter.extract(dummySamples, sampleDelta)
 
       // if we're ahead of where we should be, rewind
       } else if (sampleDelta < 0) {
@@ -134,7 +136,7 @@ function onaudioprocess ({
   }
 
   const samples = new Float32Array(BUFFER_SIZE * CHANNEL_COUNT)
-  const framesExtracted = extractFrameCount > 0 ? filter.extract(samples, extractFrameCount) : 0
+  extractFrameCount > 0 ? filter.extract(samples, extractFrameCount) : 0
 
   // map extracted frames onto output
   let filterFrame = 0
@@ -145,7 +147,7 @@ function onaudioprocess ({
   }
 };
 
-const createSoundtouchSource = module.exports = function (audioContext) {
+module.exports = function (audioContext) {
   const processor = {}
   const node = new AudioWorkerNode(audioContext, onaudioprocess, {
     numberOfInputs: 2,
@@ -195,7 +197,13 @@ const createSoundtouchSource = module.exports = function (audioContext) {
     stopTime: null,
 
     start (startTime, offsetTime) {
+      if (!isValidNumber(startTime)) {
+        console.warn('Invalid startTime given to soundtouchNode.start', startTime)
+        return
+      }
+
       const audioContext = this.audioContext
+      offsetTime = validNumberOrDefault(offsetTime, 0)
 
       const sampleRate = this.sampleRate = audioContext.sampleRate || 44100
       this.startSample = ~~(offsetTime * sampleRate)
@@ -204,12 +212,13 @@ const createSoundtouchSource = module.exports = function (audioContext) {
 
       // update filter if we have one
       if (this.filter) {
-        filter.sourcePosition = this.startSample
+        this.filter.sourcePosition = this.startSample
       }
     },
 
     stop (stopTime) {
-      this.isPlaying.setValueAtTime(0, stopTime || this.audioContext.currentTime)
+      stopTime = Math.max(0, validNumberOrDefault(stopTime, this.audioContext.currentTime))
+      this.isPlaying.setValueAtTime(0, stopTime)
     }
   })
 }

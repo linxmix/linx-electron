@@ -1,16 +1,32 @@
-const { map, merge, forEach } = require('lodash')
+const { map, merge, forEach, filter } = require('lodash')
+const d3 = require('d3')
 
-const createSoundtouchSource = require('./create-soundtouch-source')
+const createSoundtouchSource = (process.env.NODE_ENV === 'test')
+  ? () => {} : require('./create-soundtouch-source')
+
 const { PLAY_STATE_PLAYING } = require('../constants')
-const { beatToTime, validNumberOrDefault } = require('../../lib/number-utils')
+const getValueCurve = require('./get-value-curve')
+const {
+  validNumberOrDefault,
+  isValidNumber,
+  beatToTime
+} = require('../../lib/number-utils')
 
 module.exports = createAudioGraph
 
-function createAudioGraph ({ channel, audioContext, outputs = 'output', playState, startBeat }) {
+function createAudioGraph ({
+  channel,
+  audioContext,
+  outputs = 'output',
+  playState,
+  startBeat,
+  beatScale,
+  bpmScale
+}) {
   startBeat = validNumberOrDefault(startBeat, 0)
   const { channels: nestedChannels = [] } = channel
-  const { currentTime } = audioContext
 
+  // hack to add createSoundtouchSource to audioContext
   audioContext.createSoundtouchSource = () => createSoundtouchSource(audioContext)
 
   const nestedAudioGraphs = map(nestedChannels, (nestedChannel, i) =>
@@ -18,6 +34,8 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output', playStat
       channel: nestedChannel,
       audioContext,
       playState,
+      beatScale,
+      bpmScale,
       startBeat: startBeat + validNumberOrDefault(nestedChannel.startBeat, 0),
       outputs: { key: channel.id, outputs: [i], inputs: [0] }
     })
@@ -32,46 +50,72 @@ function createAudioGraph ({ channel, audioContext, outputs = 'output', playStat
     [channel.id]: ['channelMerger', outputs, { numberOfOutputs: nestedChannels.length }]
   }
 
-  // TODO: pass this in from reducer, computed from masterChannel beatGrid
-  function _beatToTime (beat) {
-    return beatToTime(beat, 128)
-  }
-
   forEach(channel.clips, clip => {
-    // TODO: how does web audio playback work?
-    //       if i specify a time in the past, does it auto correct offsetTime?
-    // const absClipStartTime = Math.max(playState.absSeekTime + clipStartTime, audioContext.currentTime);
-
     const clipStartBeat = startBeat + clip.startBeat
     const clipEndBeat = clipStartBeat + clip.beatCount
+    const audioBpm = clip.sample.meta.bpm
 
-    let startTime, stopTime, offsetTime
-    if (clipStartBeat >= playState.seekBeat) {
-      startTime = _beatToTime(clipStartBeat - playState.seekBeat)
-      stopTime = _beatToTime(clipEndBeat - playState.seekBeat)
-      offsetTime = clip.audioStartTime
-    } else {
-      // // TODO: curate args
-      // if (offsetTime < 0) {
-      //   startTime -= offsetTime;
-      //   offsetTime = 0;
-      // }
+    // if not playing or seek is beyond clip, stop here
+    if ((playState.status !== PLAY_STATE_PLAYING) ||
+      (playState.seekBeat > clipEndBeat)) {
+      return
     }
-    console.log({
-      name: clip.sample.meta.title,
-      clipStartBeat, clipEndBeat, 'playState.seekBeat': playState.seekBeat,
-      startTime, stopTime, offsetTime
+
+    const tempoScale = _getSampleClipTempoScale({
+      bpmScale,
+      audioBpm,
+      startBeat: clipStartBeat,
+      endBeat: clipEndBeat
+    })
+    const tempoCurve = getValueCurve({
+      scale: tempoScale,
+      beatCount: clip.beatCount
     })
 
-    if (playState.status === PLAY_STATE_PLAYING) {
-      audioGraph[clip.id] = ['soundtouchSource', channel.id, {
-        buffer: clip.sample.audioBuffer,
-        offsetTime,
-        startTime: playState.absSeekTime + startTime,
-        stopTime: playState.absSeekTime + stopTime
-      }]
+    let startTime = beatScale(clipStartBeat - playState.seekBeat)
+    let offsetTime = clip.audioStartTime
+    const stopTime = beatScale(clipEndBeat - playState.seekBeat)
+
+    // if seek in middle of clip, start now and adjust offsetTime
+    if (playState.seekBeat > clipStartBeat) {
+      startTime = 0
+      offsetTime += beatToTime(playState.seekBeat - clipStartBeat, audioBpm)
     }
+
+    console.log({
+      name: clip.sample.meta.title,
+      clipStartBeat,
+      clipEndBeat,
+      'playState.seekBeat': playState.seekBeat,
+      startTime,
+      stopTime,
+      offsetTime,
+      audioBpm: clip.sample.meta.bpm
+    })
+
+    audioGraph[clip.id] = ['soundtouchSource', channel.id, {
+      buffer: clip.sample.audioBuffer,
+      offsetTime,
+      startTime: playState.absSeekTime + startTime,
+      stopTime: playState.absSeekTime + stopTime,
+      tempo: ['setValueCurveAtTime', tempoCurve, playState.absSeekTime + startTime, stopTime - startTime]
+    }]
   })
 
   return merge(audioGraph, ...nestedAudioGraphs)
+}
+
+function _getSampleClipTempoScale ({ bpmScale, audioBpm, startBeat, endBeat }) {
+  const tempoScaleDomain = [startBeat]
+    .concat(filter(bpmScale.domain(), beat => (beat > startBeat && beat < endBeat)))
+    .concat([endBeat])
+
+  const tempoScaleRange = map(tempoScaleDomain, beat => {
+    const syncBpm = bpmScale(beat)
+    return (isValidNumber(syncBpm) && isValidNumber(audioBpm)) ? (syncBpm / audioBpm) : 1
+  })
+
+  return d3.scaleLinear()
+    .domain(tempoScaleDomain)
+    .range(tempoScaleRange)
 }

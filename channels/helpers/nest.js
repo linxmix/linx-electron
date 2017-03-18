@@ -1,6 +1,8 @@
-const { includes, some, every, map, concat } = require('lodash')
+const { includes, some, every, map, concat, sortBy, omitBy, isNil } = require('lodash')
+const d3 = require('d3')
 
-const { validNumberOrDefault } = require('../../lib/number-utils')
+const { validNumberOrDefault, beatToTime } = require('../../lib/number-utils')
+const { CHANNEL_TYPE_MIX } = require('../constants')
 
 module.exports = nestChannels
 
@@ -23,21 +25,37 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
   }
 
   // compute beatCount
-  const beatCount = Math.max.apply(Math, map(
+  const beatCount = validNumberOrDefault(Math.max.apply(Math, map(
     concat(childChannels, childClips),
     ({ startBeat, beatCount }) => startBeat + beatCount,
-  ))
+  )), 0)
 
-  return {
+  // compute beatScale, bpmScale
+  let beatScale, bpmScale
+  if (type === CHANNEL_TYPE_MIX) {
+    // TODO: update to use BPM automation
+    const bpm = validNumberOrDefault(channel.bpm, 128)
+    bpmScale = d3.scaleLinear()
+      .domain([0, beatCount])
+      .range([bpm, bpm])
+
+    beatScale = d3.scaleLinear()
+      .domain([0, beatCount])
+      .range([0, beatToTime(beatCount, bpm)])
+  }
+
+  return omitBy({
     id,
     type,
     status,
     beatCount,
+    beatScale,
+    bpmScale,
     startBeat: validNumberOrDefault(startBeat, 0),
     isDirty: (includes(dirtyChannels, id) ||
       some(childChannels, { isDirty: true }) ||
       some(childClips, { isDirty: true })),
-    channels: childChannels,
-    clips: childClips
-  }
+    channels: sortBy(childChannels, ['startBeat', 'id']),
+    clips: sortBy(childClips, ['startBeat', 'id'])
+  }, isNil)
 }

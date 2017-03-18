@@ -8,7 +8,6 @@ const {
   CHANNEL_TYPE_PRIMARY_TRACK,
   CHANNEL_TYPE_TRANSITION
 } = require('../../channels/constants')
-const { isValidNumber } = require('../../lib/number-utils')
 
 const ZOOM_STEP = 0.2
 const MIN_SCALE_X = 0.1

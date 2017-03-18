@@ -1,6 +1,7 @@
 const React = require('react')
 const { connect } = require('react-redux')
-const { forEach, last, get } = require('lodash')
+const { forEach, get } = require('lodash')
+const keymaster = require('keymaster')
 
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix, deleteMix,
@@ -10,11 +11,35 @@ const { play, pause } = require('../../audio/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { validNumberOrDefault } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
-const MixOverviewArrangement = require('../../svgs/components/mix-overview-arrangement')
+const MixArrangementOverview = require('../../svgs/components/mix-arrangement-overview')
 const { PLAY_STATE_PLAYING } = require('../../audio/constants')
 const { seekToBeat } = require('../../audio/actions')
 
 class MixOverviewContainer extends React.Component {
+  componentDidMount () {
+    const { loadMix, mix } = this.props
+    keymaster('space', this.playPause.bind(this))
+
+    if (mix && !mix.channel.type) {
+      loadMix(mix.id)
+    }
+  }
+
+  componentWillUnmount () {
+    keymaster.unbind('space')
+  }
+
+  playPause (e) {
+    const { mix, play, pause } = this.props
+    const playStatus = get(mix, 'playState.status')
+
+    if (playStatus !== PLAY_STATE_PLAYING) {
+      play({ channel: mix.channel })
+    } else {
+      pause({ channel: mix.channel })
+    }
+  }
+
   handleFilesDrop ({ files }) {
     const { mix, createPrimaryTrackFromFile } = this.props
     const mixBeatCount = mix && mix.channel && mix.channel.beatCount
@@ -37,7 +62,7 @@ class MixOverviewContainer extends React.Component {
 
   render () {
     const { mix, audioContext, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack,
-      unsetPrimaryTrackFromMix, seekToBeat, play, pause } = this.props
+      unsetPrimaryTrackFromMix, seekToBeat } = this.props
     if (!mix) { return null }
     console.log('mix', mix)
 
@@ -56,21 +81,6 @@ class MixOverviewContainer extends React.Component {
         onChange={this.handleChangeMixTitle.bind(this)} />
     }
 
-    let playButton
-    if (playState.status !== PLAY_STATE_PLAYING) {
-      playButton = <button
-        disabled={masterChannelStatus !== 'loaded'}
-        onClick={() => (mix && play({ channel: mix.channel }))}>
-        Play Mix
-      </button>
-    } else {
-      playButton = <button
-        disabled={masterChannelStatus !== 'loaded'}
-        onClick={() => (mix && pause({ channel: mix.channel }))}>
-        Pause Mix
-      </button>
-    }
-
     return <div>
       <header>
         {titleElement}
@@ -81,7 +91,11 @@ class MixOverviewContainer extends React.Component {
         <button disabled={isLoading || isSaving} onClick={() => deleteMix(mix.id)}>
           Delete Mix
         </button>
-        {playButton}
+        <button
+          disabled={masterChannelStatus !== 'loaded'}
+          onClick={this.playPause.bind(this)}>
+          {playState.status === PLAY_STATE_PLAYING ? 'Pause Mix' : 'Play Mix'}
+        </button>
       </header>
 
       <section>
@@ -97,21 +111,13 @@ class MixOverviewContainer extends React.Component {
       </section>
 
       <section>
-        <MixOverviewArrangement
+        <MixArrangementOverview
           mix={mix}
           audioContext={audioContext}
           seekToBeat={seekToBeat}
         />
       </section>
     </div>
-  }
-
-  componentDidMount () {
-    const { loadMix, mix } = this.props
-
-    if (mix && !mix.channel.type) {
-      loadMix(mix.id)
-    }
   }
 }
 

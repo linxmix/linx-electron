@@ -6,9 +6,9 @@
   "scripts": {
     "start": "electron .",
     "start:dev": "NODE_ENV=development node dev",
-    "test:lint": "standard",
-    "test:lint:fix": "standard --fix",
-    "test:unit": "ava",
+    "test:lint": "NODE_ENV=test standard",
+    "test:lint:fix": "NODE_ENV=test standard --fix",
+    "test:unit": "NODE_ENV=test ava",
     "test": "npm-run-all -p test:*"
   },
   "repository": {
@@ -37,6 +37,7 @@
     "insert-css": "^2.0.0",
     "invariant": "^2.2.2",
     "jsmediatags": "^3.3.2",
+    "keymaster": "^1.6.2",
     "lodash": "^4.17.2",
     "npm-run-all": "^3.1.1",
     "pify": "^2.3.0",
