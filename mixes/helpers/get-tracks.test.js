@@ -108,7 +108,6 @@ test('getPrimaryTracks', (t) => {
     }
   }]
 
-
   const actual = getPrimaryTracks(nestedChannel, metas)
   t.deepEqual(actual, expected)
 })

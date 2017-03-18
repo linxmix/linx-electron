@@ -1,9 +1,8 @@
 const { map, merge, forEach, filter } = require('lodash')
 const d3 = require('d3')
 
-const createSoundtouchSource = (process.env.NODE_ENV === 'test') ?
-  () => {} :
-  require('./create-soundtouch-source')
+const createSoundtouchSource = (process.env.NODE_ENV === 'test')
+  ? () => {} : require('./create-soundtouch-source')
 
 const { PLAY_STATE_PLAYING } = require('../constants')
 const getValueCurve = require('./get-value-curve')
