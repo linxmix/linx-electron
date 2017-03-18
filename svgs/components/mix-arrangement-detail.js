@@ -9,7 +9,7 @@ const TransitionChannel = require('./transition-channel')
 class MixArrangementDetail extends React.Component {
   render () {
     const { mix, audioContext, height, rowHeight, seekToBeat,
-      fromTrack, toTrack } = this.props
+      fromTrack, toTrack, moveClip } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const { transition } = fromTrack
@@ -34,6 +34,8 @@ class MixArrangementDetail extends React.Component {
         channel={fromTrack.channel}
         beatScale={beatScale}
         translateY={0}
+        canDrag={true}
+        moveClip={moveClip}
         color={d3.interpolateCool(.25)}
       />
 
@@ -42,6 +44,8 @@ class MixArrangementDetail extends React.Component {
         channel={toTrack.channel}
         beatScale={beatScale}
         translateY={rowHeight}
+        canDrag={true}
+        moveClip={moveClip}
         color={d3.interpolateCool(.75)}
       />
     </MixArrangementLayout>

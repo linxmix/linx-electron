@@ -2,6 +2,8 @@ const React = require('react')
 const { connect } = require('react-redux')
 const { forEach, get } = require('lodash')
 const keymaster = require('keymaster')
+const { DragDropContext } = require('react-dnd')
+const HTML5Backend = require('react-dnd-html5-backend')
 
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix, deleteMix,
@@ -150,4 +152,4 @@ module.exports = connect(
     play,
     pause
   }
-)(MixOverviewContainer)
+)(DragDropContext(HTML5Backend)(MixOverviewContainer))

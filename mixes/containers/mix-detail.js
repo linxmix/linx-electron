@@ -2,10 +2,13 @@ const React = require('react')
 const { connect } = require('react-redux')
 const { Link } = require('react-router')
 const { findIndex, get } = require('lodash')
+const { DragDropContext } = require('react-dnd')
+const MouseBackEnd = require('react-dnd-mouse-backend')
 
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
+const { moveClip } = require('../../clips/actions')
 const { play, pause, seekToBeat } = require('../../audio/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
 const { PLAY_STATE_PLAYING } = require('../../audio/constants')
@@ -13,7 +16,7 @@ const { PLAY_STATE_PLAYING } = require('../../audio/constants')
 class MixDetailContainer extends React.Component {
   render () {
     const { mix, audioContext, fromTrack, toTrack, error,
-      sampleError, saveMix, play, pause, seekToBeat } = this.props
+      sampleError, saveMix, play, pause, seekToBeat, moveClip } = this.props
     if (!mix) { return null }
 
     const { playState, isSaving, isLoading, isDirty } = mix
@@ -56,6 +59,7 @@ class MixDetailContainer extends React.Component {
           seekToBeat={seekToBeat}
           fromTrack={fromTrack}
           toTrack={toTrack}
+          moveClip={moveClip}
         />
       </section>
     </div>
@@ -89,6 +93,7 @@ module.exports = connect(
     updateMeta,
     play,
     pause,
-    seekToBeat
+    seekToBeat,
+    moveClip
   }
-)(MixDetailContainer)
+)(DragDropContext(MouseBackEnd)(MixDetailContainer))

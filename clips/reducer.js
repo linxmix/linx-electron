@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { map, defaults, without, omit } = require('lodash')
+const { map, defaults, without, omit, assign } = require('lodash')
 const assert = require('assert')
 const uuid = require('uuid/v4')
 
@@ -11,7 +11,9 @@ const {
   unsetClip,
   undirtyClips,
   undirtyClip,
-  createClip
+  updateClip,
+  createClip,
+  moveClip
 } = require('./actions')
 
 module.exports = createReducer
@@ -48,7 +50,28 @@ function createReducer (config) {
       return loop({
         ...state, dirty: [...state.dirty, attrs.id]
       }, Effects.constant(setClip(attrs)))
-    }
+    },
+    [updateClip]: (state, action) => {
+      const { id } = action.payload
+      assert(id, 'Cannot updateClip without id')
+
+      return {
+        ...state,
+        dirty: [...state.dirty, id],
+        records: {
+          ...state.records,
+          [id]: assign({}, state.records[id], action.payload)
+        }
+      }
+    },
+    [moveClip]: (state, action) => {
+      const { id, beats } = action.payload
+
+      return loop(state, Effects.constant(updateClip({
+        id,
+        startBeat: beats + state.records[id].startBeat
+      })))
+    },
   }, {
     dirty: [],
     records: {}

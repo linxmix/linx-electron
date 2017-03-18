@@ -1,12 +1,13 @@
 const React = require('react')
 const d3 = require('d3')
+const { DragSource } = require('react-dnd')
 
 const getPeaks = require('../../samples/helpers/get-peaks')
 const { beatToTime } = require('../../lib/number-utils')
 
 class SampleClip extends React.Component {
   render () {
-    const { clip, height, color, resolution } = this.props
+    const { clip, height, color, resolution, connectDragSource } = this.props
     if (!clip || (clip.status !== 'loaded')) { return null }
 
     const { sample, audioStartTime, beatCount } = clip
@@ -30,16 +31,45 @@ class SampleClip extends React.Component {
       .y0(([ ymin, ymax ]) => median + ymin * median)
       .y1(([ ymin, ymax ]) => median + ymax * median)
 
-    return <g transform={`translate(${clip.startBeat})`}>
+    return connectDragSource(<g transform={`translate(${clip.startBeat})`}>
       <path fill={color} d={area(peaks)} />
-    </g>
+    </g>)
   }
 }
 
 SampleClip.defaultProps = {
   height: 100,
   color: 'green',
-  resolution: 1
+  resolution: 1,
+  canDrag: false
 }
 
-module.exports = SampleClip
+function collectDrag (connect, monitor) {
+  return {
+    connectDragSource: connect.dragSource(),
+    isDragging: monitor.isDragging(),
+    canDrag: monitor.canDrag()
+  }
+}
+
+const dragSource = {
+  beginDrag (props, monitor, component) {
+    return {
+      id: props.clip.id
+    }
+  },
+  isDragging (props, monitor) {
+    console.log('isDragging', monitor.getDifferenceFromInitialOffset())
+  },
+  endDrag (props, monitor) {
+    props.moveClip({
+      id: props.clip.id,
+      beats: monitor.getDifferenceFromInitialOffset().x
+    })
+  },
+  canDrag (props) {
+    return props.canDrag
+  }
+}
+
+module.exports = DragSource('sample-clip', dragSource, collectDrag)(SampleClip)
