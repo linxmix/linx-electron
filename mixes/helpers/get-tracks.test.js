@@ -21,18 +21,16 @@ test('getPrimaryTracks', (t) => {
   const nestedChannel = {
     id: 0,
     channels: [{
-
-      id: 1,
+      id: 4,
       type: 'primary-track',
 
-      startBeat: 90,
+      startBeat: 0,
       beatCount: 100,
 
       clips: [{
-        id: 'track2',
-        sampleId: 'track-2.m4a'
+        id: 'track1',
+        sampleId: 'track-1.m4a'
       }]
-
     }, {
       id: 2,
       type: 'transition',
@@ -54,16 +52,18 @@ test('getPrimaryTracks', (t) => {
       }]
 
     }, {
-      id: 4,
+
+      id: 1,
       type: 'primary-track',
 
-      startBeat: 0,
+      startBeat: 90,
       beatCount: 100,
 
       clips: [{
-        id: 'track1',
-        sampleId: 'track-1.m4a'
+        id: 'track2',
+        sampleId: 'track-2.m4a'
       }]
+
     }]
   }
 
@@ -107,6 +107,7 @@ test('getPrimaryTracks', (t) => {
       }]
     }
   }]
+
 
   const actual = getPrimaryTracks(nestedChannel, metas)
   t.deepEqual(actual, expected)
