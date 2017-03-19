@@ -25,7 +25,8 @@ const {
 const {
   CHANNEL_TYPE_PRIMARY_TRACK,
   CHANNEL_TYPES
-} = require('../channels/constants')
+} = require('./constants')
+const { CLIP_TYPE_SAMPLE } = require('../clips/constants')
 
 module.exports = createReducer
 
@@ -114,7 +115,7 @@ function createReducer (config) {
         const clipId = uuid()
 
         return Effects.batch([
-          Effects.constant(createClip({ id: clipId, sampleId })),
+          Effects.constant(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
           Effects.constant(createChannel(assign({
             id: channelId,
             type: CHANNEL_TYPE_PRIMARY_TRACK,

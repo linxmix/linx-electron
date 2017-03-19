@@ -1,6 +1,7 @@
 const React = require('react')
 const d3 = require('d3')
 const { DragSource } = require('react-dnd')
+const { throttle } = require('lodash')
 
 const getPeaks = require('../../samples/helpers/get-peaks')
 const { beatToTime } = require('../../lib/number-utils')
@@ -55,18 +56,24 @@ function collectDrag (connect, monitor) {
 const dragSource = {
   beginDrag (props, monitor, component) {
     return {
-      id: props.clip.id
+      id: props.clip.id,
+      type: props.clip.type,
+      startBeat: props.clip.startBeat
     }
   },
-  isDragging (props, monitor) {
-    console.log('isDragging', monitor.getDifferenceFromInitialOffset())
-  },
-  endDrag (props, monitor) {
-    props.moveClip({
+  isDragging: throttle(function (props, monitor) {
+    const item = monitor.getItem()
+    const diff = monitor.getDifferenceFromInitialOffset()
+    if (!item || !diff) { return false }
+
+    const isDragging = item.id === props.clip.id
+    isDragging && props.moveClip({
       id: props.clip.id,
-      beats: monitor.getDifferenceFromInitialOffset().x
+      startBeat: diff.x + item.startBeat
     })
-  },
+
+    return isDragging
+  }, 10),
   canDrag (props) {
     return props.canDrag
   }

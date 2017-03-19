@@ -2,11 +2,7 @@ const React = require('react')
 const { map } = require('lodash')
 
 const SampleClip = require('./sample-clip')
-
-// TODO: abstract identifiers
-function isSampleClip (clip) {
-  return clip && clip.sample
-}
+const { CLIP_TYPE_SAMPLE } = require('../../clips/constants')
 
 class PrimaryTrackChannel extends React.Component {
   render () {
@@ -15,7 +11,7 @@ class PrimaryTrackChannel extends React.Component {
 
     return <g transform={`translate(${channel.startBeat},${translateY})`}>
       {map(channel.clips, clip =>
-        isSampleClip(clip) && <SampleClip
+        (clip.type === CLIP_TYPE_SAMPLE) && <SampleClip
           key={clip.id}
           clip={clip}
           beatScale={beatScale}

@@ -1,5 +1,9 @@
 const React = require('react')
 const { Link } = require('react-router')
+const { DragDropContext } = require('react-dnd')
+const { default: HTML5Backend } = require('react-dnd-html5-backend')
+const { default: MouseBackEnd } = require('react-dnd-mouse-backend')
+const MultiBackEnd = require('react-dnd-multi-backend')
 
 class LayoutContainer extends React.Component {
   render () {
@@ -17,5 +21,4 @@ class LayoutContainer extends React.Component {
     </div>
   }
 }
-
-module.exports = LayoutContainer
+module.exports = DragDropContext(MultiBackEnd(HTML5Backend, MouseBackEnd))(LayoutContainer)

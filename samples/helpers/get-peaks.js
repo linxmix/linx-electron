@@ -5,6 +5,8 @@ const { isValidNumber, validNumberOrDefault } = require('../../lib/number-utils'
 module.exports = getPeaks
 
 // TODO: add caching? here or in store?
+const peaksCache = {}
+
 // returns an array of arrays of [ymin, ymax] values of the waveform
 //  from startTime to endTime when broken into length subranges
 function getPeaks ({ audioBuffer, startTime, endTime, length }) {
@@ -15,14 +17,10 @@ function getPeaks ({ audioBuffer, startTime, endTime, length }) {
   startTime = Math.max(validNumberOrDefault(startTime, 0), 0)
   endTime = validNumberOrDefault(endTime, audioBuffer.duration)
 
-  // const cacheKey = `startTime:${startTime},endTime:${endTime},length:${length},audioBufferDuration:${audioBuffer.duration}`;
-  // const peaksCache = this.get('_peaksCache');
-  // const cached = peaksCache.get(cacheKey);
+  const cacheKey = `startTime:${startTime},endTime:${endTime},length:${length},audioBufferDuration:${audioBuffer.duration}`
+  const cached = peaksCache[cacheKey]
 
-  // if (cached) {
-  //   // Ember.Logger.log('AudioBinary.getPeaks cache hit', startTime, endTime, length);
-  //   return cached;
-  // }
+  if (cached) { return cached }
 
   // TODO(FUTURE): update to use multiple channels
   // TODO(FUTURE): job.spawn still helpful?
@@ -33,7 +31,7 @@ function getPeaks ({ audioBuffer, startTime, endTime, length }) {
     endSample: endTime * audioBuffer.sampleRate
   })
 
-  // peaksCache.set(cacheKey, peaks);
+  peaksCache[cacheKey] = peaks
 
   return peaks
 }
