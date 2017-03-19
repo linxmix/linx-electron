@@ -66,11 +66,11 @@ function createReducer (config) {
       }
     },
     [moveClip]: (state, action) => {
-      const { id, beats } = action.payload
+      const { id, startBeat } = action.payload
 
       return loop(state, Effects.constant(updateClip({
         id,
-        startBeat: beats + state.records[id].startBeat
+        startBeat
       })))
     }
   }, {

@@ -2,8 +2,6 @@ const React = require('react')
 const { connect } = require('react-redux')
 const { Link } = require('react-router')
 const { findIndex } = require('lodash')
-const { DragDropContext } = require('react-dnd')
-const MouseBackEnd = require('react-dnd-mouse-backend')
 
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
@@ -96,4 +94,4 @@ module.exports = connect(
     seekToBeat,
     moveClip
   }
-)(DragDropContext(MouseBackEnd)(MixDetailContainer))
+)(MixDetailContainer)

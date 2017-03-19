@@ -1,5 +1,6 @@
 const React = require('react')
 const d3 = require('d3')
+const { DropTarget } = require('react-dnd')
 
 const Axis = require('./axis')
 const Playhead = require('./playhead')
@@ -122,7 +123,7 @@ class MixArrangementLayout extends React.Component {
   }
 
   render () {
-    const { mix, audioContext, height } = this.props
+    const { mix, audioContext, height, connectDropTarget } = this.props
     const { scaleX, translateX } = this.state
     if (!(mix && mix.channel)) { return null }
 
@@ -134,7 +135,7 @@ class MixArrangementLayout extends React.Component {
       .domain([0, mixPhraseCount])
       .range([0, mixBeatCount])
 
-    return <div
+    return connectDropTarget(<div
       onMouseDown={this.handleMouseDown.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
 
@@ -164,7 +165,7 @@ class MixArrangementLayout extends React.Component {
           />
         </g>
       </svg>
-    </div>
+    </div>)
   }
 }
 
@@ -172,4 +173,17 @@ MixArrangementLayout.defaultProps = {
   height: 100
 }
 
-module.exports = MixArrangementLayout
+const dropTarget = {
+  hover (props, monitor, component) {
+    // if there is an item dragging, say something is dragging but not us
+    component.setState({ dragCoords: null, isDragging: true })
+  }
+}
+
+function collect (connect, monitor) {
+  return {
+    connectDropTarget: connect.dropTarget()
+  }
+}
+
+module.exports = DropTarget('sample-clip', dropTarget, collect)(MixArrangementLayout)
