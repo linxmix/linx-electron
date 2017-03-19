@@ -13,7 +13,7 @@ function _isNegative (n) {
   return ((n = +n) || 1 / n) < 0
 }
 
-class MixArrangementOverview extends React.Component {
+class MixArrangementLayout extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
@@ -168,8 +168,8 @@ class MixArrangementOverview extends React.Component {
   }
 }
 
-MixArrangementOverview.defaultProps = {
+MixArrangementLayout.defaultProps = {
   height: 100
 }
 
-module.exports = MixArrangementOverview
+module.exports = MixArrangementLayout

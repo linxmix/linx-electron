@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { map, defaults, without, omit, assign } = require('lodash')
+const { map, defaults, without, omit, assign, includes } = require('lodash')
 const assert = require('assert')
 const uuid = require('uuid/v4')
 
@@ -15,6 +15,7 @@ const {
   createClip,
   moveClip
 } = require('./actions')
+const CLIP_TYPES = require('./constants')
 
 module.exports = createReducer
 
@@ -45,7 +46,7 @@ function createReducer (config) {
     }),
     [createClip]: (state, action) => {
       const attrs = defaults({}, action.payload, { id: uuid() })
-      assert(attrs.sampleId, 'Cannot createClip without sampleId')
+      assert(includes(CLIP_TYPES, attrs.type), 'Must have valid type to createClip')
 
       return loop({
         ...state, dirty: [...state.dirty, attrs.id]
