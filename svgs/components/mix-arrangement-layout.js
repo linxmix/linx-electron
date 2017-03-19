@@ -1,13 +1,9 @@
 const React = require('react')
-const { map, sortBy } = require('lodash')
 const d3 = require('d3')
 
-const PrimaryTrackChannel = require('./primary-track-channel')
-const TransitionChannel = require('./transition-channel')
-const {
-  CHANNEL_TYPE_PRIMARY_TRACK,
-  CHANNEL_TYPE_TRANSITION
-} = require('../../channels/constants')
+const Axis = require('./axis')
+const Playhead = require('./playhead')
+const { validNumberOrDefault } = require('../../lib/number-utils')
 
 const ZOOM_STEP = 0.2
 const MIN_SCALE_X = 0.1
@@ -17,14 +13,16 @@ function _isNegative (n) {
   return ((n = +n) || 1 / n) < 0
 }
 
-class MixDetailArrangement extends React.Component {
+class MixArrangementOverview extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
       scaleX: 1,
       translateX: 1,
       mouseMoveHandler: null,
-      mouseUpHandler: null
+      mouseUpHandler: null,
+      isDragging: false,
+      dragCoords: null
     }
   }
 
@@ -53,7 +51,6 @@ class MixDetailArrangement extends React.Component {
 
   handleMouseDown (e) {
     this.setState({
-      isDragging: true,
       dragCoords: {
         x: e.pageX,
         y: e.pageY
@@ -61,21 +58,27 @@ class MixDetailArrangement extends React.Component {
     })
   }
 
-  handleMouseUp () {
+  handleMouseUp (e) {
+    if (this.state.dragCoords) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
     this.setState({
       isDragging: false,
-      dragCoords: {}
+      dragCoords: null
     })
   }
 
   handleMouseMove (e) {
-    if (!this.state.isDragging) { return }
+    if (!this.state.dragCoords) { return }
 
     e.preventDefault()
     e.stopPropagation()
 
     const xDiff = this.state.dragCoords.x - e.pageX
     this.setState({
+      isDragging: true,
       translateX: this.state.translateX - xDiff,
       dragCoords: {
         x: e.pageX,
@@ -105,40 +108,68 @@ class MixDetailArrangement extends React.Component {
     })
   }
 
+  handleClick (e) {
+    if (this.state.isDragging) { return }
+
+    const { mix, seekToBeat } = this.props
+    const { translateX, scaleX } = this.state
+    const mouseX = e.nativeEvent.offsetX
+
+    seekToBeat({
+      channel: mix.channel,
+      seekBeat: (mouseX - translateX) / scaleX
+    })
+  }
+
   render () {
-    const { mix } = this.props
+    const { mix, audioContext, height } = this.props
     const { scaleX, translateX } = this.state
+    if (!(mix && mix.channel)) { return null }
+
     const transform = `translate(${translateX}) scale(${scaleX}, 1)`
+    const beatScale = mix.channel.beatScale
+    const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
+    const mixPhraseCount = mixBeatCount / 32  // TODO: need to round?
+    const phraseScale = d3.scaleLinear()
+      .domain([0, mixPhraseCount])
+      .range([0, mixBeatCount])
 
     return <div
       onMouseDown={this.handleMouseDown.bind(this)}
-      onMouseUp={this.handleMouseUp.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
+
       <svg
+        onMouseUp={this.handleClick.bind(this)}
         width='100%'
-        height={100}
+        height={height}
         style={{ border: '1px solid gray' }}
         ref='svg'>
 
-        <g transform={transform}>
-          {map(sortBy(mix.channel.channels, ['startBeat', 'id']), (channel, i, channels) => {
-            let Element
-            switch (channel.type) {
-              case CHANNEL_TYPE_PRIMARY_TRACK:
-                Element = PrimaryTrackChannel; break
-              case CHANNEL_TYPE_TRANSITION:
-                Element = TransitionChannel; break
-            }
-            return Element ? <Element
-              key={channel.id}
-              channel={channel}
-              color={d3.interpolateCool(i / channels.length)}
-              /> : null
-          })}
+        <g transform={transform} >
+          <Axis
+            scale={phraseScale}
+            tickCount={mixPhraseCount}
+            height={height}
+            strokeWidth={1 / scaleX}
+          />
+
+          {this.props.children}
+
+          <Playhead
+            playState={mix.playState}
+            beatScale={beatScale}
+            audioContext={audioContext}
+            height={height}
+            strokeWidth={1.5 / scaleX}
+          />
         </g>
       </svg>
     </div>
   }
 }
 
-module.exports = MixDetailArrangement
+MixArrangementOverview.defaultProps = {
+  height: 100
+}
+
+module.exports = MixArrangementOverview

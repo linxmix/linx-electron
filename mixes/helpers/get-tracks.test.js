@@ -30,27 +30,13 @@ test('getPrimaryTracks', (t) => {
       clips: [{
         id: 'track1',
         sampleId: 'track-1.m4a'
-      }]
-    }, {
-      id: 2,
-      type: 'transition',
-
-      startBeat: 90,
-      beatCount: 20,
+      }],
 
       channels: [{
-        id: 3,
-        type: 'sample-track',
-
-        startBeat: 5,
-        beatCount: 10,
-
-        clips: [{
-          id: 'beat',
-          sampleId: 'beat.m4a'
-        }]
+        id: 2,
+        type: 'transition',
+        startBeat: 90
       }]
-
     }, {
 
       id: 1,
@@ -63,7 +49,6 @@ test('getPrimaryTracks', (t) => {
         id: 'track2',
         sampleId: 'track-2.m4a'
       }]
-
     }]
   }
 
@@ -77,14 +62,24 @@ test('getPrimaryTracks', (t) => {
     channel: {
       id: 4,
       type: 'primary-track',
-
       startBeat: 0,
       beatCount: 100,
+
+      channels: [{
+        id: 2,
+        type: 'transition',
+        startBeat: 90
+      }],
 
       clips: [{
         id: 'track1',
         sampleId: 'track-1.m4a'
       }]
+    },
+    transition: {
+      id: 2,
+      type: 'transition',
+      startBeat: 90
     }
   }, {
     id: 1,
@@ -94,10 +89,8 @@ test('getPrimaryTracks', (t) => {
       title: 'track-2'
     },
     channel: {
-
       id: 1,
       type: 'primary-track',
-
       startBeat: 90,
       beatCount: 100,
 
@@ -105,7 +98,8 @@ test('getPrimaryTracks', (t) => {
         id: 'track2',
         sampleId: 'track-2.m4a'
       }]
-    }
+    },
+    transition: undefined
   }]
 
   const actual = getPrimaryTracks(nestedChannel, metas)
