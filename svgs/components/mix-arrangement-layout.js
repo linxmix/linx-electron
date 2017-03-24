@@ -1,6 +1,7 @@
 const React = require('react')
 const d3 = require('d3')
 const { DropTarget } = require('react-dnd')
+const { throttle } = require('lodash')
 
 const Axis = require('./axis')
 const Playhead = require('./playhead')
@@ -179,9 +180,29 @@ MixArrangementLayout.defaultProps = {
 }
 
 const dropTarget = {
-  hover (props, monitor, component) {
+  hover: throttle(function(props, monitor, component) {
+    const item = monitor.getItem()
+    const diff = monitor.getDifferenceFromInitialOffset()
+    if (!(item && diff)) { return false }
+
     // if there is an item dragging, say something is dragging but not us
     component.setState({ dragCoords: null, isDragging: true })
+
+    props.moveClip && props.moveClip({
+      id: item.id,
+      startBeat: item.startBeat,
+      diffX: diff.x
+    })
+  }, 10),
+  drop (props, monitor, component) {
+    const item = monitor.getItem()
+    const diff = monitor.getDifferenceFromInitialOffset()
+    console.log('endDrag', item, diff)
+
+    // report if clip moved
+    if (item && item.id && diff && (diff.x !== 0)) {
+      props.didMoveClip({ id: item.id })
+    }
   }
 }
 

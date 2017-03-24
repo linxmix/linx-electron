@@ -44,8 +44,7 @@ function createReducer (config) {
           absSeekTime: state.audioContext.currentTime,
           seekBeat
         })),
-        Effects.constant(updateAudioGraph(channel)),
-        Effects.constant(updateVirtualAudioGraph(channel.id))
+        Effects.constant(updateAudioGraph(channel))
       ]))
     },
     [pause]: (state, action) => {
@@ -73,8 +72,7 @@ function createReducer (config) {
           absSeekTime,
           seekBeat
         })),
-        Effects.constant(updateAudioGraph(channel)),
-        Effects.constant(updateVirtualAudioGraph(channel.id))
+        Effects.constant(updateAudioGraph(channel))
       ]))
     },
     [seekToBeat]: (state, action) => {
@@ -86,8 +84,7 @@ function createReducer (config) {
           seekBeat: seekBeat,
           absSeekTime: state.audioContext.currentTime
         })),
-        Effects.constant(updateAudioGraph(channel)),
-        Effects.constant(updateVirtualAudioGraph(channel.id))
+        Effects.constant(updateAudioGraph(channel))
       ]))
     },
     [updatePlayState]: (state, action) => {
@@ -109,7 +106,8 @@ function createReducer (config) {
       const channel = action.payload
       const playState = state.playStates[channel.id]
       assert(channel.status === 'loaded', 'Requires loaded channel to updateAudioGraph')
-      assert(!!playState, 'Requires playState to updateAudioGraph')
+
+      if (!playState) { return }
 
       const audioGraph = createAudioGraph({
         channel,
@@ -119,13 +117,13 @@ function createReducer (config) {
         audioContext: state.audioContext
       })
 
-      return {
+      return loop({
         ...state,
         audioGraphs: {
           ...state.audioGraphs,
           [channel.id]: audioGraph
         }
-      }
+      }, Effects.constant(updateVirtualAudioGraph(channel.id)))
     },
     [updateVirtualAudioGraph]: (state, action) => {
       const channelId = action.payload

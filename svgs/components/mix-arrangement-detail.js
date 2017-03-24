@@ -1,5 +1,6 @@
 const React = require('react')
 const d3 = require('d3')
+const { throttle } = require('lodash')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
 const PrimaryTrackChannel = require('./primary-track-channel')
@@ -9,7 +10,7 @@ const { roundTo } = require('../../lib/number-utils')
 
 class MixArrangementDetail extends React.Component {
   render () {
-    const { mix, audioContext, height, rowHeight, seekToBeat,
+    const { mix, audioContext, height, rowHeight, seekToBeat, updateAudioGraph,
       fromTrack, toTrack, updateClip, scaleX, translateX, updateZoom } = this.props
     if (!(mix && mix.channel)) { return null }
 
@@ -22,12 +23,15 @@ class MixArrangementDetail extends React.Component {
       id,
       startBeat: _quantizeBeat(this.props.dragModifierKeys, (diffX / scaleX)) + startBeat
     })
+    const didMoveClip = () => updateAudioGraph(mix.channel)
 
     return <MixArrangementLayout
       mix={mix}
       seekToBeat={seekToBeat}
       audioContext={audioContext}
       updateZoom={updateZoom}
+      moveClip={moveClip}
+      didMoveClip={didMoveClip}
       scaleX={scaleX}
       translateX={translateX}
       height={height}>
@@ -43,8 +47,6 @@ class MixArrangementDetail extends React.Component {
         beatScale={beatScale}
         translateY={0}
         canDrag={true}
-        scaleX={scaleX}
-        moveClip={moveClip}
         color={d3.interpolateCool(0.25)}
       />
 
@@ -54,8 +56,6 @@ class MixArrangementDetail extends React.Component {
         beatScale={beatScale}
         translateY={rowHeight}
         canDrag={true}
-        scaleX={scaleX}
-        moveClip={moveClip}
         color={d3.interpolateCool(0.75)}
       />
     </MixArrangementLayout>

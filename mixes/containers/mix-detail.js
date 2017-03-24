@@ -8,14 +8,14 @@ const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { updateZoom } = require('../../svgs/actions')
 const { updateClip } = require('../../clips/actions')
-const { play, pause, seekToBeat } = require('../../audios/actions')
+const { play, pause, seekToBeat, updateAudioGraph } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
 const { PLAY_STATE_PLAYING } = require('../../audios/constants')
 
 class MixDetailContainer extends React.Component {
   render () {
     const { mix, audioContext, fromTrack, toTrack, error, zoom,
-      sampleError, saveMix, play, pause, seekToBeat, updateClip, updateZoom } = this.props
+      sampleError, saveMix, play, pause, seekToBeat, updateClip, updateZoom, updateAudioGraph } = this.props
     if (!mix) { return null }
 
     const { playState, isSaving, isLoading, isDirty } = mix
@@ -57,6 +57,7 @@ class MixDetailContainer extends React.Component {
           audioContext={audioContext}
           seekToBeat={seekToBeat}
           updateZoom={updateZoom}
+          updateAudioGraph={updateAudioGraph}
           scaleX={zoom.scaleX}
           translateX={zoom.translateX}
           fromTrack={fromTrack}
@@ -99,6 +100,7 @@ module.exports = connect(
     pause,
     seekToBeat,
     updateClip,
-    updateZoom
+    updateZoom,
+    updateAudioGraph
   }
 )(MixDetailContainer)

@@ -8,7 +8,7 @@ const { beatToTime } = require('../../lib/number-utils')
 
 class SampleClip extends React.Component {
   render () {
-    const { clip, height, color, resolution, connectDragSource } = this.props
+    const { clip, height, color, resolution, connectDragSource, isDragging } = this.props
     if (!clip || (clip.status !== 'loaded')) { return null }
 
     const { sample, audioStartTime, beatCount } = clip
@@ -33,7 +33,7 @@ class SampleClip extends React.Component {
       .y1(([ ymin, ymax ]) => median + ymax * median)
 
     return connectDragSource(<g transform={`translate(${clip.startBeat})`}>
-      <path fill={color} d={area(peaks)} />
+      <path fill={color} d={area(peaks)} opacity={isDragging ? 0.5 : 1} />
     </g>)
   }
 }
@@ -61,22 +61,10 @@ const dragSource = {
       startBeat: props.clip.startBeat
     }
   },
-  isDragging: throttle(function (props, monitor) {
+  isDragging (props, monitor) {
     const item = monitor.getItem()
-    const diff = monitor.getDifferenceFromInitialOffset()
-    if (!item || !diff) { return false }
-
-    const isDragging = item.id === props.clip.id
-
-    // setTimeout to asynchronously moveClip
-    isDragging && window.setTimeout(() => props.moveClip({
-      id: props.clip.id,
-      startBeat: item.startBeat,
-      diffX: diff.x
-    }))
-
-    return isDragging
-  }, 10),
+    return item && item.id && (item.id === props.clip.id)
+  },
   canDrag (props) {
     return props.canDrag
   }
