@@ -7,12 +7,13 @@ const { getMixProps } = require('../getters')
 const { saveMix, loadMix, deleteMix,
   reorderPrimaryTrack, unsetPrimaryTrackFromMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
-const { play, pause, seekToBeat } = require('../../audio/actions')
+const { play, pause, seekToBeat } = require('../../audios/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
+const { updateZoom } = require('../../svgs/actions')
 const { validNumberOrDefault } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
 const MixArrangementOverview = require('../../svgs/components/mix-arrangement-overview')
-const { PLAY_STATE_PLAYING } = require('../../audio/constants')
+const { PLAY_STATE_PLAYING } = require('../../audios/constants')
 
 class MixOverviewContainer extends React.Component {
   componentDidMount () {
@@ -61,7 +62,7 @@ class MixOverviewContainer extends React.Component {
 
   render () {
     const { mix, audioContext, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack,
-      unsetPrimaryTrackFromMix, seekToBeat } = this.props
+      unsetPrimaryTrackFromMix, seekToBeat, updateZoom, zoom } = this.props
     if (!mix) { return null }
     console.log('mix', mix)
 
@@ -112,7 +113,10 @@ class MixOverviewContainer extends React.Component {
       <section>
         <MixArrangementOverview
           mix={mix}
+          updateZoom={updateZoom}
           audioContext={audioContext}
+          scaleX={zoom.scaleX}
+          translateX={zoom.translateX}
           seekToBeat={seekToBeat}
         />
       </section>
@@ -127,6 +131,8 @@ module.exports = connect(
     const { router, route } = ownProps
     const mix = props.mixes[currentMixId]
 
+    const zoom = props.zooms[currentMixId] || {}
+
     if (mix) {
       router.setRouteLeaveHook(
         route,
@@ -136,7 +142,7 @@ module.exports = connect(
       )
     }
 
-    return { ...props, mix }
+    return { ...props, mix, zoom }
   },
   {
     saveMix,
@@ -147,6 +153,7 @@ module.exports = connect(
     reorderPrimaryTrack,
     unsetPrimaryTrackFromMix,
     seekToBeat,
+    updateZoom,
     play,
     pause
   }
