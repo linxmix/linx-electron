@@ -85,7 +85,10 @@ class MixArrangementLayout extends React.Component {
       }
     })
 
-    this.props.updateZoom({ translateX: this.props.translateX - xDiff })
+    this.props.updateZoom({
+      id: this.props.mix.id,
+      translateX: this.props.translateX - xDiff
+    })
   }
 
   handleMouseWheel (e) {
@@ -105,6 +108,7 @@ class MixArrangementLayout extends React.Component {
     const translateX = this.props.translateX
 
     this.props.updateZoom({
+      id: this.props.mix.id,
       scaleX,
       translateX: translateX + ((mouseX - translateX) * factor)
     })

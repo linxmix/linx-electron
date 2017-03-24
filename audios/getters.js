@@ -1,7 +1,7 @@
 const { createSelector: Getter } = require('reselect')
 
-const getPlayStatesRecords = (state) => state.audio.playStates
-const getAudioContext = (state) => state.audio.audioContext
+const getPlayStatesRecords = (state) => state.audios.playStates
+const getAudioContext = (state) => state.audios.audioContext
 
 const getPlayStates = Getter(
   getPlayStatesRecords,

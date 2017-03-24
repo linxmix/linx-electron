@@ -6,21 +6,12 @@ const PrimaryTrackChannel = require('./primary-track-channel')
 const TransitionChannel = require('./transition-channel')
 
 class MixArrangementDetail extends React.Component {
-  constructor (props) {
-    super(props)
-    this.state = {
-      scaleX: 1,
-      translateX: 1
-    }
-  }
-
   render () {
     const { mix, audioContext, height, rowHeight, seekToBeat,
-      fromTrack, toTrack, updateClip } = this.props
+      fromTrack, toTrack, updateClip, scaleX, translateX, updateZoom } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const { transition } = fromTrack
-    const { scaleX, translateX } = this.state
 
     console.log('mix-arrangement-detail', { fromTrack, toTrack, transition })
 
@@ -34,7 +25,7 @@ class MixArrangementDetail extends React.Component {
       mix={mix}
       seekToBeat={seekToBeat}
       audioContext={audioContext}
-      updateZoom={({ translateX, scaleX }) => this.setState({ translateX, scaleX })}
+      updateZoom={updateZoom}
       scaleX={scaleX}
       translateX={translateX}
       height={height}>
@@ -71,7 +62,9 @@ class MixArrangementDetail extends React.Component {
 
 MixArrangementDetail.defaultProps = {
   height: 200,
-  rowHeight: 100
+  rowHeight: 100,
+  scaleX: 1,
+  translateX: 1
 }
 
 module.exports = MixArrangementDetail

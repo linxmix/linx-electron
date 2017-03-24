@@ -1,7 +1,7 @@
 const React = require('react')
 
 const { validNumberOrDefault } = require('../../lib/number-utils')
-const { PLAY_STATE_PLAYING } = require('../../audio/constants')
+const { PLAY_STATE_PLAYING } = require('../../audios/constants')
 
 class Playhead extends React.Component {
   constructor (props) {
