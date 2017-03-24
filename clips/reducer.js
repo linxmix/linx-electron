@@ -12,8 +12,7 @@ const {
   undirtyClips,
   undirtyClip,
   updateClip,
-  createClip,
-  moveClip
+  createClip
 } = require('./actions')
 const CLIP_TYPES = require('./constants')
 
@@ -64,14 +63,6 @@ function createReducer (config) {
           [id]: assign({}, state.records[id], action.payload)
         }
       }
-    },
-    [moveClip]: (state, action) => {
-      const { id, startBeat } = action.payload
-
-      return loop(state, Effects.constant(updateClip({
-        id,
-        startBeat
-      })))
     }
   }, {
     dirty: [],

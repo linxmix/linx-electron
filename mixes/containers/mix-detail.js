@@ -6,7 +6,7 @@ const { findIndex } = require('lodash')
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
-const { moveClip } = require('../../clips/actions')
+const { updateClip } = require('../../clips/actions')
 const { play, pause, seekToBeat } = require('../../audio/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
 const { PLAY_STATE_PLAYING } = require('../../audio/constants')
@@ -14,7 +14,7 @@ const { PLAY_STATE_PLAYING } = require('../../audio/constants')
 class MixDetailContainer extends React.Component {
   render () {
     const { mix, audioContext, fromTrack, toTrack, error,
-      sampleError, saveMix, play, pause, seekToBeat, moveClip } = this.props
+      sampleError, saveMix, play, pause, seekToBeat, updateClip } = this.props
     if (!mix) { return null }
 
     const { playState, isSaving, isLoading, isDirty } = mix
@@ -57,7 +57,7 @@ class MixDetailContainer extends React.Component {
           seekToBeat={seekToBeat}
           fromTrack={fromTrack}
           toTrack={toTrack}
-          moveClip={moveClip}
+          updateClip={updateClip}
         />
       </section>
     </div>
@@ -92,6 +92,6 @@ module.exports = connect(
     play,
     pause,
     seekToBeat,
-    moveClip
+    updateClip
   }
 )(MixDetailContainer)

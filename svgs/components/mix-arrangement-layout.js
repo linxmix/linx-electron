@@ -18,8 +18,6 @@ class MixArrangementLayout extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      scaleX: 1,
-      translateX: 1,
       mouseMoveHandler: null,
       mouseUpHandler: null,
       isDragging: false,
@@ -78,21 +76,23 @@ class MixArrangementLayout extends React.Component {
     e.stopPropagation()
 
     const xDiff = this.state.dragCoords.x - e.pageX
+
     this.setState({
       isDragging: true,
-      translateX: this.state.translateX - xDiff,
       dragCoords: {
         x: e.pageX,
         y: e.pageY
       }
     })
+
+    this.props.updateZoom({ translateX: this.props.translateX - xDiff })
   }
 
   handleMouseWheel (e) {
     e.preventDefault()
     e.stopPropagation()
 
-    let scaleX = this.state.scaleX
+    let scaleX = this.props.scaleX
     if (_isNegative(e.deltaY)) {
       scaleX += ZOOM_STEP * scaleX
     } else {
@@ -100,20 +100,20 @@ class MixArrangementLayout extends React.Component {
     }
     scaleX = Math.max(MIN_SCALE_X, scaleX)
 
-    const factor = 1 - (scaleX / this.state.scaleX)
+    const factor = 1 - (scaleX / this.props.scaleX)
     const mouseX = e.nativeEvent.offsetX
+    const translateX = this.props.translateX
 
-    this.setState({
+    this.props.updateZoom({
       scaleX,
-      translateX: this.state.translateX + ((mouseX - this.state.translateX) * factor)
+      translateX: translateX + ((mouseX - translateX) * factor)
     })
   }
 
   handleClick (e) {
     if (this.state.isDragging) { return }
 
-    const { mix, seekToBeat } = this.props
-    const { translateX, scaleX } = this.state
+    const { mix, seekToBeat, translateX, scaleX } = this.props
     const mouseX = e.nativeEvent.offsetX
 
     seekToBeat({
@@ -123,8 +123,7 @@ class MixArrangementLayout extends React.Component {
   }
 
   render () {
-    const { mix, audioContext, height, connectDropTarget } = this.props
-    const { scaleX, translateX } = this.state
+    const { mix, audioContext, height, connectDropTarget, scaleX, translateX } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const transform = `translate(${translateX}) scale(${scaleX}, 1)`
@@ -170,7 +169,9 @@ class MixArrangementLayout extends React.Component {
 }
 
 MixArrangementLayout.defaultProps = {
-  height: 100
+  height: 100,
+  scaleX: 1,
+  translateX: 1
 }
 
 const dropTarget = {
