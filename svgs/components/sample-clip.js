@@ -67,10 +67,13 @@ const dragSource = {
     if (!item || !diff) { return false }
 
     const isDragging = item.id === props.clip.id
-    isDragging && props.moveClip({
+
+    // setTimeout to asynchronously moveClip
+    isDragging && window.setTimeout(() => props.moveClip({
       id: props.clip.id,
-      startBeat: diff.x + item.startBeat
-    })
+      startBeat: item.startBeat,
+      diffX: diff.x
+    }))
 
     return isDragging
   }, 10),

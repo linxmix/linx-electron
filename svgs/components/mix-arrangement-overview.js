@@ -11,16 +11,28 @@ const {
 } = require('../../channels/constants')
 
 class MixArrangementOverview extends React.Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      scaleX: 1,
+      translateX: 1
+    }
+  }
+
   render () {
     const { mix, audioContext, height, seekToBeat } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const beatScale = mix.channel.beatScale
+    const { scaleX, translateX } = this.state
 
     return <MixArrangementLayout
       mix={mix}
       seekToBeat={seekToBeat}
       audioContext={audioContext}
+      updateZoom={({ translateX, scaleX }) => this.setState({ translateX, scaleX })}
+      scaleX={scaleX}
+      translateX={translateX}
       height={height}>
 
       {map(mix.channel.channels, (channel, i, channels) => {
