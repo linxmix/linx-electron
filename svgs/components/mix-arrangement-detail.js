@@ -4,6 +4,8 @@ const d3 = require('d3')
 const MixArrangementLayout = require('./mix-arrangement-layout')
 const PrimaryTrackChannel = require('./primary-track-channel')
 const TransitionChannel = require('./transition-channel')
+const DetectDragModifierKeys = require('../../lib/detect-drag-modifier-keys')
+const { roundTo } = require('../../lib/number-utils')
 
 class MixArrangementDetail extends React.Component {
   render () {
@@ -18,7 +20,7 @@ class MixArrangementDetail extends React.Component {
     const beatScale = mix.channel.beatScale
     const moveClip = ({ id, startBeat, diffX }) => updateClip({
       id,
-      startBeat: (diffX / scaleX) + startBeat
+      startBeat: _quantizeBeat(this.props.dragModifierKeys, (diffX / scaleX)) + startBeat
     })
 
     return <MixArrangementLayout
@@ -67,4 +69,22 @@ MixArrangementDetail.defaultProps = {
   translateX: 1
 }
 
-module.exports = MixArrangementDetail
+module.exports = DetectDragModifierKeys({ listenForAllDragEvents: true })(MixArrangementDetail)
+
+function _quantizeBeat(dragModifierKeys, beat, timeSignature = 4) {
+  console.log('_quantizeBeat', { dragModifierKeys, beat })
+
+  // beat quantization
+  if (dragModifierKeys.ctrlKey || dragModifierKeys.metaKey) {
+    return Math.round(beat)
+
+  // sample quantization
+  } else if (dragModifierKeys.altKey) {
+    return beat
+  }
+
+  // (default) bar quantization
+  else {
+    return roundTo(beat, timeSignature)
+  }
+}
