@@ -33,6 +33,7 @@ class SampleClip extends React.Component {
       .y1(([ ymin, ymax ]) => median + ymax * median)
 
     return connectDragSource(<g transform={`translate(${clip.startBeat})`}>
+      <rect width={beatCount} height={height} fill='transparent' />
       <path fill={color} d={area(peaks)} opacity={isDragging ? 0.5 : 1} />
     </g>)
   }
