@@ -10,6 +10,7 @@ const { PLAY_STATE_PLAYING, PLAY_STATE_PAUSED } = require('./constants')
 const {
   play,
   pause,
+  playPause,
   seekToBeat,
   updatePlayState,
   updateAudioGraph,
@@ -74,6 +75,16 @@ function createReducer (config) {
         })),
         Effects.constant(updateAudioGraph(channel))
       ]))
+    },
+    [playPause]: (state, action) => {
+      const { channel } = action.payload
+      const playState = state.playStates[channel.id]
+
+      if (!playState || playState.status === PLAY_STATE_PAUSED) {
+        return loop(state, Effects.constant(play(action.payload)))
+      } else {
+        return loop(state, Effects.constant(pause(action.payload)))
+      }
     },
     [seekToBeat]: (state, action) => {
       const { channel, seekBeat } = action.payload
