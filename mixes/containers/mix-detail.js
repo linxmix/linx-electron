@@ -1,7 +1,7 @@
 const React = require('react')
 const { connect } = require('react-redux')
 const { Link } = require('react-router')
-const { findIndex, pick, mapValues, curry } = require('lodash')
+const { findIndex, pick, mapValues } = require('lodash')
 const keymaster = require('keymaster')
 
 const DetectDragModifierKeys = require('../../lib/detect-drag-modifier-keys')
@@ -9,8 +9,8 @@ const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { updateZoom } = require('../../svgs/actions')
-const { updateClip, moveClip } = require('../../clips/actions')
-const { updateChannel, moveChannel, resizeChannel } = require('../../channels/actions')
+const { moveClip } = require('../../clips/actions')
+const { moveChannel, resizeChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
 const { PLAY_STATE_PLAYING } = require('../../audios/constants')
@@ -42,8 +42,6 @@ class MixDetailContainer extends React.Component {
         ...options
       })
     )
-
-    console.log({ arrangementActions})
 
     const { playState, isSaving, isLoading, isDirty, channel } = mix
     const { status: masterChannelStatus } = channel
@@ -112,7 +110,7 @@ module.exports = connect(
 )(DetectDragModifierKeys({ listenForAllDragEvents: true })(MixDetailContainer))
 
 // TODO use default quantization, provided by store state, unless modifier keys are present
-function _getQuantization(modifierKeys, defaultQuantization = 'bar') {
+function _getQuantization (modifierKeys, defaultQuantization = 'bar') {
   if (modifierKeys.ctrlKey || modifierKeys.metaKey) {
     return 'beat'
   } else if (modifierKeys.altKey) {

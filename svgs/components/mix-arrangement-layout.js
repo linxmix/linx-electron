@@ -181,7 +181,7 @@ MixArrangementLayout.defaultProps = {
 }
 
 const dropTarget = {
-  hover: throttle(function(props, monitor, component) {
+  hover: throttle(function (props, monitor, component) {
     const item = monitor.getItem()
     const diff = monitor.getDifferenceFromInitialOffset()
     if (!(item && diff)) { return false }
@@ -209,7 +209,6 @@ const dropTarget = {
   }, 10),
   drop (props, monitor, component) {
     const item = monitor.getItem()
-    const itemType = monitor.getItemType()
     const diff = monitor.getDifferenceFromInitialOffset()
     console.log('endDrag', item, diff)
 

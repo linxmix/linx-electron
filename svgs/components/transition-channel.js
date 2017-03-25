@@ -23,15 +23,17 @@ class TransitionChannel extends React.Component {
       <ResizeHandle
         id={channel.id}
         translateX={0}
+        translateY={-10}
         startBeat={channel.startBeat}
         beatCount={channel.beatCount}
         canDrag={canDrag}
       />
       <ResizeHandle
         id={channel.id}
+        translateX={channel.beatCount}
+        translateY={-10}
         startBeat={channel.startBeat}
         beatCount={channel.beatCount}
-        translateX={channel.beatCount}
         canDrag={canDrag}
       />
     </g>
@@ -52,7 +54,6 @@ function collectDrag (connect, monitor) {
 
 const dragSource = {
   beginDrag (props, monitor, component) {
-    console.log('drag transition channel')
     return {
       id: props.channel.id,
       startBeat: props.channel.startBeat

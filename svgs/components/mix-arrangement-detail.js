@@ -5,7 +5,6 @@ const { pick, get } = require('lodash')
 const MixArrangementLayout = require('./mix-arrangement-layout')
 const PrimaryTrackChannel = require('./primary-track-channel')
 const TransitionChannel = require('./transition-channel')
-const { roundTo } = require('../../lib/number-utils')
 
 class MixArrangementDetail extends React.Component {
   render () {
@@ -29,12 +28,19 @@ class MixArrangementDetail extends React.Component {
       height={height}
       {...layoutActions}>
 
+      <TransitionChannel
+        key={transition.id}
+        channel={transition}
+        height={height}
+        canDrag
+      />
+
       <PrimaryTrackChannel
         key={fromTrack.id}
         channel={fromTrack.channel}
         beatScale={beatScale}
         translateY={0}
-        canDrag={true}
+        canDrag
         color={d3.interpolateCool(0.25)}
       />
 
@@ -43,15 +49,8 @@ class MixArrangementDetail extends React.Component {
         channel={toTrack.channel}
         beatScale={beatScale}
         translateY={rowHeight}
-        canDrag={true}
+        canDrag
         color={d3.interpolateCool(0.75)}
-      />
-
-      <TransitionChannel
-        key={transition.id}
-        channel={transition}
-        height={height}
-        canDrag={true}
       />
     </MixArrangementLayout>
   }

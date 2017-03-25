@@ -166,13 +166,13 @@ function createReducer (config) {
       const quantizedDiffBeats = quantizeBeat({ quantization, beat: diffBeats })
 
       let updatePayload
-      if (isResizeLeft)
+      if (isResizeLeft) {
         updatePayload = {
           id,
           startBeat: startBeat + quantizedDiffBeats,
           beatCount: beatCount - quantizedDiffBeats
         }
-      else {
+      } else {
         updatePayload = {
           id,
           beatCount: beatCount + quantizedDiffBeats

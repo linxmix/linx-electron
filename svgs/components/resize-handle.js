@@ -3,13 +3,13 @@ const { DragSource } = require('react-dnd')
 
 class ResizeHandle extends React.Component {
   render () {
-    const { height, width, connectDragSource, isDragging, translateX } = this.props
+    const { height, width, connectDragSource, translateX, translateY } = this.props
 
     return connectDragSource(<rect
-      transform={`translate(${translateX - width / 2})`}
+      transform={`translate(${translateX - width / 2}, ${translateY})`}
       width={width}
       height={height}
-      style={{ fill: 'rgba(0,0,255)' }}
+      style={{ fill: 'rgba(0,0,255,0.4' }}
     />)
   }
 }
@@ -18,7 +18,8 @@ ResizeHandle.defaultProps = {
   canDrag: false,
   height: 10,
   width: 10,
-  translateX: 0
+  translateX: 0,
+  translateY: 0
 }
 
 function collectDrag (connect, monitor) {
@@ -30,7 +31,6 @@ function collectDrag (connect, monitor) {
 
 const dragSource = {
   beginDrag (props, monitor, component) {
-    console.log('drag resize-handle')
     return {
       id: props.id,
       startBeat: props.startBeat,
