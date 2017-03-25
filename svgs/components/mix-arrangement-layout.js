@@ -128,10 +128,10 @@ class MixArrangementLayout extends React.Component {
   }
 
   render () {
-    const { mix, audioContext, height, connectDropTarget, scaleX, translateX } = this.props
+    const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY } = this.props
     if (!(mix && mix.channel)) { return null }
 
-    const transform = `translate(${translateX}) scale(${scaleX}, 1)`
+    const transform = `translate(${translateX},${translateY}) scale(${scaleX}, 1)`
     const beatScale = mix.channel.beatScale
     const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
     const mixPhraseCount = mixBeatCount / 32  // TODO: need to round?
@@ -188,20 +188,30 @@ const dropTarget = {
     // if there is an item dragging, say something is dragging but not us
     component.setState({ dragCoords: null, isDragging: true })
 
-    props.moveClip && props.moveClip({
-      id: item.id,
-      startBeat: item.startBeat,
-      diffX: diff.x
-    })
+    switch (monitor.getItemType()) {
+      case 'sample-clip':
+        props.moveClip({
+          id: item.id,
+          startBeat: item.startBeat,
+          diffX: diff.x
+        })
+      case 'transition-channel':
+        props.moveChannel({
+          id: item.id,
+          startBeat: item.startBeat,
+          diffX: diff.x
+        })
+    }
   }, 10),
   drop (props, monitor, component) {
     const item = monitor.getItem()
+    const itemType = monitor.getItemType()
     const diff = monitor.getDifferenceFromInitialOffset()
     console.log('endDrag', item, diff)
 
     // report if clip moved
     if (item && item.id && diff && (diff.x !== 0)) {
-      props.didMoveClip({ id: item.id })
+      props.didUpdateArrangement({ id: item.id })
     }
   }
 }
@@ -212,4 +222,4 @@ function collect (connect, monitor) {
   }
 }
 
-module.exports = DropTarget('sample-clip', dropTarget, collect)(MixArrangementLayout)
+module.exports = DropTarget(['sample-clip', 'transition-channel'], dropTarget, collect)(MixArrangementLayout)

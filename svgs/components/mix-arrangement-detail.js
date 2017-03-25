@@ -11,19 +11,23 @@ const { roundTo } = require('../../lib/number-utils')
 class MixArrangementDetail extends React.Component {
   render () {
     const { mix, audioContext, height, rowHeight, seekToBeat, updateAudioGraph,
-      fromTrack, toTrack, updateClip, scaleX, translateX, updateZoom } = this.props
+      fromTrack, toTrack, updateClip, updateChannel, scaleX, translateX, updateZoom } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const { transition } = fromTrack
+    const beatScale = mix.channel.beatScale
 
     console.log('mix-arrangement-detail', { fromTrack, toTrack, transition })
 
-    const beatScale = mix.channel.beatScale
     const moveClip = ({ id, startBeat, diffX }) => updateClip({
       id,
       startBeat: _quantizeBeat(this.props.dragModifierKeys, (diffX / scaleX)) + startBeat
     })
-    const didMoveClip = () => updateAudioGraph(mix.channel)
+    const moveChannel = ({ id, startBeat, diffX }) => updateChannel({
+      id,
+      startBeat: _quantizeBeat(this.props.dragModifierKeys, (diffX / scaleX)) + startBeat
+    })
+    const didUpdateArrangement = () => updateAudioGraph(mix.channel)
 
     return <MixArrangementLayout
       mix={mix}
@@ -31,15 +35,12 @@ class MixArrangementDetail extends React.Component {
       audioContext={audioContext}
       updateZoom={updateZoom}
       moveClip={moveClip}
-      didMoveClip={didMoveClip}
+      moveChannel={moveChannel}
+      didUpdateArrangement={didUpdateArrangement}
       scaleX={scaleX}
       translateX={translateX}
+      translateY={25}
       height={height}>
-
-      <TransitionChannel
-        key={transition.id}
-        channel={transition}
-      />
 
       <PrimaryTrackChannel
         key={fromTrack.id}
@@ -58,12 +59,19 @@ class MixArrangementDetail extends React.Component {
         canDrag={true}
         color={d3.interpolateCool(0.75)}
       />
+
+      <TransitionChannel
+        key={transition.id}
+        channel={transition}
+        height={height}
+        canDrag={true}
+      />
     </MixArrangementLayout>
   }
 }
 
 MixArrangementDetail.defaultProps = {
-  height: 200,
+  height: 225,
   rowHeight: 100,
   scaleX: 1,
   translateX: 1

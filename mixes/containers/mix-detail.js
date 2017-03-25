@@ -9,6 +9,7 @@ const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { updateZoom } = require('../../svgs/actions')
 const { updateClip } = require('../../clips/actions')
+const { updateChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
 const { PLAY_STATE_PLAYING } = require('../../audios/constants')
@@ -28,7 +29,7 @@ class MixDetailContainer extends React.Component {
   }
 
   render () {
-    const { mix, audioContext, fromTrack, toTrack, error, zoom,
+    const { mix, audioContext, fromTrack, toTrack, error, zoom, updateChannel,
       sampleError, saveMix, playPause, seekToBeat, updateClip, updateZoom, updateAudioGraph } = this.props
     if (!mix) { return null }
 
@@ -66,6 +67,7 @@ class MixDetailContainer extends React.Component {
           fromTrack={fromTrack}
           toTrack={toTrack}
           updateClip={updateClip}
+          updateChannel={updateChannel}
         />
       </section>
     </div>
@@ -94,6 +96,7 @@ module.exports = connect(
     playPause,
     seekToBeat,
     updateClip,
+    updateChannel,
     updateZoom,
     updateAudioGraph
   }
