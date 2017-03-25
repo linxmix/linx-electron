@@ -14,6 +14,8 @@ const {
   undirtyChannel,
   createChannel,
   updateChannel,
+  moveChannel,
+  resizeChannel,
   setChannelParent,
   createPrimaryTrackFromFile,
   swapPrimaryTracks
@@ -27,6 +29,7 @@ const {
   CHANNEL_TYPES
 } = require('./constants')
 const { CLIP_TYPE_SAMPLE } = require('../clips/constants')
+const { quantizeBeat } = require('../lib/number-utils')
 
 module.exports = createReducer
 
@@ -149,6 +152,34 @@ function createReducer (config) {
           })
         }
       }
+    },
+    [moveChannel]: (state, action) => {
+      const { id, startBeat, diffBeats, quantization } = action.payload
+
+      return loop(state, Effects.constant(updateChannel({
+        id,
+        startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
+      })))
+    },
+    [resizeChannel]: (state, action) => {
+      const { id, startBeat, beatCount, diffBeats, isResizeLeft, quantization } = action.payload
+      const quantizedDiffBeats = quantizeBeat({ quantization, beat: diffBeats })
+
+      let updatePayload
+      if (isResizeLeft)
+        updatePayload = {
+          id,
+          startBeat: startBeat + quantizedDiffBeats,
+          beatCount: beatCount - quantizedDiffBeats
+        }
+      else {
+        updatePayload = {
+          id,
+          beatCount: beatCount + quantizedDiffBeats
+        }
+      }
+
+      return loop(state, Effects.constant(updateChannel(updatePayload)))
     }
   }, {
     dirty: [],

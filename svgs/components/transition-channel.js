@@ -1,11 +1,13 @@
 const React = require('react')
 const { DragSource } = require('react-dnd')
 
+const ResizeHandle = require('./resize-handle')
+
 class TransitionChannel extends React.Component {
   render () {
-    const { channel, height, connectDragSource, connectDragPreview, isDragging } = this.props
+    const { channel, height, connectDragSource, isDragging, canDrag } = this.props
 
-    return connectDragPreview(<g transform={`translate(${channel.startBeat})`} opacity={isDragging ? 0.5 : 1}>
+    return <g transform={`translate(${channel.startBeat})`} opacity={isDragging ? 0.5 : 1}>
       <rect
         width={channel.beatCount}
         height={height}
@@ -18,7 +20,21 @@ class TransitionChannel extends React.Component {
         y={-25}
         style={{ fill: 'rgba(0,0,255,0.4)' }}
       />)}
-    </g>)
+      <ResizeHandle
+        id={channel.id}
+        translateX={0}
+        startBeat={channel.startBeat}
+        beatCount={channel.beatCount}
+        canDrag={canDrag}
+      />
+      <ResizeHandle
+        id={channel.id}
+        startBeat={channel.startBeat}
+        beatCount={channel.beatCount}
+        translateX={channel.beatCount}
+        canDrag={canDrag}
+      />
+    </g>
   }
 }
 
@@ -30,7 +46,6 @@ TransitionChannel.defaultProps = {
 function collectDrag (connect, monitor) {
   return {
     connectDragSource: connect.dragSource(),
-    connectDragPreview: connect.dragPreview(),
     isDragging: monitor.isDragging()
   }
 }

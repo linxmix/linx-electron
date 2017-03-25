@@ -1,46 +1,33 @@
 const React = require('react')
 const d3 = require('d3')
-const { throttle } = require('lodash')
+const { pick, get } = require('lodash')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
 const PrimaryTrackChannel = require('./primary-track-channel')
 const TransitionChannel = require('./transition-channel')
-const DetectDragModifierKeys = require('../../lib/detect-drag-modifier-keys')
 const { roundTo } = require('../../lib/number-utils')
 
 class MixArrangementDetail extends React.Component {
   render () {
-    const { mix, audioContext, height, rowHeight, seekToBeat, updateAudioGraph,
-      fromTrack, toTrack, updateClip, updateChannel, scaleX, translateX, updateZoom } = this.props
+    const { mix, audioContext, height, rowHeight, fromTrack, toTrack, scaleX, translateX } = this.props
     if (!(mix && mix.channel)) { return null }
 
+    const layoutActions = pick(this.props, ['updateZoom', 'moveClip', 'moveChannel', 'resizeChannel',
+      'updateAudioGraph', 'seekToBeat'])
+
     const { transition } = fromTrack
-    const beatScale = mix.channel.beatScale
+    const beatScale = get(mix, 'channel.beatScale')
 
     console.log('mix-arrangement-detail', { fromTrack, toTrack, transition })
 
-    const moveClip = ({ id, startBeat, diffX }) => updateClip({
-      id,
-      startBeat: _quantizeBeat(this.props.dragModifierKeys, (diffX / scaleX)) + startBeat
-    })
-    const moveChannel = ({ id, startBeat, diffX }) => updateChannel({
-      id,
-      startBeat: _quantizeBeat(this.props.dragModifierKeys, (diffX / scaleX)) + startBeat
-    })
-    const didUpdateArrangement = () => updateAudioGraph(mix.channel)
-
     return <MixArrangementLayout
       mix={mix}
-      seekToBeat={seekToBeat}
       audioContext={audioContext}
-      updateZoom={updateZoom}
-      moveClip={moveClip}
-      moveChannel={moveChannel}
-      didUpdateArrangement={didUpdateArrangement}
       scaleX={scaleX}
       translateX={translateX}
       translateY={25}
-      height={height}>
+      height={height}
+      {...layoutActions}>
 
       <PrimaryTrackChannel
         key={fromTrack.id}
@@ -77,22 +64,4 @@ MixArrangementDetail.defaultProps = {
   translateX: 1
 }
 
-module.exports = DetectDragModifierKeys({ listenForAllDragEvents: true })(MixArrangementDetail)
-
-function _quantizeBeat(dragModifierKeys, beat, timeSignature = 4) {
-  console.log('_quantizeBeat', { dragModifierKeys, beat })
-
-  // beat quantization
-  if (dragModifierKeys.ctrlKey || dragModifierKeys.metaKey) {
-    return Math.round(beat)
-
-  // sample quantization
-  } else if (dragModifierKeys.altKey) {
-    return beat
-  }
-
-  // (default) bar quantization
-  else {
-    return roundTo(beat, timeSignature)
-  }
-}
+module.exports = MixArrangementDetail
