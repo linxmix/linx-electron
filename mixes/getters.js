@@ -1,10 +1,11 @@
 const { createSelector: Getter, createStructuredSelector: Struct } = require('reselect')
 const { mapValues, values, includes } = require('lodash')
 
-const { getPlayStates, getAudioContext } = require('../audio/getters')
+const { getPlayStates, getAudioContext } = require('../audios/getters')
 const { getMetas } = require('../metas/getters')
 const { getChannels } = require('../channels/getters')
 const { getSamplesError } = require('../samples/getters')
+const { getZooms } = require('../svgs/getters')
 const { getPrimaryTracks } = require('./helpers/get-tracks')
 
 const getMixesRecords = (state) => state.mixes.records
@@ -57,6 +58,7 @@ const getMixListProps = Struct({
 
 const getMixProps = Struct({
   mixes: getMixes,
+  zooms: getZooms,
   sampleError: getSamplesError,
   error: getMixesError,
   audioContext: getAudioContext

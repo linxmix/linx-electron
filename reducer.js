@@ -11,6 +11,7 @@ function createReducer (config) {
     channels: require('./channels/reducer')(config),
     clips: require('./clips/reducer')(config),
     metas: require('./metas/reducer')(config),
-    audio: require('./audio/reducer')(config)
+    audios: require('./audios/reducer')(config),
+    svgs: require('./svgs/reducer')(config)
   })
 }

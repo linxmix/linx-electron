@@ -10,6 +10,7 @@ const { PLAY_STATE_PLAYING, PLAY_STATE_PAUSED } = require('./constants')
 const {
   play,
   pause,
+  playPause,
   seekToBeat,
   updatePlayState,
   updateAudioGraph,
@@ -44,8 +45,7 @@ function createReducer (config) {
           absSeekTime: state.audioContext.currentTime,
           seekBeat
         })),
-        Effects.constant(updateAudioGraph(channel)),
-        Effects.constant(updateVirtualAudioGraph(channel.id))
+        Effects.constant(updateAudioGraph({ channel }))
       ]))
     },
     [pause]: (state, action) => {
@@ -73,9 +73,18 @@ function createReducer (config) {
           absSeekTime,
           seekBeat
         })),
-        Effects.constant(updateAudioGraph(channel)),
-        Effects.constant(updateVirtualAudioGraph(channel.id))
+        Effects.constant(updateAudioGraph({ channel }))
       ]))
+    },
+    [playPause]: (state, action) => {
+      const { channel } = action.payload
+      const playState = state.playStates[channel.id]
+
+      if (!playState || playState.status === PLAY_STATE_PAUSED) {
+        return loop(state, Effects.constant(play(action.payload)))
+      } else {
+        return loop(state, Effects.constant(pause(action.payload)))
+      }
     },
     [seekToBeat]: (state, action) => {
       const { channel, seekBeat } = action.payload
@@ -86,8 +95,7 @@ function createReducer (config) {
           seekBeat: seekBeat,
           absSeekTime: state.audioContext.currentTime
         })),
-        Effects.constant(updateAudioGraph(channel)),
-        Effects.constant(updateVirtualAudioGraph(channel.id))
+        Effects.constant(updateAudioGraph({ channel }))
       ]))
     },
     [updatePlayState]: (state, action) => {
@@ -106,10 +114,11 @@ function createReducer (config) {
 
     // TODO: should this all be in channels reducer? so we dont have to pass full channel
     [updateAudioGraph]: (state, action) => {
-      const channel = action.payload
+      const { channel } = action.payload
       const playState = state.playStates[channel.id]
       assert(channel.status === 'loaded', 'Requires loaded channel to updateAudioGraph')
-      assert(!!playState, 'Requires playState to updateAudioGraph')
+
+      if (!playState) { return }
 
       const audioGraph = createAudioGraph({
         channel,
@@ -119,13 +128,13 @@ function createReducer (config) {
         audioContext: state.audioContext
       })
 
-      return {
+      return loop({
         ...state,
         audioGraphs: {
           ...state.audioGraphs,
           [channel.id]: audioGraph
         }
-      }
+      }, Effects.constant(updateVirtualAudioGraph(channel.id)))
     },
     [updateVirtualAudioGraph]: (state, action) => {
       const channelId = action.payload

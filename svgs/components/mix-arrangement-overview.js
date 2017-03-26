@@ -12,7 +12,7 @@ const {
 
 class MixArrangementOverview extends React.Component {
   render () {
-    const { mix, audioContext, height, seekToBeat } = this.props
+    const { mix, audioContext, height, seekToBeat, scaleX, translateX, updateZoom } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const beatScale = mix.channel.beatScale
@@ -21,6 +21,9 @@ class MixArrangementOverview extends React.Component {
       mix={mix}
       seekToBeat={seekToBeat}
       audioContext={audioContext}
+      updateZoom={updateZoom}
+      scaleX={scaleX}
+      translateX={translateX}
       height={height}>
 
       {map(mix.channel.channels, (channel, i, channels) => {
@@ -43,7 +46,9 @@ class MixArrangementOverview extends React.Component {
 }
 
 MixArrangementOverview.defaultProps = {
-  height: 100
+  height: 100,
+  scaleX: 1,
+  translateX: 1
 }
 
 module.exports = MixArrangementOverview

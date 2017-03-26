@@ -16,6 +16,7 @@ const {
   moveClip
 } = require('./actions')
 const CLIP_TYPES = require('./constants')
+const { quantizeBeat } = require('../lib/number-utils')
 
 module.exports = createReducer
 
@@ -66,11 +67,11 @@ function createReducer (config) {
       }
     },
     [moveClip]: (state, action) => {
-      const { id, startBeat } = action.payload
+      const { id, startBeat, diffBeats, quantization } = action.payload
 
       return loop(state, Effects.constant(updateClip({
         id,
-        startBeat
+        startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
       })))
     }
   }, {

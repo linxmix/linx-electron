@@ -1,6 +1,7 @@
 const React = require('react')
 const d3 = require('d3')
 const { DropTarget } = require('react-dnd')
+const { throttle } = require('lodash')
 
 const Axis = require('./axis')
 const Playhead = require('./playhead')
@@ -18,8 +19,6 @@ class MixArrangementLayout extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      scaleX: 1,
-      translateX: 1,
       mouseMoveHandler: null,
       mouseUpHandler: null,
       isDragging: false,
@@ -78,13 +77,18 @@ class MixArrangementLayout extends React.Component {
     e.stopPropagation()
 
     const xDiff = this.state.dragCoords.x - e.pageX
+
     this.setState({
       isDragging: true,
-      translateX: this.state.translateX - xDiff,
       dragCoords: {
         x: e.pageX,
         y: e.pageY
       }
+    })
+
+    this.props.updateZoom({
+      id: this.props.mix.id,
+      translateX: this.props.translateX - xDiff
     })
   }
 
@@ -92,7 +96,7 @@ class MixArrangementLayout extends React.Component {
     e.preventDefault()
     e.stopPropagation()
 
-    let scaleX = this.state.scaleX
+    let scaleX = this.props.scaleX
     if (_isNegative(e.deltaY)) {
       scaleX += ZOOM_STEP * scaleX
     } else {
@@ -100,20 +104,21 @@ class MixArrangementLayout extends React.Component {
     }
     scaleX = Math.max(MIN_SCALE_X, scaleX)
 
-    const factor = 1 - (scaleX / this.state.scaleX)
+    const factor = 1 - (scaleX / this.props.scaleX)
     const mouseX = e.nativeEvent.offsetX
+    const translateX = this.props.translateX
 
-    this.setState({
+    this.props.updateZoom({
+      id: this.props.mix.id,
       scaleX,
-      translateX: this.state.translateX + ((mouseX - this.state.translateX) * factor)
+      translateX: translateX + ((mouseX - translateX) * factor)
     })
   }
 
   handleClick (e) {
     if (this.state.isDragging) { return }
 
-    const { mix, seekToBeat } = this.props
-    const { translateX, scaleX } = this.state
+    const { mix, seekToBeat, translateX, scaleX } = this.props
     const mouseX = e.nativeEvent.offsetX
 
     seekToBeat({
@@ -123,11 +128,10 @@ class MixArrangementLayout extends React.Component {
   }
 
   render () {
-    const { mix, audioContext, height, connectDropTarget } = this.props
-    const { scaleX, translateX } = this.state
+    const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY } = this.props
     if (!(mix && mix.channel)) { return null }
 
-    const transform = `translate(${translateX}) scale(${scaleX}, 1)`
+    const transform = `translate(${translateX},${translateY}) scale(${scaleX}, 1)`
     const beatScale = mix.channel.beatScale
     const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
     const mixPhraseCount = mixBeatCount / 32  // TODO: need to round?
@@ -170,13 +174,48 @@ class MixArrangementLayout extends React.Component {
 }
 
 MixArrangementLayout.defaultProps = {
-  height: 100
+  height: 100,
+  scaleX: 1,
+  translateX: 1,
+  translateY: 0
 }
 
 const dropTarget = {
-  hover (props, monitor, component) {
+  hover: throttle(function (props, monitor, component) {
+    const item = monitor.getItem()
+    const diff = monitor.getDifferenceFromInitialOffset()
+    if (!(item && diff)) { return false }
+
     // if there is an item dragging, say something is dragging but not us
     component.setState({ dragCoords: null, isDragging: true })
+
+    let action
+    switch (monitor.getItemType()) {
+      case 'sample-clip':
+        action = props.moveClip
+        break
+      case 'transition-channel':
+        action = props.moveChannel
+        break
+      case 'resize-handle':
+        action = props.resizeChannel
+        break
+    }
+
+    action({
+      diffBeats: (diff.x / props.scaleX),
+      ...item
+    })
+  }, 10),
+  drop (props, monitor, component) {
+    const item = monitor.getItem()
+    const diff = monitor.getDifferenceFromInitialOffset()
+    console.log('endDrag', item, diff)
+
+    // report if clip moved
+    if (item && item.id && diff && (diff.x !== 0)) {
+      props.updateAudioGraph({ channel: props.mix.channel })
+    }
   }
 }
 
@@ -186,4 +225,5 @@ function collect (connect, monitor) {
   }
 }
 
-module.exports = DropTarget('sample-clip', dropTarget, collect)(MixArrangementLayout)
+module.exports = DropTarget(['sample-clip', 'transition-channel', 'resize-handle'],
+  dropTarget, collect)(MixArrangementLayout)

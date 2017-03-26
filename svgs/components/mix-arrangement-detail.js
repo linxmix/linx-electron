@@ -1,5 +1,6 @@
 const React = require('react')
 const d3 = require('d3')
+const { pick, get } = require('lodash')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
 const PrimaryTrackChannel = require('./primary-track-channel')
@@ -7,25 +8,31 @@ const TransitionChannel = require('./transition-channel')
 
 class MixArrangementDetail extends React.Component {
   render () {
-    const { mix, audioContext, height, rowHeight, seekToBeat,
-      fromTrack, toTrack, moveClip } = this.props
+    const { mix, audioContext, height, rowHeight, fromTrack, toTrack, scaleX, translateX } = this.props
     if (!(mix && mix.channel)) { return null }
 
+    const layoutActions = pick(this.props, ['updateZoom', 'moveClip', 'moveChannel', 'resizeChannel',
+      'updateAudioGraph', 'seekToBeat'])
+
     const { transition } = fromTrack
+    const beatScale = get(mix, 'channel.beatScale')
 
     console.log('mix-arrangement-detail', { fromTrack, toTrack, transition })
 
-    const beatScale = mix.channel.beatScale
-
     return <MixArrangementLayout
       mix={mix}
-      seekToBeat={seekToBeat}
       audioContext={audioContext}
-      height={height}>
+      scaleX={scaleX}
+      translateX={translateX}
+      translateY={25}
+      height={height}
+      {...layoutActions}>
 
       <TransitionChannel
         key={transition.id}
         channel={transition}
+        height={height}
+        canDrag
       />
 
       <PrimaryTrackChannel
@@ -34,7 +41,6 @@ class MixArrangementDetail extends React.Component {
         beatScale={beatScale}
         translateY={0}
         canDrag
-        moveClip={moveClip}
         color={d3.interpolateCool(0.25)}
       />
 
@@ -44,7 +50,6 @@ class MixArrangementDetail extends React.Component {
         beatScale={beatScale}
         translateY={rowHeight}
         canDrag
-        moveClip={moveClip}
         color={d3.interpolateCool(0.75)}
       />
     </MixArrangementLayout>
@@ -52,8 +57,10 @@ class MixArrangementDetail extends React.Component {
 }
 
 MixArrangementDetail.defaultProps = {
-  height: 200,
-  rowHeight: 100
+  height: 225,
+  rowHeight: 100,
+  scaleX: 1,
+  translateX: 1
 }
 
 module.exports = MixArrangementDetail
