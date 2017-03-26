@@ -12,7 +12,7 @@ class MixArrangementDetail extends React.Component {
     if (!(mix && mix.channel)) { return null }
 
     const layoutActions = pick(this.props, ['updateZoom', 'moveClip', 'moveChannel', 'resizeChannel',
-      'updateAudioGraph', 'seekToBeat'])
+      'updateAudioGraph', 'seekToBeat', 'moveControlPoint'])
 
     const { transition } = fromTrack
     const beatScale = get(mix, 'channel.beatScale')
@@ -41,6 +41,7 @@ class MixArrangementDetail extends React.Component {
         beatScale={beatScale}
         translateY={0}
         canDrag
+        showAutomations
         color={d3.interpolateCool(0.25)}
       />
 
@@ -50,6 +51,7 @@ class MixArrangementDetail extends React.Component {
         beatScale={beatScale}
         translateY={rowHeight}
         canDrag
+        showAutomations
         color={d3.interpolateCool(0.75)}
       />
     </MixArrangementLayout>

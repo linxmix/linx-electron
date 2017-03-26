@@ -11,6 +11,7 @@ const {
   isValidNumber,
   beatToTime
 } = require('../../lib/number-utils')
+const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../../clips/constants')
 
 module.exports = createAudioGraph
 
@@ -50,7 +51,7 @@ function createAudioGraph ({
     [channel.id]: ['channelMerger', outputs, { numberOfOutputs: nestedChannels.length }]
   }
 
-  forEach(channel.clips, clip => {
+  forEach(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip => {
     const clipStartBeat = startBeat + clip.startBeat
     const clipEndBeat = clipStartBeat + clip.beatCount
     const audioBpm = clip.sample.meta.bpm

@@ -13,10 +13,11 @@ const {
   undirtyClip,
   updateClip,
   createClip,
-  moveClip
+  moveClip,
+  moveControlPoint
 } = require('./actions')
 const CLIP_TYPES = require('./constants')
-const { quantizeBeat } = require('../lib/number-utils')
+const { quantizeBeat, clamp } = require('../lib/number-utils')
 
 module.exports = createReducer
 
@@ -72,6 +73,26 @@ function createReducer (config) {
       return loop(state, Effects.constant(updateClip({
         id,
         startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
+      })))
+    },
+    [moveControlPoint]: (state, action) => {
+      const { sourceId, id, beat, value, diffBeats, diffValue, quantization } = action.payload
+
+      const sourceClip = state.records[sourceId]
+      assert(sourceClip, 'Cannot moveControlPoint for nonexistent sourceClip')
+
+      const newBeat = quantizeBeat({ quantization, beat: diffBeats }) + beat
+
+      return loop(state, Effects.constant(updateClip({
+        id: sourceId,
+        controlPoints: {
+          ...sourceClip.controlPoints,
+          [id]: {
+            id,
+            beat: clamp(0, newBeat, sourceClip.beatCount),
+            value: clamp(0, value - diffValue, 1)
+          }
+        }
       })))
     }
   }, {

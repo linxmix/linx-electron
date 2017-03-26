@@ -9,7 +9,7 @@ const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { updateZoom } = require('../../svgs/actions')
-const { moveClip } = require('../../clips/actions')
+const { moveClip, moveControlPoint } = require('../../clips/actions')
 const { moveChannel, resizeChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
@@ -35,7 +35,7 @@ class MixDetailContainer extends React.Component {
     if (!mix) { return null }
 
     const arrangementActions = mapValues(
-      pick(this.props, ['seekToBeat', 'updateZoom',
+      pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint',
         'updateAudioGraph', 'moveClip', 'moveChannel', 'resizeChannel']),
       (fn) => (options) => fn({
         quantization: _getQuantization(this.props.dragModifierKeys),
@@ -102,6 +102,7 @@ module.exports = connect(
     playPause,
     seekToBeat,
     moveClip,
+    moveControlPoint,
     moveChannel,
     resizeChannel,
     updateZoom,

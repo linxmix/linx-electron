@@ -190,6 +190,10 @@ const dropTarget = {
     component.setState({ dragCoords: null, isDragging: true })
 
     let action
+    const payload = {
+      diffBeats: (diff.x / props.scaleX),
+      ...item
+    }
     switch (monitor.getItemType()) {
       case 'sample-clip':
         action = props.moveClip
@@ -200,12 +204,13 @@ const dropTarget = {
       case 'resize-handle':
         action = props.resizeChannel
         break
+      case 'control-point':
+        action = props.moveControlPoint
+        payload.diffValue = (diff.y / item.height)
+        break
     }
 
-    action({
-      diffBeats: (diff.x / props.scaleX),
-      ...item
-    })
+    action(payload)
   }, 10),
   drop (props, monitor, component) {
     const item = monitor.getItem()
@@ -225,5 +230,5 @@ function collect (connect, monitor) {
   }
 }
 
-module.exports = DropTarget(['sample-clip', 'transition-channel', 'resize-handle'],
+module.exports = DropTarget(['sample-clip', 'transition-channel', 'resize-handle', 'control-point'],
   dropTarget, collect)(MixArrangementLayout)

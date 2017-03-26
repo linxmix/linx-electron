@@ -10,7 +10,7 @@ class SampleClip extends React.Component {
     const { clip, height, color, resolution, connectDragSource, isDragging } = this.props
     if (!clip || (clip.status !== 'loaded')) { return null }
 
-    const { sample, audioStartTime, beatCount } = clip
+    const { sample, startBeat, audioStartTime, beatCount } = clip
     const { audioBuffer, meta: { bpm: audioBpm } } = sample
     const peaks = getPeaks({
       audioBuffer,
@@ -31,7 +31,7 @@ class SampleClip extends React.Component {
       .y0(([ ymin, ymax ]) => median + ymin * median)
       .y1(([ ymin, ymax ]) => median + ymax * median)
 
-    return connectDragSource(<g transform={`translate(${clip.startBeat})`}>
+    return connectDragSource(<g transform={`translate(${startBeat})`}>
       <rect width={beatCount} height={height} fill='transparent' />
       <path fill={color} d={area(peaks)} opacity={isDragging ? 0.5 : 1} />
     </g>)

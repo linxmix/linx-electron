@@ -9,5 +9,6 @@ module.exports = createActions(
   'UNDIRTY_CLIP',
   'CREATE_CLIP',
   'UPDATE_CLIP',
-  'MOVE_CLIP'
+  'MOVE_CLIP',
+  'MOVE_CONTROL_POINT'
 )

@@ -1,17 +1,30 @@
 const React = require('react')
-const { map } = require('lodash')
+const { map, filter } = require('lodash')
 
 const SampleClip = require('./sample-clip')
-const { CLIP_TYPE_SAMPLE } = require('../../clips/constants')
+const AutomationClip = require('./automation-clip')
+const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../../clips/constants')
 
 class PrimaryTrackChannel extends React.Component {
   render () {
-    const { channel, color, beatScale, translateY, canDrag, height } = this.props
+    const { channel, color, beatScale,
+      translateY, canDrag, height, showAutomations } = this.props
     if (!channel) { return null }
 
     return <g transform={`translate(${channel.startBeat},${translateY})`}>
-      {map(channel.clips, clip =>
-        (clip.type === CLIP_TYPE_SAMPLE) && <SampleClip
+      {map(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip =>
+        <SampleClip
+          key={clip.id}
+          clip={clip}
+          beatScale={beatScale}
+          color={color}
+          height={height}
+          canDrag={canDrag}
+        />
+      )}
+
+      {showAutomations && map(filter(channel.clips, { type: CLIP_TYPE_AUTOMATION }), clip =>
+        <AutomationClip
           key={clip.id}
           clip={clip}
           beatScale={beatScale}
@@ -27,7 +40,8 @@ class PrimaryTrackChannel extends React.Component {
 PrimaryTrackChannel.defaultProps = {
   translateY: 0,
   canDrag: false,
-  height: 100
+  height: 100,
+  showAutomations: false
 }
 
 module.exports = PrimaryTrackChannel
