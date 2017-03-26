@@ -128,10 +128,10 @@ class MixArrangementLayout extends React.Component {
   }
 
   render () {
-    const { mix, audioContext, height, connectDropTarget, scaleX, translateX } = this.props
+    const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY } = this.props
     if (!(mix && mix.channel)) { return null }
 
-    const transform = `translate(${translateX}) scale(${scaleX}, 1)`
+    const transform = `translate(${translateX},${translateY}) scale(${scaleX}, 1)`
     const beatScale = mix.channel.beatScale
     const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
     const mixPhraseCount = mixBeatCount / 32  // TODO: need to round?
@@ -176,11 +176,12 @@ class MixArrangementLayout extends React.Component {
 MixArrangementLayout.defaultProps = {
   height: 100,
   scaleX: 1,
-  translateX: 1
+  translateX: 1,
+  translateY: 0
 }
 
 const dropTarget = {
-  hover: throttle(function(props, monitor, component) {
+  hover: throttle(function (props, monitor, component) {
     const item = monitor.getItem()
     const diff = monitor.getDifferenceFromInitialOffset()
     if (!(item && diff)) { return false }
@@ -188,10 +189,22 @@ const dropTarget = {
     // if there is an item dragging, say something is dragging but not us
     component.setState({ dragCoords: null, isDragging: true })
 
-    props.moveClip && props.moveClip({
-      id: item.id,
-      startBeat: item.startBeat,
-      diffX: diff.x
+    let action
+    switch (monitor.getItemType()) {
+      case 'sample-clip':
+        action = props.moveClip
+        break
+      case 'transition-channel':
+        action = props.moveChannel
+        break
+      case 'resize-handle':
+        action = props.resizeChannel
+        break
+    }
+
+    action({
+      diffBeats: (diff.x / props.scaleX),
+      ...item
     })
   }, 10),
   drop (props, monitor, component) {
@@ -201,7 +214,7 @@ const dropTarget = {
 
     // report if clip moved
     if (item && item.id && diff && (diff.x !== 0)) {
-      props.didMoveClip({ id: item.id })
+      props.updateAudioGraph({ channel: props.mix.channel })
     }
   }
 }
@@ -212,4 +225,5 @@ function collect (connect, monitor) {
   }
 }
 
-module.exports = DropTarget('sample-clip', dropTarget, collect)(MixArrangementLayout)
+module.exports = DropTarget(['sample-clip', 'transition-channel', 'resize-handle'],
+  dropTarget, collect)(MixArrangementLayout)

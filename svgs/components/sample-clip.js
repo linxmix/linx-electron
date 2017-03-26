@@ -1,7 +1,6 @@
 const React = require('react')
 const d3 = require('d3')
 const { DragSource } = require('react-dnd')
-const { throttle } = require('lodash')
 
 const getPeaks = require('../../samples/helpers/get-peaks')
 const { beatToTime } = require('../../lib/number-utils')
@@ -49,8 +48,7 @@ SampleClip.defaultProps = {
 function collectDrag (connect, monitor) {
   return {
     connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging(),
-    canDrag: monitor.canDrag()
+    isDragging: monitor.isDragging()
   }
 }
 

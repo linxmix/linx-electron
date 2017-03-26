@@ -20,7 +20,7 @@ class MixOverviewContainer extends React.Component {
     keymaster('space', () => this.props.playPause({ channel: this.props.mix.channel }))
 
     const { loadMix, mix } = this.props
-    if (mix && !mix.channel.type) {
+    if (mix && !get(mix, 'channel.type')) {
       loadMix(mix.id)
     }
   }

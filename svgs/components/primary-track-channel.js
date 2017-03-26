@@ -6,7 +6,7 @@ const { CLIP_TYPE_SAMPLE } = require('../../clips/constants')
 
 class PrimaryTrackChannel extends React.Component {
   render () {
-    const { channel, color, beatScale, translateY, canDrag } = this.props
+    const { channel, color, beatScale, translateY, canDrag, height } = this.props
     if (!channel) { return null }
 
     return <g transform={`translate(${channel.startBeat},${translateY})`}>
@@ -16,6 +16,7 @@ class PrimaryTrackChannel extends React.Component {
           clip={clip}
           beatScale={beatScale}
           color={color}
+          height={height}
           canDrag={canDrag}
         />
       )}
@@ -25,7 +26,8 @@ class PrimaryTrackChannel extends React.Component {
 
 PrimaryTrackChannel.defaultProps = {
   translateY: 0,
-  canDrag: false
+  canDrag: false,
+  height: 100
 }
 
 module.exports = PrimaryTrackChannel

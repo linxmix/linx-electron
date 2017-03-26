@@ -45,7 +45,7 @@ function createReducer (config) {
           absSeekTime: state.audioContext.currentTime,
           seekBeat
         })),
-        Effects.constant(updateAudioGraph(channel))
+        Effects.constant(updateAudioGraph({ channel }))
       ]))
     },
     [pause]: (state, action) => {
@@ -73,7 +73,7 @@ function createReducer (config) {
           absSeekTime,
           seekBeat
         })),
-        Effects.constant(updateAudioGraph(channel))
+        Effects.constant(updateAudioGraph({ channel }))
       ]))
     },
     [playPause]: (state, action) => {
@@ -95,7 +95,7 @@ function createReducer (config) {
           seekBeat: seekBeat,
           absSeekTime: state.audioContext.currentTime
         })),
-        Effects.constant(updateAudioGraph(channel))
+        Effects.constant(updateAudioGraph({ channel }))
       ]))
     },
     [updatePlayState]: (state, action) => {
@@ -114,7 +114,7 @@ function createReducer (config) {
 
     // TODO: should this all be in channels reducer? so we dont have to pass full channel
     [updateAudioGraph]: (state, action) => {
-      const channel = action.payload
+      const { channel } = action.payload
       const playState = state.playStates[channel.id]
       assert(channel.status === 'loaded', 'Requires loaded channel to updateAudioGraph')
 

@@ -239,7 +239,7 @@ function createReducer (config) {
   }
 
   function runSaveMix (nestedMix) {
-    return service.saveMix(pick(nestedMix, 'id', 'channel'))
+    return service.saveMix(pick(nestedMix, ['id', 'channel']))
       .then(() => saveMixSuccess(nestedMix))
       .catch(saveMixFailure)
   }

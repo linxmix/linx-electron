@@ -1,14 +1,16 @@
 const React = require('react')
 const { connect } = require('react-redux')
 const { Link } = require('react-router')
-const { findIndex } = require('lodash')
+const { findIndex, pick, mapValues } = require('lodash')
 const keymaster = require('keymaster')
 
+const DetectDragModifierKeys = require('../../lib/detect-drag-modifier-keys')
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { updateZoom } = require('../../svgs/actions')
-const { updateClip } = require('../../clips/actions')
+const { moveClip } = require('../../clips/actions')
+const { moveChannel, resizeChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
 const { PLAY_STATE_PLAYING } = require('../../audios/constants')
@@ -29,8 +31,17 @@ class MixDetailContainer extends React.Component {
 
   render () {
     const { mix, audioContext, fromTrack, toTrack, error, zoom,
-      sampleError, saveMix, playPause, seekToBeat, updateClip, updateZoom, updateAudioGraph } = this.props
+      sampleError, saveMix, playPause } = this.props
     if (!mix) { return null }
+
+    const arrangementActions = mapValues(
+      pick(this.props, ['seekToBeat', 'updateZoom',
+        'updateAudioGraph', 'moveClip', 'moveChannel', 'resizeChannel']),
+      (fn) => (options) => fn({
+        quantization: _getQuantization(this.props.dragModifierKeys),
+        ...options
+      })
+    )
 
     const { playState, isSaving, isLoading, isDirty, channel } = mix
     const { status: masterChannelStatus } = channel
@@ -58,14 +69,11 @@ class MixDetailContainer extends React.Component {
         <MixArrangementDetail
           mix={mix}
           audioContext={audioContext}
-          seekToBeat={seekToBeat}
-          updateZoom={updateZoom}
-          updateAudioGraph={updateAudioGraph}
           scaleX={zoom.scaleX}
           translateX={zoom.translateX}
           fromTrack={fromTrack}
           toTrack={toTrack}
-          updateClip={updateClip}
+          {...arrangementActions}
         />
       </section>
     </div>
@@ -93,8 +101,21 @@ module.exports = connect(
     updateMeta,
     playPause,
     seekToBeat,
-    updateClip,
+    moveClip,
+    moveChannel,
+    resizeChannel,
     updateZoom,
     updateAudioGraph
   }
-)(MixDetailContainer)
+)(DetectDragModifierKeys({ listenForAllDragEvents: true })(MixDetailContainer))
+
+// TODO use default quantization, provided by store state, unless modifier keys are present
+function _getQuantization (modifierKeys, defaultQuantization = 'bar') {
+  if (modifierKeys.ctrlKey || modifierKeys.metaKey) {
+    return 'beat'
+  } else if (modifierKeys.altKey) {
+    return 'sample'
+  } else {
+    return defaultQuantization
+  }
+}

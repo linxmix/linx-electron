@@ -8,5 +8,6 @@ module.exports = createActions(
   'UNDIRTY_CLIPS',
   'UNDIRTY_CLIP',
   'CREATE_CLIP',
-  'UPDATE_CLIP'
+  'UPDATE_CLIP',
+  'MOVE_CLIP'
 )
