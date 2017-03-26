@@ -2,7 +2,7 @@ const { includes, some, every, map, concat, sortBy, omitBy, isNil } = require('l
 const d3 = require('d3')
 
 const { validNumberOrDefault, beatToTime } = require('../../lib/number-utils')
-const { CHANNEL_TYPE_MIX, CHANNEL_TYPE_TRANSITION } = require('../constants')
+const { CHANNEL_TYPE_MIX } = require('../constants')
 
 module.exports = nestChannels
 
@@ -25,17 +25,10 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
   }
 
   // compute beatCount
-  let beatCount
-  // hack to give special beatCount to transition for testing
-  // TODO: remove hack
-  if (type !== CHANNEL_TYPE_TRANSITION) {
-    beatCount = validNumberOrDefault(Math.max.apply(Math, map(
-      concat(childChannels, childClips),
-      ({ startBeat, beatCount }) => startBeat + beatCount,
-    )), 0)
-  } else {
-    beatCount = channel.beatCount
-  }
+  const beatCount = validNumberOrDefault(Math.max.apply(Math, map(
+    concat(childChannels, childClips),
+    ({ startBeat, beatCount }) => startBeat + beatCount,
+  )), 0)
 
   // compute beatScale, bpmScale
   let beatScale, bpmScale

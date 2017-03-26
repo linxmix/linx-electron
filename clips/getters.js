@@ -3,6 +3,7 @@ const { mapValues, includes, get } = require('lodash')
 
 const { isValidNumber, validNumberOrDefault, timeToBeat } = require('../lib/number-utils')
 const { getSamples } = require('../samples/getters')
+const { CLIP_TYPE_SAMPLE } = require('../clips/constants')
 
 const getClipsRecords = (state) => state.clips.records
 const getClipsDirty = (state) => state.clips.dirty
@@ -18,10 +19,14 @@ const getClips = Getter(
       const sample = samples[clip.sampleId] || {}
 
       // compute status
-      let status = 'unloaded'
-      if (sample.isLoading) {
-        status = 'loading'
-      } else if (sample.audioBuffer) {
+      let status = 'loaded'
+      if (clip.type === CLIP_TYPE_SAMPLE) {
+        if (sample.isLoading) {
+          status = 'loading'
+        } else if (!sample.audioBuffer) {
+          status = 'unloaded'
+        }
+      } else {
         status = 'loaded'
       }
 

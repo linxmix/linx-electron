@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { pick, without, map, omit, values } = require('lodash')
+const { pick, without, map, omit, values, filter } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -20,6 +20,7 @@ const {
   loadSample
 } = require('../samples/actions')
 const { CHANNEL_TYPE_MIX } = require('../channels/constants')
+const { CLIP_TYPE_SAMPLE } = require('../clips/constants')
 
 const {
   loadMixList,
@@ -80,7 +81,10 @@ function createReducer (config) {
       const { id, channelId, channels, clips } = flattenMix(action.payload)
       const mix = { id, channelId }
 
-      const loadSampleEffects = map(values(clips), clip => Effects.constant(loadSample(clip.sampleId)))
+      const loadSampleEffects = map(
+        filter(values(clips), { type: CLIP_TYPE_SAMPLE }),
+        clip => Effects.constant(loadSample(clip.sampleId))
+      )
 
       return loop({
         ...state,
