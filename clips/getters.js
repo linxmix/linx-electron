@@ -50,12 +50,10 @@ const getClips = Getter(
         startBeat = validNumberOrDefault(clip.startBeat, 0)
 
       } else if (clip.type === CLIP_TYPE_AUTOMATION) {
-        // TODO: does this make any sense?
         const controlPointBeats = map(clip.controlPoints, 'beat')
-        startBeat = validNumberOrDefault(Math.min(controlPointBeats), 0)
-        beatCount = validNumberOrDefault(Math.max(controlPointBeats), 0)
+        startBeat = validNumberOrDefault(Math.min(...controlPointBeats), 0)
+        beatCount = validNumberOrDefault(Math.max(...controlPointBeats) - startBeat, 0)
       }
-
 
       return {
         ...clip,
