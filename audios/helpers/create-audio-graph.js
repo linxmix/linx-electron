@@ -68,7 +68,7 @@ function createAudioGraph ({
     const endTime = beatScale(clipEndBeat - playState.seekBeat)
     let duration = endTime - startTime
 
-    console.log("GAIN AUTOMATION CLIP", {
+    console.log('GAIN AUTOMATION CLIP', {
       startTime,
       endTime,
       duration,

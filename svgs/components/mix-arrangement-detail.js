@@ -15,7 +15,7 @@ class MixArrangementDetail extends React.Component {
       'movePrimaryTrackChannel', 'resizeChannel', 'updateAudioGraph', 'seekToBeat', 'moveControlPoint'])
 
     const createControlPoint = ({ sourceId, e, minBeat, maxBeat }) => {
-      const dim = e.target.getBoundingClientRect();
+      const dim = e.target.getBoundingClientRect()
       const x = e.clientX - dim.left
       const y = e.clientY - dim.top
 

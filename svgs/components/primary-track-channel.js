@@ -8,7 +8,7 @@ const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../../clips/constant
 
 class PrimaryTrackChannel extends React.Component {
   render () {
-    const { channel, color, beatScale, translateY, canDrag,
+    const { channel, color, beatScale, translateY,
       canDragAutomations, height, showAutomations, connectDragSource } = this.props
     if (!channel) { return null }
 

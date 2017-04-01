@@ -156,10 +156,7 @@ function createReducer (config) {
     },
     [moveTransitionChannel]: (state, action) => {
       const { id, startBeat, diffBeats, quantization, mixChannels } = action.payload
-
-      // startBeat from payload is where drag started. we need to know how far we've already moved
       const currentBeat = state.records[id].startBeat
-      const beatsToMove = quantizeBeat({ quantization, beat: diffBeats }) - (currentBeat - startBeat)
 
       // move toTrack when moving transition
       const fromTrackChannelIndex = findIndex(mixChannels,
@@ -194,7 +191,7 @@ function createReducer (config) {
         (channel.type === CHANNEL_TYPE_PRIMARY_TRACK))
       const nextEffects = map(channelsToMove, channel => Effects.constant(updateChannel({
         id: channel.id,
-        startBeat: channel.startBeat + beatsToMove,
+        startBeat: channel.startBeat + beatsToMove
       })))
 
       return loop(state, Effects.batch([

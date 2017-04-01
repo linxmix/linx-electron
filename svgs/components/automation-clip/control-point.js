@@ -1,9 +1,8 @@
 const React = require('react')
-const d3 = require('d3')
 const { DragSource } = require('react-dnd')
 
 class ControlPoint extends React.Component {
-  handleClick(e) {
+  handleClick (e) {
     if (e && e.nativeEvent && e.nativeEvent.which === 3) {
       e.preventDefault()
       e.stopPropagation()
@@ -12,7 +11,7 @@ class ControlPoint extends React.Component {
   }
 
   render () {
-    const { sourceId, id, beat, value, height, connectDragSource } = this.props
+    const { beat, value, height, connectDragSource } = this.props
 
     return connectDragSource(<circle
       cx={beat}

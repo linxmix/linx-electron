@@ -3,11 +3,9 @@ const d3 = require('d3')
 const { map } = require('lodash')
 
 const ControlPoint = require('./automation-clip/control-point')
-const getPeaks = require('../../samples/helpers/get-peaks')
-const { beatToTime } = require('../../lib/number-utils')
 
 class AutomationClip extends React.Component {
-  handleClick(e) {
+  handleClick (e) {
     if (e && e.nativeEvent && e.nativeEvent.which === 3) {
       e.preventDefault()
       e.stopPropagation()
@@ -25,7 +23,6 @@ class AutomationClip extends React.Component {
     if (!clip) { return null }
 
     const { id, controlPoints } = clip
-    const median = Math.ceil(height / 2.0)
     const line = d3.line()
       .x((controlPoint) => controlPoint.beat)
       .y((controlPoint) => (1 - controlPoint.value) * height)

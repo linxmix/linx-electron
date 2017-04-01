@@ -48,7 +48,6 @@ const getClips = Getter(
 
         // compute startBeat
         startBeat = validNumberOrDefault(clip.startBeat, 0)
-
       } else if (clip.type === CLIP_TYPE_AUTOMATION) {
         controlPoints = sortBy(values(clip.controlPoints), 'beat', 'value')
         startBeat = validNumberOrDefault(Math.min(...map(controlPoints, 'beat')), 0)
