@@ -5,7 +5,6 @@ const { DragSource } = require('react-dnd')
 class ControlPoint extends React.Component {
   render () {
     const { sourceId, id, beat, value, height, connectDragSource } = this.props
-    console.log('controlPoint', id, beat, value)
 
     return connectDragSource(<circle
       cx={beat}

@@ -1,5 +1,6 @@
 const React = require('react')
 const { map, filter } = require('lodash')
+const { DragSource } = require('react-dnd')
 
 const SampleClip = require('./sample-clip')
 const AutomationClip = require('./automation-clip')
@@ -7,13 +8,11 @@ const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../../clips/constant
 
 class PrimaryTrackChannel extends React.Component {
   render () {
-    const { channel, color, beatScale,
-      translateY, canDrag, height, showAutomations } = this.props
+    const { channel, color, beatScale, translateY, canDrag,
+      canDragAutomations, height, showAutomations, connectDragSource } = this.props
     if (!channel) { return null }
 
-      console.log("CHANNEL", { channel })
-
-    return <g transform={`translate(${channel.startBeat},${translateY})`}>
+    return connectDragSource(<g transform={`translate(${channel.startBeat},${translateY})`}>
       {map(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip =>
         <SampleClip
           key={clip.id}
@@ -21,7 +20,7 @@ class PrimaryTrackChannel extends React.Component {
           beatScale={beatScale}
           color={color}
           height={height}
-          canDrag={canDrag}
+          canDrag={false}
         />
       )}
 
@@ -34,18 +33,42 @@ class PrimaryTrackChannel extends React.Component {
           beatScale={beatScale}
           color={color}
           height={height}
-          canDrag={canDrag}
+          canDrag={canDragAutomations}
         />
       )}
-    </g>
+    </g>)
   }
 }
 
 PrimaryTrackChannel.defaultProps = {
   translateY: 0,
   canDrag: false,
+  canDragAutomations: false,
   height: 100,
   showAutomations: false
 }
 
-module.exports = PrimaryTrackChannel
+function collectDrag (connect, monitor) {
+  return {
+    connectDragSource: connect.dragSource(),
+    isDragging: monitor.isDragging()
+  }
+}
+
+const dragSource = {
+  beginDrag (props, monitor, component) {
+    return {
+      id: props.channel.id,
+      startBeat: props.channel.startBeat
+    }
+  },
+  isDragging (props, monitor) {
+    const item = monitor.getItem()
+    return item && item.id && (item.id === props.channel.id)
+  },
+  canDrag (props) {
+    return props.canDrag
+  }
+}
+
+module.exports = DragSource('primary-track-channel', dragSource, collectDrag)(PrimaryTrackChannel)

@@ -195,11 +195,16 @@ const dropTarget = {
       ...item
     }
     switch (monitor.getItemType()) {
-      case 'sample-clip':
-        action = props.moveClip
+      case 'primary-track-channel':
+        action = props.movePrimaryTrackChannel
+        payload.mixChannels = props.mix.channel.channels // TODO: does this belong in reducer?
         break
       case 'transition-channel':
-        action = props.moveChannel
+        action = props.moveTransitionChannel
+        payload.mixChannels = props.mix.channel.channels // TODO: does this belong in reducer?
+        break
+      case 'sample-clip':
+        action = props.moveClip
         break
       case 'resize-handle':
         action = props.resizeChannel
@@ -230,5 +235,6 @@ function collect (connect, monitor) {
   }
 }
 
-module.exports = DropTarget(['sample-clip', 'transition-channel', 'resize-handle', 'control-point'],
+module.exports = DropTarget(
+  ['primary-track-channel', 'transition-channel', 'sample-clip', 'resize-handle', 'control-point'],
   dropTarget, collect)(MixArrangementLayout)

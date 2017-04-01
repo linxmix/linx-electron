@@ -10,7 +10,7 @@ const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { updateZoom } = require('../../svgs/actions')
 const { moveClip, moveControlPoint } = require('../../clips/actions')
-const { moveChannel, resizeChannel } = require('../../channels/actions')
+const { moveTransitionChannel, movePrimaryTrackChannel, resizeChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
 const { PLAY_STATE_PLAYING } = require('../../audios/constants')
@@ -35,8 +35,8 @@ class MixDetailContainer extends React.Component {
     if (!mix) { return null }
 
     const arrangementActions = mapValues(
-      pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint',
-        'updateAudioGraph', 'moveClip', 'moveChannel', 'resizeChannel']),
+      pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
+        'moveClip', 'moveTransitionChannel', 'movePrimaryTrackChannel', 'resizeChannel']),
       (fn) => (options) => fn({
         quantization: _getQuantization(this.props.dragModifierKeys),
         ...options
@@ -103,7 +103,8 @@ module.exports = connect(
     seekToBeat,
     moveClip,
     moveControlPoint,
-    moveChannel,
+    moveTransitionChannel,
+    movePrimaryTrackChannel,
     resizeChannel,
     updateZoom,
     updateAudioGraph
