@@ -8,20 +8,22 @@ const { beatToTime } = require('../../lib/number-utils')
 
 class AutomationClip extends React.Component {
   render () {
-    const { clip, height, color, canDrag } = this.props
+    const { clip, height, color, canDrag, minBeat, maxBeat } = this.props
     if (!clip) { return null }
 
-    const { id, startBeat, controlPoints } = clip
+    const { id, controlPoints } = clip
 
     const median = Math.ceil(height / 2.0)
 
-    return <g transform={`translate(${startBeat})`}>
+    return <g>
       {map(values(controlPoints), controlPoint => <ControlPoint
         key={controlPoint.id}
         sourceId={id}
         id={controlPoint.id}
         beat={controlPoint.beat}
         value={controlPoint.value}
+        minBeat={minBeat}
+        maxBeat={maxBeat}
         height={height}
         canDrag={canDrag}
       />)}

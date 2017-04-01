@@ -11,6 +11,8 @@ class PrimaryTrackChannel extends React.Component {
       translateY, canDrag, height, showAutomations } = this.props
     if (!channel) { return null }
 
+      console.log("CHANNEL", { channel })
+
     return <g transform={`translate(${channel.startBeat},${translateY})`}>
       {map(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip =>
         <SampleClip
@@ -27,6 +29,8 @@ class PrimaryTrackChannel extends React.Component {
         <AutomationClip
           key={clip.id}
           clip={clip}
+          minBeat={channel.startBeat}
+          maxBeat={channel.beatCount}
           beatScale={beatScale}
           color={color}
           height={height}

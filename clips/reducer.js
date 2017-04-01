@@ -76,7 +76,8 @@ function createReducer (config) {
       })))
     },
     [moveControlPoint]: (state, action) => {
-      const { sourceId, id, beat, value, diffBeats, diffValue, quantization } = action.payload
+      const { sourceId, id, beat, value, diffBeats, diffValue,
+        quantization, minBeat = 0, maxBeat = 0 } = action.payload
 
       const sourceClip = state.records[sourceId]
       assert(sourceClip, 'Cannot moveControlPoint for nonexistent sourceClip')
@@ -89,7 +90,7 @@ function createReducer (config) {
           ...sourceClip.controlPoints,
           [id]: {
             id,
-            beat: clamp(0, newBeat, sourceClip.beatCount),
+            beat: clamp(minBeat, newBeat, maxBeat),
             value: clamp(0, value - diffValue, 1)
           }
         }

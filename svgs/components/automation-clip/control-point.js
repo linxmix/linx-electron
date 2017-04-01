@@ -35,7 +35,9 @@ const dragSource = {
       id: props.id,
       beat: props.beat,
       value: props.value,
-      height: props.height
+      height: props.height,
+      minBeat: props.minBeat,
+      maxBeat: props.maxBeat
     }
   },
   isDragging (props, monitor) {
