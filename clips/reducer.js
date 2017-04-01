@@ -14,7 +14,9 @@ const {
   updateClip,
   createClip,
   moveClip,
-  moveControlPoint
+  moveControlPoint,
+  createControlPoint,
+  deleteControlPoint
 } = require('./actions')
 const CLIP_TYPES = require('./constants')
 const { quantizeBeat, clamp } = require('../lib/number-utils')
@@ -94,6 +96,34 @@ function createReducer (config) {
             value: clamp(0, value - diffValue, 1)
           }
         }
+      })))
+    },
+    [createControlPoint]: (state, action) => {
+      const { sourceId, beat, value, minBeat, maxBeat, quantization } = action.payload
+      const newControlPoint = {
+        id: uuid(),
+        beat: clamp(minBeat, quantizeBeat({ quantization, beat }), maxBeat),
+        value: clamp(0, value, 1)
+      }
+      const sourceClip = state.records[sourceId]
+      assert(sourceClip, 'Cannot createControlPoint for nonexistent sourceClip')
+
+      return loop(state, Effects.constant(updateClip({
+        id: sourceId,
+        controlPoints: {
+          ...sourceClip.controlPoints,
+          [newControlPoint.id]: newControlPoint
+        }
+      })))
+    },
+    [deleteControlPoint]: (state, action) => {
+      const { id, sourceId } = action.payload
+      const sourceClip = state.records[sourceId]
+      assert(sourceClip, 'Cannot createControlPoint for nonexistent sourceClip')
+
+      return loop(state, Effects.constant(updateClip({
+        id: sourceId,
+        controlPoints: omit(sourceClip.controlPoints, id)
       })))
     }
   }, {

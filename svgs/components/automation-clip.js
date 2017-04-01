@@ -7,8 +7,21 @@ const getPeaks = require('../../samples/helpers/get-peaks')
 const { beatToTime } = require('../../lib/number-utils')
 
 class AutomationClip extends React.Component {
+  handleClick(e) {
+    if (e && e.nativeEvent && e.nativeEvent.which === 3) {
+      e.preventDefault()
+      e.stopPropagation()
+      this.props.createControlPoint({
+        e,
+        sourceId: this.props.clip.id,
+        minBeat: this.props.minBeat,
+        maxBeat: this.props.maxBeat
+      })
+    }
+  }
+
   render () {
-    const { clip, height, color, canDrag, minBeat, maxBeat } = this.props
+    const { clip, height, color, canDrag, minBeat, maxBeat, deleteControlPoint } = this.props
     if (!clip) { return null }
 
     const { id, controlPoints } = clip
@@ -16,9 +29,12 @@ class AutomationClip extends React.Component {
     const median = Math.ceil(height / 2.0)
 
     return <g>
+      <rect width={maxBeat - minBeat} height={height} fill='transparent'
+        onMouseUp={this.handleClick.bind(this)} />
       {map(values(controlPoints), controlPoint => <ControlPoint
         key={controlPoint.id}
         sourceId={id}
+        deleteControlPoint={deleteControlPoint}
         id={controlPoint.id}
         beat={controlPoint.beat}
         value={controlPoint.value}

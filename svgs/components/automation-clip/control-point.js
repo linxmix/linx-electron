@@ -3,6 +3,14 @@ const d3 = require('d3')
 const { DragSource } = require('react-dnd')
 
 class ControlPoint extends React.Component {
+  handleClick(e) {
+    if (e && e.nativeEvent && e.nativeEvent.which === 3) {
+      e.preventDefault()
+      e.stopPropagation()
+      this.props.deleteControlPoint({ id: this.props.id, sourceId: this.props.sourceId })
+    }
+  }
+
   render () {
     const { sourceId, id, beat, value, height, connectDragSource } = this.props
 
@@ -11,6 +19,7 @@ class ControlPoint extends React.Component {
       cy={(1 - value) * height}
       r={10}
       style={{ fill: '#B8DE44' }}
+      onMouseUp={this.handleClick.bind(this)}
     />)
   }
 }

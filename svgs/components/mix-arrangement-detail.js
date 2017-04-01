@@ -14,6 +14,26 @@ class MixArrangementDetail extends React.Component {
     const layoutActions = pick(this.props, ['updateZoom', 'moveClip', 'moveTransitionChannel',
       'movePrimaryTrackChannel', 'resizeChannel', 'updateAudioGraph', 'seekToBeat', 'moveControlPoint'])
 
+    const createControlPoint = ({ sourceId, e, minBeat, maxBeat }) => {
+      const dim = e.target.getBoundingClientRect();
+      const x = e.clientX - dim.left
+      const y = e.clientY - dim.top
+
+      this.props.createControlPoint({
+        sourceId,
+        beat: (x / scaleX),
+        value: 1 - (y / rowHeight),
+        minBeat,
+        maxBeat
+      })
+      this.props.updateAudioGraph({ channel: mix.channel })
+    }
+
+    const deleteControlPoint = (...args) => {
+      this.props.deleteControlPoint(...args)
+      this.props.updateAudioGraph({ channel: mix.channel })
+    }
+
     const { transition } = fromTrack
     const beatScale = get(mix, 'channel.beatScale')
 
@@ -40,6 +60,8 @@ class MixArrangementDetail extends React.Component {
         channel={fromTrack.channel}
         beatScale={beatScale}
         translateY={0}
+        createControlPoint={createControlPoint}
+        deleteControlPoint={deleteControlPoint}
         canDragAutomations
         showAutomations
         color={d3.interpolateCool(0.25)}
@@ -50,6 +72,8 @@ class MixArrangementDetail extends React.Component {
         channel={toTrack.channel}
         beatScale={beatScale}
         translateY={rowHeight}
+        createControlPoint={createControlPoint}
+        deleteControlPoint={deleteControlPoint}
         canDrag
         canDragAutomations
         showAutomations

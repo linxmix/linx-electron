@@ -116,6 +116,7 @@ class MixArrangementLayout extends React.Component {
   }
 
   handleClick (e) {
+    console.log('handleMouseDown', e)
     if (this.state.isDragging) { return }
 
     const { mix, seekToBeat, translateX, scaleX } = this.props

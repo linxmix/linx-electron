@@ -30,6 +30,8 @@ class PrimaryTrackChannel extends React.Component {
           clip={clip}
           minBeat={channel.startBeat}
           maxBeat={channel.beatCount}
+          createControlPoint={this.props.createControlPoint}
+          deleteControlPoint={this.props.deleteControlPoint}
           beatScale={beatScale}
           color={color}
           height={height}
