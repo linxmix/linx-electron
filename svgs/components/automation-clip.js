@@ -1,6 +1,6 @@
 const React = require('react')
 const d3 = require('d3')
-const { map, values, sortBy } = require('lodash')
+const { map } = require('lodash')
 
 const ControlPoint = require('./automation-clip/control-point')
 const getPeaks = require('../../samples/helpers/get-peaks')
@@ -25,19 +25,18 @@ class AutomationClip extends React.Component {
     if (!clip) { return null }
 
     const { id, controlPoints } = clip
-    const sortedControlPoints = sortBy(values(controlPoints), 'beat')
     const median = Math.ceil(height / 2.0)
     const line = d3.line()
       .x((controlPoint) => controlPoint.beat)
       .y((controlPoint) => (1 - controlPoint.value) * height)
 
     return <g>
-      <path stroke={color} fill='transparent' d={line(sortedControlPoints)} />
+      <path stroke={color} fill='transparent' d={line(controlPoints)} />
 
       <rect width={maxBeat - minBeat} height={height} fill='transparent'
         onMouseUp={this.handleClick.bind(this)} />
 
-      {map(sortedControlPoints, controlPoint => <ControlPoint
+      {map(controlPoints, controlPoint => <ControlPoint
         key={controlPoint.id}
         sourceId={id}
         deleteControlPoint={deleteControlPoint}

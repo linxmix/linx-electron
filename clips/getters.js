@@ -1,5 +1,5 @@
 const { createSelector: Getter } = require('reselect')
-const { map, mapValues, includes, get } = require('lodash')
+const { map, mapValues, includes, get, sortBy, values } = require('lodash')
 
 const { isValidNumber, validNumberOrDefault, timeToBeat } = require('../lib/number-utils')
 const { getSamples } = require('../samples/getters')
@@ -16,7 +16,7 @@ const getClips = Getter(
   getSamples,
   (clips, dirtyClips, samples) => {
     return mapValues(clips, clip => {
-      let startBeat, beatCount, sample, status, audioStartTime
+      let startBeat, beatCount, sample, status, audioStartTime, controlPoints
 
       if (clip.type === CLIP_TYPE_SAMPLE) {
         sample = samples[clip.sampleId] || {}
@@ -50,9 +50,9 @@ const getClips = Getter(
         startBeat = validNumberOrDefault(clip.startBeat, 0)
 
       } else if (clip.type === CLIP_TYPE_AUTOMATION) {
-        const controlPointBeats = map(clip.controlPoints, 'beat')
-        startBeat = validNumberOrDefault(Math.min(...controlPointBeats), 0)
-        beatCount = validNumberOrDefault(Math.max(...controlPointBeats) - startBeat, 0)
+        controlPoints = sortBy(values(clip.controlPoints), 'beat', 'value')
+        startBeat = validNumberOrDefault(Math.min(...map(controlPoints, 'beat')), 0)
+        beatCount = validNumberOrDefault(Math.max(...map(controlPoints, 'beat')) - startBeat, 0)
       }
 
       return {
@@ -62,6 +62,7 @@ const getClips = Getter(
         startBeat,
         beatCount,
         audioStartTime,
+        controlPoints,
         isDirty: includes(dirtyClips, clip.id)
       }
     })
