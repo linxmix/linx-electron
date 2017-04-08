@@ -2,7 +2,7 @@ const { isValidNumber } = require('../../lib/number-utils')
 
 const TICKS_PER_BEAT = 100
 
-module.exports = function ({ scale, beatCount, startValue, endValue }) {
+module.exports = function ({ scale, startBeat = 0, beatCount, startValue, endValue }) {
   if (!(scale && (beatCount > 0))) { return new Float32Array(0) }
 
   // populate Float32Array by sampling Curve
@@ -21,7 +21,7 @@ module.exports = function ({ scale, beatCount, startValue, endValue }) {
     // otherwise, get value indicated by scale
     } else {
       const beat = (i / numTicks) * beatCount
-      value = scale(beat)
+      value = scale(startBeat + beat)
     }
 
     values[i] = value

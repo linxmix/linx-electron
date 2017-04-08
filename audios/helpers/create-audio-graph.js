@@ -51,38 +51,56 @@ function createAudioGraph ({
   })
   const gainControlArray = [['setValueAtTime', 1, 0]] // start all volumes at 1
 
-  if (gainAutomationClip) {
+  // TODO: get rid of ugly hacks. abstract for various automation types
+  const gainClipStartBeat = startBeat + (gainAutomationClip || {}).startBeat
+  const gainClipEndBeat = gainClipStartBeat + (gainAutomationClip || {}).beatCount
+  if (gainAutomationClip && (gainClipEndBeat > playState.seekBeat)) {
     const gainControlPoints = gainAutomationClip.controlPoints || []
     const gainScale = d3.scaleLinear()
       // scale to gain automation clip start
       .domain(map(map(gainControlPoints, 'beat'), beat => beat - gainAutomationClip.startBeat))
       .range(map(gainControlPoints, 'value'))
-    const gainCurve = getValueCurve({
-      scale: gainScale,
-      beatCount: gainAutomationClip.beatCount
-    })
-    const clipStartBeat = startBeat + gainAutomationClip.startBeat
-    const clipEndBeat = clipStartBeat + gainAutomationClip.beatCount
+    const clipStartBeat = gainClipStartBeat
+    const clipEndBeat = gainClipEndBeat
 
-    let startTime = beatScale(clipStartBeat - playState.seekBeat)
-    const endTime = beatScale(clipEndBeat - playState.seekBeat)
-    let duration = endTime - startTime
+
+    // if seek before clip, proceed as normal
+    let gainCurve, startTime, endTime, duration
+    if (playState.seekBeat < clipStartBeat) {
+      startTime = beatScale(clipStartBeat) - beatScale(playState.seekBeat)
+      endTime = beatScale(clipEndBeat) - beatScale(playState.seekBeat)
+      duration = endTime - startTime
+      gainCurve = getValueCurve({
+        scale: gainScale,
+        beatCount: clipEndBeat - clipStartBeat
+      })
+
+    // if seek in middle of clip, start now and adjust duration
+    } else {
+      startTime = 0
+      endTime = beatScale(clipEndBeat) - beatScale(playState.seekBeat)
+      duration = endTime - startTime
+
+      gainCurve = getValueCurve({
+        scale: gainScale,
+        startBeat: playState.seekBeat - clipStartBeat,
+        beatCount: clipEndBeat - playState.seekBeat
+      })
+    }
+
 
     console.log('GAIN AUTOMATION CLIP', {
+      absStartTime: playState.absSeekTime + startTime,
       startTime,
       endTime,
       duration,
       clipStartBeat,
       clipEndBeat,
       gainCurve,
-      gainControlPoints
+      gainControlPoints,
+      startBeat: playState.seekBeat - gainClipStartBeat,
+      beatCount: gainClipEndBeat - playState.seekBeat
     })
-
-    // if seek in middle of clip, start now and adjust duration
-    if (playState.seekBeat > clipStartBeat) {
-      startTime = 0
-      duration += beatScale.invert(playState.seekBeat - clipStartBeat)
-    }
 
     gainControlArray[1] = ['setValueCurveAtTime', gainCurve,
       playState.absSeekTime + startTime, duration]

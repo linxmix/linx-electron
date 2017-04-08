@@ -62,7 +62,8 @@ function createReducer (config) {
       let { absSeekTime, seekBeat } = playState
       if (updateSeek) {
         const currentTime = state.audioContext.currentTime
-        seekBeat = beatScale.invert(beatScale(seekBeat) + currentTime - absSeekTime)
+        const elapsedTime = currentTime - absSeekTime
+        seekBeat = beatScale.invert(beatScale(seekBeat) + elapsedTime)
         absSeekTime = currentTime
       }
 

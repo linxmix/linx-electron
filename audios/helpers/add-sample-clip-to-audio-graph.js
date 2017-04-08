@@ -31,9 +31,9 @@ module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
     beatCount: clip.beatCount
   })
 
-  let startTime = beatScale(clipStartBeat - playState.seekBeat)
+  let startTime = beatScale(clipStartBeat) - beatScale(playState.seekBeat)
   let offsetTime = clip.audioStartTime
-  const stopTime = beatScale(clipEndBeat - playState.seekBeat)
+  const stopTime = beatScale(clipEndBeat) - beatScale(playState.seekBeat)
 
   // if seek in middle of clip, start now and adjust offsetTime
   if (playState.seekBeat > clipStartBeat) {

@@ -17,7 +17,8 @@ class Playhead extends React.Component {
 
     let currentBeat = playState.seekBeat
     if (playState.status === PLAY_STATE_PLAYING) {
-      currentBeat += beatScale.invert(audioContext.currentTime - playState.absSeekTime)
+      const elapsedTime = audioContext.currentTime - playState.absSeekTime
+      currentBeat = beatScale.invert(beatScale(currentBeat) + elapsedTime)
     }
 
     return validNumberOrDefault(currentBeat, 0)

@@ -44,7 +44,6 @@ class MixArrangementDetail extends React.Component {
       audioContext={audioContext}
       scaleX={scaleX}
       translateX={translateX}
-      translateY={25}
       height={height}
       {...layoutActions}>
 
