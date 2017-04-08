@@ -3,7 +3,7 @@ const d3 = require('d3')
 const { DropTarget } = require('react-dnd')
 const { throttle } = require('lodash')
 
-const Axis = require('./axis')
+const BeatAxis = require('./beat-axis')
 const Playhead = require('./playhead')
 const { validNumberOrDefault } = require('../../lib/number-utils')
 
@@ -136,16 +136,6 @@ class MixArrangementLayout extends React.Component {
     const beatScale = mix.channel.beatScale
     const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
 
-    let axisDomainMax = mixBeatCount
-    // if (scaleX <= 1) {
-    //   axisDomainMax = mixBeatCount / 32
-    // } else {
-    //   axisDomainMax = mixBeatCount / (32 / scaleX)
-    // }
-    const axisScale = d3.scaleLinear()
-      .domain([0, axisDomainMax])
-      .range([0, mixBeatCount])
-
     return connectDropTarget(<div
       onMouseDown={this.handleMouseDown.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
@@ -157,11 +147,10 @@ class MixArrangementLayout extends React.Component {
         style={{ border: '1px solid gray' }}>
         
         <g transform={transform}>
-          <Axis
+          <BeatAxis
             scaleX={scaleX}
-            scale={axisScale}
-            tickCount={axisDomainMax}
-            height="100%"
+            beatCount={mixBeatCount}
+            height='100%'
             showText={true}
             strokeWidth={1 / scaleX}
           />
@@ -170,7 +159,7 @@ class MixArrangementLayout extends React.Component {
             playState={mix.playState}
             beatScale={beatScale}
             audioContext={audioContext}
-            height="100%"
+            height='100%'
             strokeWidth={1.5 / scaleX}
           />
         </g>
@@ -184,10 +173,9 @@ class MixArrangementLayout extends React.Component {
         ref='svg'>
 
         <g transform={transform}>
-          <Axis
+          <BeatAxis
             scaleX={scaleX}
-            scale={axisScale}
-            tickCount={axisDomainMax}
+            beatCount={mixBeatCount}
             height={height}
             strokeWidth={1 / scaleX}
           />
