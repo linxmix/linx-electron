@@ -1,7 +1,8 @@
-const { filter, map, find } = require('lodash')
+const { filter, map, find, get } = require('lodash')
 const {
   CHANNEL_TYPE_PRIMARY_TRACK,
-  CHANNEL_TYPE_TRANSITION
+  CHANNEL_TYPE_TRANSITION,
+  CHANNEL_TYPE_SAMPLE_TRACK
 } = require('../../channels/constants')
 
 module.exports = {
@@ -14,7 +15,8 @@ function getPrimaryTracks (nestedChannel = {}, metas = []) {
 
   return map(primaryTrackChannels, (channel, i) => {
     const clips = channel.clips
-    const sampleId = clips[0] && clips[0].sampleId
+    const sampleChannel = find(channel.channels || [], { type: CHANNEL_TYPE_SAMPLE_TRACK })
+    const sampleId = get(sampleChannel, 'clips.[0].sampleId')
 
     return {
       id: channel.id,

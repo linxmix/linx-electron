@@ -48,13 +48,6 @@ class MixArrangementDetail extends React.Component {
       height={height}
       {...layoutActions}>
 
-      <TransitionChannel
-        key={transition.id}
-        channel={transition}
-        height={height}
-        canDrag
-      />
-
       <PrimaryTrackChannel
         key={fromTrack.id}
         channel={fromTrack.channel}
@@ -62,8 +55,11 @@ class MixArrangementDetail extends React.Component {
         translateY={0}
         createControlPoint={createControlPoint}
         deleteControlPoint={deleteControlPoint}
+        canDrag
+        canDragTransition
         canDragAutomations
         showAutomations
+        showTransition
         color={d3.interpolateCool(0.25)}
       />
 

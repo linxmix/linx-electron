@@ -10,8 +10,6 @@ class Axis extends React.Component {
     const computedStep = tickCount / (32 * scaleX)
     const step = clamp(4, roundToNearestPowerOfTwo(computedStep), 128)
 
-    console.log('stepTHNIG', step)
-
     return <g>
       {map(range(0, tickCount, step), tick => <g key={tick} transform={`translate(${scale(tick)})`}>
         {showText && (computedStep < 256) && (tick % 16 === 0) && <text

@@ -2,57 +2,51 @@ const React = require('react')
 const { map, filter } = require('lodash')
 const { DragSource } = require('react-dnd')
 
-const SampleTrackChannel = require('./sample-track-channel')
-const TransitionChannel = require('./transition-channel')
 const SampleClip = require('./sample-clip')
 const AutomationClip = require('./automation-clip')
 const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../../clips/constants')
-const {
-  CHANNEL_TYPE_SAMPLE_TRACK,
-  CHANNEL_TYPE_TRANSITION
-} = require('../../channels/constants')
 
-class PrimaryTrackChannel extends React.Component {
+class SampleTrackChannel extends React.Component {
   render () {
-    const { channel, color, beatScale, translateY, showTransition,
+    const { channel, color, beatScale, translateY,
       canDragAutomations, height, showAutomations, connectDragSource } = this.props
     if (!channel) { return null }
 
     return connectDragSource(<g transform={`translate(${channel.startBeat},${translateY})`}>
-      {showTransition && map(filter(channel.channels, { type: CHANNEL_TYPE_TRANSITION }),
-        (channel, i, channels) => <TransitionChannel
-          key={channel.id}
-          channel={channel}
+      {map(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip =>
+        <SampleClip
+          key={clip.id}
+          clip={clip}
+          beatScale={beatScale}
+          color={color}
           height={height}
-          canDrag={this.props.canDragTransition}
+          canDrag={this.props.canDrag}
         />
       )}
 
-      {map(filter(channel.channels, { type: CHANNEL_TYPE_SAMPLE_TRACK }),
-        (channel, i, channels) => <SampleTrackChannel
-          key={channel.id}
-          channel={channel}
-          beatScale={beatScale}
+      {showAutomations && map(filter(channel.clips, { type: CLIP_TYPE_AUTOMATION }), clip =>
+        <AutomationClip
+          key={clip.id}
+          clip={clip}
+          minBeat={channel.startBeat}
+          maxBeat={channel.beatCount}
           createControlPoint={this.props.createControlPoint}
           deleteControlPoint={this.props.deleteControlPoint}
-          canDrag={false}
-          canDragAutomations={this.props.canDragAutomations}
-          showAutomations={this.props.showAutomations}
-          color={this.props.color}
+          beatScale={beatScale}
+          height={height}
+          canDrag={canDragAutomations}
         />
       )}
     </g>)
   }
 }
 
-PrimaryTrackChannel.defaultProps = {
+SampleTrackChannel.defaultProps = {
   translateY: 0,
   canDrag: false,
   canDragAutomations: false,
-  canDragTransition: false,
   height: 100,
-  showAutomations: false,
-  showTransition: false
+  showAutomations: false
 }
 
 function collectDrag (connect, monitor) {
@@ -78,4 +72,4 @@ const dragSource = {
   }
 }
 
-module.exports = DragSource('primary-track-channel', dragSource, collectDrag)(PrimaryTrackChannel)
+module.exports = DragSource('sample-track-channel', dragSource, collectDrag)(SampleTrackChannel)
