@@ -128,15 +128,22 @@ class MixArrangementLayout extends React.Component {
   }
 
   render () {
-    const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY } = this.props
+    const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY,
+      topAxisHeight } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const transform = `translate(${translateX},${translateY}) scale(${scaleX}, 1)`
     const beatScale = mix.channel.beatScale
     const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
-    const mixPhraseCount = mixBeatCount / 32  // TODO: need to round?
-    const phraseScale = d3.scaleLinear()
-      .domain([0, mixPhraseCount])
+
+    let axisDomainMax = mixBeatCount
+    // if (scaleX <= 1) {
+    //   axisDomainMax = mixBeatCount / 32
+    // } else {
+    //   axisDomainMax = mixBeatCount / (32 / scaleX)
+    // }
+    const axisScale = d3.scaleLinear()
+      .domain([0, axisDomainMax])
       .range([0, mixBeatCount])
 
     return connectDropTarget(<div
@@ -146,14 +153,41 @@ class MixArrangementLayout extends React.Component {
       <svg
         onMouseUp={this.handleClick.bind(this)}
         width='100%'
+        height={topAxisHeight}
+        style={{ border: '1px solid gray' }}>
+        
+        <g transform={transform}>
+          <Axis
+            scaleX={scaleX}
+            scale={axisScale}
+            tickCount={axisDomainMax}
+            height="100%"
+            showText={true}
+            strokeWidth={1 / scaleX}
+          />
+
+          <Playhead
+            playState={mix.playState}
+            beatScale={beatScale}
+            audioContext={audioContext}
+            height="100%"
+            strokeWidth={1.5 / scaleX}
+          />
+        </g>
+      </svg>
+
+      <svg
+        onMouseUp={this.handleClick.bind(this)}
+        width='100%'
         height={height}
         style={{ border: '1px solid gray' }}
         ref='svg'>
 
-        <g transform={transform} >
+        <g transform={transform}>
           <Axis
-            scale={phraseScale}
-            tickCount={mixPhraseCount}
+            scaleX={scaleX}
+            scale={axisScale}
+            tickCount={axisDomainMax}
             height={height}
             strokeWidth={1 / scaleX}
           />
@@ -174,6 +208,7 @@ class MixArrangementLayout extends React.Component {
 }
 
 MixArrangementLayout.defaultProps = {
+  topAxisHeight: 25,
   height: 100,
   scaleX: 1,
   translateX: 1,
