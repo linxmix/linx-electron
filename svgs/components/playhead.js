@@ -1,27 +1,18 @@
 const React = require('react')
 
-const { validNumberOrDefault } = require('../../lib/number-utils')
-const { PLAY_STATE_PLAYING } = require('../../audios/constants')
+const getCurrentBeat = require('../../audios/helpers/get-current-beat')
 
 class Playhead extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
       playheadAnimationId: null,
-      seekBeat: this.getCurrentBeat()
+      seekBeat: getCurrentBeat({
+        playState: this.props.playState,
+        audioContext: this.props.audioContext,
+        beatScale: this.props.beatScale
+      })
     }
-  }
-
-  getCurrentBeat () {
-    const { playState, beatScale, audioContext } = this.props
-
-    let currentBeat = playState.seekBeat
-    if (playState.status === PLAY_STATE_PLAYING) {
-      const elapsedTime = audioContext.currentTime - playState.absSeekTime
-      currentBeat = beatScale.invert(beatScale(currentBeat) + elapsedTime)
-    }
-
-    return validNumberOrDefault(currentBeat, 0)
   }
 
   render () {
@@ -41,7 +32,11 @@ class Playhead extends React.Component {
 
     this.setState({
       playheadAnimationId,
-      seekBeat: this.getCurrentBeat()
+      seekBeat: getCurrentBeat({
+        playState: this.props.playState,
+        audioContext: this.props.audioContext,
+        beatScale: this.props.beatScale
+      })
     })
   }
 
