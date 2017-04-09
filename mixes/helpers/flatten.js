@@ -1,4 +1,4 @@
-const { omit, reduce, keyBy } = require('lodash')
+const { omit, reduce, keyBy, map } = require('lodash')
 
 module.exports = flatten
 
@@ -40,6 +40,13 @@ function flattenChannels (channel) {
 function flattenClips (channel) {
   return reduceChannelsToObject(channel, (next) => {
     const { clips = [] } = next
-    return keyBy(clips, 'id')
+    return keyBy(map(clips, flattenControlPoints), 'id')
   })
+}
+
+function flattenControlPoints (clip) {
+  return {
+    ...clip,
+    controlPoints: keyBy(clip.controlPoints || [], 'id')
+  }
 }
