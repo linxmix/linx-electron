@@ -2,7 +2,7 @@ const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const createVirtualAudioGraph = require('virtual-audio-graph')
 const assert = require('assert')
-const { merge, defaults } = require('lodash')
+const { merge } = require('lodash')
 
 const { isValidNumber } = require('../lib/number-utils')
 const { PLAY_STATE_PLAYING, PLAY_STATE_PAUSED } = require('./constants')
@@ -100,7 +100,7 @@ function createReducer (config) {
       ]))
     },
     [updatePlayState]: (state, action) => {
-      const playState = defaults(action.payload, { status: PLAY_STATE_PAUSED })
+      const playState = action.payload
       const { channelId } = playState
       assert(!!channelId, 'Must provide channelId to updatePlayState')
 
@@ -108,7 +108,8 @@ function createReducer (config) {
         ...state,
         playStates: {
           ...state.playStates,
-          [channelId]: merge({}, state.playStates[channelId], playState)
+          [channelId]: merge({ status: PLAY_STATE_PAUSED }, state.playStates[channelId],
+            playState)
         }
       }
     },
