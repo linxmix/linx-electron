@@ -89,6 +89,7 @@ function createReducer (config) {
     },
     [seekToBeat]: (state, action) => {
       const { channel, seekBeat } = action.payload
+      const playState = state.playStates[channel.id] || {}
 
       return loop(state, Effects.batch([
         Effects.constant(updatePlayState({
@@ -96,7 +97,9 @@ function createReducer (config) {
           seekBeat: seekBeat,
           absSeekTime: state.audioContext.currentTime
         })),
-        Effects.constant(updateAudioGraph({ channel }))
+        playState.status === PLAY_STATE_PLAYING ?
+          Effects.constant(updateAudioGraph({ channel })) :
+          Effects.none()
       ]))
     },
     [updatePlayState]: (state, action) => {
