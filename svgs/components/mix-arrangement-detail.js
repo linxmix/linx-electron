@@ -26,12 +26,18 @@ class MixArrangementDetail extends React.Component {
         minBeat,
         maxBeat
       })
-      this.props.updateAudioGraph({ channel: mix.channel })
+
+      // TODO: remove this hack
+      // Make sure this.props.mix is updated from previous action
+      window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
     }
 
     const deleteControlPoint = (...args) => {
       this.props.deleteControlPoint(...args)
-      this.props.updateAudioGraph({ channel: mix.channel })
+      
+      // TODO: remove this hack
+      // Make sure this.props.mix is updated from previous action
+      window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
     }
 
     const { transition } = fromTrack
