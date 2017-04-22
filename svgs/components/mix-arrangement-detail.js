@@ -1,10 +1,11 @@
 const React = require('react')
 const d3 = require('d3')
-const { pick, get } = require('lodash')
+const { pick, get, map } = require('lodash')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
 const PrimaryTrackChannel = require('./primary-track-channel')
 const TransitionChannel = require('./transition-channel')
+const TrackControl = require('./track-control')
 
 class MixArrangementDetail extends React.Component {
   render () {
@@ -45,17 +46,25 @@ class MixArrangementDetail extends React.Component {
 
     console.log('mix-arrangement-detail', { fromTrack, toTrack, transition })
 
+    const trackControls = map([fromTrack, toTrack], (track) =>
+      <TrackControl
+        key={track.id + '_control'}
+        title={track.meta.title}
+        bpm={track.meta.bpm}
+      />
+    )
+
     return <MixArrangementLayout
       mix={mix}
       audioContext={audioContext}
       scaleX={scaleX}
       translateX={translateX}
       height={height}
-      showTrackControls
+      trackControls={trackControls}
       {...layoutActions}>
 
       <PrimaryTrackChannel
-        key={fromTrack.id}
+        key={fromTrack.id + '_channel'}
         channel={fromTrack.channel}
         beatScale={beatScale}
         translateY={0}
@@ -70,7 +79,7 @@ class MixArrangementDetail extends React.Component {
       />
 
       <PrimaryTrackChannel
-        key={toTrack.id}
+        key={toTrack.id + '_channel'}
         channel={toTrack.channel}
         beatScale={beatScale}
         translateY={rowHeight}

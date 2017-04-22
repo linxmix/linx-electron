@@ -142,8 +142,9 @@ class MixArrangementLayout extends React.Component {
       onWheel={this.handleMouseWheel.bind(this)}>
 
       <div style={{ display: 'flex', flex: 1 }}>
-        {this.props.showTrackControls && <div style={{ flex: '0 0 auto', width: '200px', 'border-right': '1px solid gray' }}>
+        {this.props.trackControls && <div style={{ flex: '0 0 auto', width: '200px', 'border-right': '1px solid gray' }}>
           <div style={{ 'border-bottom': '1px solid gray', 'border-top': '1px solid gray', height: topAxisHeight, width: '100%' }} />
+          {this.props.trackControls}
         </div>}
 
         <div className='VerticalLayout VerticalLayout--fullHeight' style={{ flex: 1 }}>
@@ -211,7 +212,7 @@ MixArrangementLayout.defaultProps = {
   scaleX: 1,
   translateX: 1,
   translateY: 0,
-  showTrackControls: false
+  trackControls: false
 }
 
 const dropTarget = {
