@@ -6,7 +6,7 @@ class TrackControl extends React.Component {
   render () {
     const { title, bpm, height, width } = this.props
 
-    return <div style={{ height, width, 'border-bottom': '1px solid gray' }}>
+    return <div style={{ height, width, borderBottom: '1px solid gray' }}>
       {title}
       <div>BPM: {bpm}</div>
     </div>

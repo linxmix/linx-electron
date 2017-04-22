@@ -142,26 +142,27 @@ class MixArrangementLayout extends React.Component {
       onWheel={this.handleMouseWheel.bind(this)}>
 
       <div style={{ display: 'flex', flex: 1 }}>
-        {this.props.trackControls && <div style={{ flex: '0 0 auto', width: '200px', 'border-right': '1px solid gray' }}>
-          <div style={{ 'border-bottom': '1px solid gray', 'border-top': '1px solid gray', height: topAxisHeight, width: '100%' }} />
+        {this.props.trackControls && <div style={{ flex: '0 0 auto', width: '200px', borderRight: '1px solid gray' }}>
+          <div style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray', height: topAxisHeight, width: '100%' }} />
           {this.props.trackControls}
         </div>}
 
-        <div className='VerticalLayout VerticalLayout--fullHeight' style={{ flex: 1 }}>
+        <div className='VerticalLayout VerticalLayout--fullHeight'
+          onMouseUp={this.handleClick.bind(this)}
+          style={{ flex: 1 }}>
           <svg
             className='VerticalLayout-fixedSection'
-            onMouseUp={this.handleClick.bind(this)}
             width='100%'
             height={topAxisHeight}
-            style={{ 'border-bottom': '1px solid gray', 'border-top': '1px solid gray' }}>
+            style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray' }}>
             
             <g transform={transform}>
               <BeatAxis
                 scaleX={scaleX}
                 beatCount={mixBeatCount}
                 height='100%'
-                showText={true}
                 strokeWidth={1 / scaleX}
+                showText
               />
 
               <Playhead
@@ -176,7 +177,6 @@ class MixArrangementLayout extends React.Component {
 
           <svg
             className='VerticalLayout-flexSection'
-            onMouseUp={this.handleClick.bind(this)}
             width='100%'
             height={height}
             ref='svg'>
