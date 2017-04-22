@@ -137,11 +137,13 @@ class MixArrangementLayout extends React.Component {
     const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
 
     return connectDropTarget(<div
+      className='VerticalLayout VerticalLayout--fullHeight'
       onMouseDown={this.handleMouseDown.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
 
       {this.props.showTrackControls && 
         <svg
+          className='VerticalLayout-fixedSection'
           onMouseUp={this.handleClick.bind(this)}
           width='100%'
           height={topAxisHeight}
@@ -168,6 +170,7 @@ class MixArrangementLayout extends React.Component {
       }
 
       <svg
+        className='VerticalLayout-fixedSection'
         onMouseUp={this.handleClick.bind(this)}
         width='100%'
         height={topAxisHeight}
@@ -193,6 +196,7 @@ class MixArrangementLayout extends React.Component {
       </svg>
 
       <svg
+        className='VerticalLayout-flexSection'
         onMouseUp={this.handleClick.bind(this)}
         width='100%'
         height={height}

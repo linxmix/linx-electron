@@ -48,8 +48,8 @@ class MixDetailContainer extends React.Component {
     const { playState, isSaving, isLoading, isDirty, channel } = mix
     const { status: masterChannelStatus } = channel
 
-    return <div>
-      <header style={{ border: '1px solid gray' }}>
+    return <div className='VerticalLayout VerticalLayout--fullHeight'>
+      <header style={{ border: '1px solid gray' }} className='VerticalLayout-fixedSection'>
         <h3>
           {fromTrack && fromTrack.meta.title} - {toTrack && toTrack.meta.title}
         </h3>
@@ -67,7 +67,7 @@ class MixDetailContainer extends React.Component {
         </button>
       </header>
 
-      <section className='VerticalLayout VerticalLayout--fullHeight'>
+      <section className='VerticalLayout-flexSection VerticalLayout VerticalLayout--fullHeight'>
         <MixArrangementDetail
           mix={mix}
           audioContext={audioContext}

@@ -86,7 +86,7 @@ class MixArrangementDetail extends React.Component {
 }
 
 MixArrangementDetail.defaultProps = {
-  height: 225,
+  height: '100%',
   rowHeight: 100,
   scaleX: 1,
   translateX: 1
