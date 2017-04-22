@@ -34,7 +34,7 @@ class MixArrangementDetail extends React.Component {
 
     const deleteControlPoint = (...args) => {
       this.props.deleteControlPoint(...args)
-      
+
       // TODO: remove this hack
       // Make sure this.props.mix is updated from previous action
       window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
@@ -51,6 +51,7 @@ class MixArrangementDetail extends React.Component {
       scaleX={scaleX}
       translateX={translateX}
       height={height}
+      showTrackControls
       {...layoutActions}>
 
       <PrimaryTrackChannel

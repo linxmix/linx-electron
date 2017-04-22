@@ -140,6 +140,33 @@ class MixArrangementLayout extends React.Component {
       onMouseDown={this.handleMouseDown.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
 
+      {this.props.showTrackControls && 
+        <svg
+          onMouseUp={this.handleClick.bind(this)}
+          width='100%'
+          height={topAxisHeight}
+          style={{ border: '1px solid gray' }}>
+          
+          <g transform={transform}>
+            <BeatAxis
+              scaleX={scaleX}
+              beatCount={mixBeatCount}
+              height='100%'
+              showText={true}
+              strokeWidth={1 / scaleX}
+            />
+
+            <Playhead
+              playState={mix.playState}
+              beatScale={beatScale}
+              audioContext={audioContext}
+              height='100%'
+              strokeWidth={1.5 / scaleX}
+            />
+          </g>
+        </svg>
+      }
+
       <svg
         onMouseUp={this.handleClick.bind(this)}
         width='100%'
@@ -200,7 +227,8 @@ MixArrangementLayout.defaultProps = {
   height: 100,
   scaleX: 1,
   translateX: 1,
-  translateY: 0
+  translateY: 0,
+  showTrackControls: false
 }
 
 const dropTarget = {

@@ -9,7 +9,7 @@ class LayoutContainer extends React.Component {
   render () {
     const { children } = this.props
 
-    return <div>
+    return <div className='VerticalLayout VerticalLayout--page'>
       <Link to='/'>
         <h1>Linx</h1>
       </Link>
@@ -17,7 +17,7 @@ class LayoutContainer extends React.Component {
         <Link to='/mixes'>mixes</Link>
         <Link to='/samples'>samples</Link>
       </nav>
-      <div>{children}</div>
+      <div className='VerticalLayout VerticalLayout--fullHeight'>{children}</div>
     </div>
   }
 }

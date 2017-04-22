@@ -67,7 +67,7 @@ class MixDetailContainer extends React.Component {
         </button>
       </header>
 
-      <section>
+      <section className='VerticalLayout VerticalLayout--fullHeight'>
         <MixArrangementDetail
           mix={mix}
           audioContext={audioContext}

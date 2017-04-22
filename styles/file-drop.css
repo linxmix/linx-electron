@@ -1,3 +1,5 @@
+
+
 .file-drop-dragging-over-frame {
   position: fixed;
   top: 0;
@@ -16,6 +18,9 @@
     background-color: rgba(0,155,0,0.5);
   }
 }
+
+
+
 
 
 
@@ -53,4 +58,36 @@
 
 .primary-track-row-draggable:hover {
   cursor: pointer;
+}
+
+
+
+body {
+  margin: 0;
+}
+
+.u-scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.VerticalLayout {
+  display: flex;
+  flex-direction: column;
+}
+
+.VerticalLayout.VerticalLayout--fullHeight {
+  height: 100%;
+}
+
+.VerticalLayout.VerticalLayout--page {
+  height: 100vh;
+}
+
+.VerticalLayout-fixedSection {
+  flex: 0 0 auto;
+}
+
+.VerticalLayout-flexSection {
+  flex: 1;
 }
