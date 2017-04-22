@@ -141,87 +141,66 @@ class MixArrangementLayout extends React.Component {
       onMouseDown={this.handleMouseDown.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
 
-      {this.props.showTrackControls && 
-        <svg
-          className='VerticalLayout-fixedSection'
-          onMouseUp={this.handleClick.bind(this)}
-          width='100%'
-          height={topAxisHeight}
-          style={{ border: '1px solid gray' }}>
-          
-          <g transform={transform}>
-            <BeatAxis
-              scaleX={scaleX}
-              beatCount={mixBeatCount}
-              height='100%'
-              showText={true}
-              strokeWidth={1 / scaleX}
-            />
+      <div style={{ display: 'flex', flex: 1 }}>
+        {this.props.showTrackControls && <div style={{ flex: '0 0 auto', width: '200px', 'border-right': '1px solid gray' }}>
+          <div style={{ 'border-bottom': '1px solid gray', 'border-top': '1px solid gray', height: topAxisHeight, width: '100%' }} />
+        </div>}
 
-            <Playhead
-              playState={mix.playState}
-              beatScale={beatScale}
-              audioContext={audioContext}
-              height='100%'
-              strokeWidth={1.5 / scaleX}
-            />
-          </g>
-        </svg>
-      }
+        <div className='VerticalLayout VerticalLayout--fullHeight' style={{ flex: 1 }}>
+          <svg
+            className='VerticalLayout-fixedSection'
+            onMouseUp={this.handleClick.bind(this)}
+            width='100%'
+            height={topAxisHeight}
+            style={{ 'border-bottom': '1px solid gray', 'border-top': '1px solid gray' }}>
+            
+            <g transform={transform}>
+              <BeatAxis
+                scaleX={scaleX}
+                beatCount={mixBeatCount}
+                height='100%'
+                showText={true}
+                strokeWidth={1 / scaleX}
+              />
 
-      <svg
-        className='VerticalLayout-fixedSection'
-        onMouseUp={this.handleClick.bind(this)}
-        width='100%'
-        height={topAxisHeight}
-        style={{ border: '1px solid gray' }}>
-        
-        <g transform={transform}>
-          <BeatAxis
-            scaleX={scaleX}
-            beatCount={mixBeatCount}
-            height='100%'
-            showText={true}
-            strokeWidth={1 / scaleX}
-          />
+              <Playhead
+                playState={mix.playState}
+                beatScale={beatScale}
+                audioContext={audioContext}
+                height='100%'
+                strokeWidth={1.5 / scaleX}
+              />
+            </g>
+          </svg>
 
-          <Playhead
-            playState={mix.playState}
-            beatScale={beatScale}
-            audioContext={audioContext}
-            height='100%'
-            strokeWidth={1.5 / scaleX}
-          />
-        </g>
-      </svg>
-
-      <svg
-        className='VerticalLayout-flexSection'
-        onMouseUp={this.handleClick.bind(this)}
-        width='100%'
-        height={height}
-        style={{ border: '1px solid gray' }}
-        ref='svg'>
-
-        <g transform={transform}>
-          <BeatAxis
-            scaleX={scaleX}
-            beatCount={mixBeatCount}
+          <svg
+            className='VerticalLayout-flexSection'
+            onMouseUp={this.handleClick.bind(this)}
+            width='100%'
             height={height}
-            strokeWidth={1 / scaleX}
-          />
+            ref='svg'>
 
-          {this.props.children}
+            <g transform={transform}>
+              <BeatAxis
+                scaleX={scaleX}
+                beatCount={mixBeatCount}
+                height={height}
+                strokeWidth={1 / scaleX}
+              />
 
-          <Playhead
-            playState={mix.playState}
-            beatScale={beatScale}
-            audioContext={audioContext}
-            height={height}
-            strokeWidth={1.5 / scaleX}
-          />
-        </g>
-      </svg>
+              {this.props.children}
+
+              <Playhead
+                playState={mix.playState}
+                beatScale={beatScale}
+                audioContext={audioContext}
+                height={height}
+                strokeWidth={1.5 / scaleX}
+              />
+            </g>
+          </svg>
+        </div>
+      </div>
     </div>)
   }
 }

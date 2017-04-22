@@ -49,7 +49,7 @@ class MixDetailContainer extends React.Component {
     const { status: masterChannelStatus } = channel
 
     return <div className='VerticalLayout VerticalLayout--fullHeight'>
-      <header style={{ border: '1px solid gray' }} className='VerticalLayout-fixedSection'>
+      <header className='VerticalLayout-fixedSection'>
         <h3>
           {fromTrack && fromTrack.meta.title} - {toTrack && toTrack.meta.title}
         </h3>
