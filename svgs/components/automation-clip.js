@@ -3,10 +3,11 @@ const d3 = require('d3')
 const { map } = require('lodash')
 
 const ControlPoint = require('./automation-clip/control-point')
+const { isRightClick } = require('../../lib/mouse-event-utils')
 
 class AutomationClip extends React.Component {
   handleClick (e) {
-    if (e && e.nativeEvent && e.nativeEvent.which === 3) {
+    if (isRightClick(e)) {
       e.preventDefault()
       e.stopPropagation()
       this.props.createControlPoint({

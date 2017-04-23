@@ -36,6 +36,7 @@ class PrimaryTrackChannel extends React.Component {
           beatScale={beatScale}
           createControlPoint={this.props.createControlPoint}
           deleteControlPoint={this.props.deleteControlPoint}
+          createAutomationClipWithControlPoint={this.props.createAutomationClipWithControlPoint}
           scaleX={this.props.scaleX}
           canDrag={false}
           canDragAutomations={this.props.canDragAutomations}

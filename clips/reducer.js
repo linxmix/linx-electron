@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { map, defaults, without, omit, assign, includes } = require('lodash')
+const { get, map, defaults, without, omit, assign, includes } = require('lodash')
 const assert = require('assert')
 const uuid = require('uuid/v4')
 
@@ -16,9 +16,12 @@ const {
   moveClip,
   moveControlPoint,
   createControlPoint,
-  deleteControlPoint
+  deleteControlPoint,
+  createAutomationClipWithControlPoint
 } = require('./actions')
-const CLIP_TYPES = require('./constants')
+const { setClipsChannel } = require('../channels/actions')
+const { CLIP_TYPES, CONTROL_TYPES,
+  CLIP_TYPE_AUTOMATION, CONTROL_TYPE_GAIN } = require('./constants')
 const { quantizeBeat, clamp } = require('../lib/number-utils')
 
 module.exports = createReducer
@@ -51,6 +54,10 @@ function createReducer (config) {
     [createClip]: (state, action) => {
       const attrs = defaults({}, action.payload, { id: uuid() })
       assert(includes(CLIP_TYPES, attrs.type), 'Must have valid type to createClip')
+      if (attrs.type === CLIP_TYPE_AUTOMATION) {
+        assert(includes(CONTROL_TYPES, attrs.controlType),
+          'Must have valid controlType to createClip of type automation')
+      }
 
       return loop({
         ...state, dirty: [...state.dirty, attrs.id]
@@ -105,13 +112,12 @@ function createReducer (config) {
         beat: clamp(minBeat, quantizeBeat({ quantization, beat }), maxBeat),
         value: clamp(0, value, 1)
       }
-      const sourceClip = state.records[sourceId]
-      assert(sourceClip, 'Cannot createControlPoint for nonexistent sourceClip')
+      const sourceClipControlPoints = get(state, `records[${sourceId}].controlPoints`) || {}
 
       return loop(state, Effects.constant(updateClip({
         id: sourceId,
         controlPoints: {
-          ...sourceClip.controlPoints,
+          ...sourceClipControlPoints,
           [newControlPoint.id]: newControlPoint
         }
       })))
@@ -125,6 +131,28 @@ function createReducer (config) {
         id: sourceId,
         controlPoints: omit(sourceClip.controlPoints, id)
       })))
+    },
+    [createAutomationClipWithControlPoint]: (state, action) => {
+      const { channelId, beat, value, minBeat, maxBeat, quantization } = action.payload
+      assert(channelId, 'Cannot createAutomationClipWithControlPoint without channelId')
+
+      const automationClipId = uuid()
+
+      return loop(state, Effects.batch([
+        Effects.constant(createClip({
+          id: automationClipId,
+          type: CLIP_TYPE_AUTOMATION,
+          controlType: CONTROL_TYPE_GAIN // TODO: make this variable
+        })),
+        Effects.constant(setClipsChannel({
+          channelId,
+          clipIds: [automationClipId]
+        })),
+        Effects.constant(createControlPoint({
+          sourceId: automationClipId,
+          beat, value, minBeat, maxBeat, quantization
+        }))
+      ]))
     }
   }, {
     dirty: [],

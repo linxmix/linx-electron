@@ -15,37 +15,40 @@ class MixArrangementDetail extends React.Component {
     const layoutActions = pick(this.props, ['updateZoom', 'moveClip', 'moveTransitionChannel',
       'movePrimaryTrackChannel', 'resizeChannel', 'updateAudioGraph', 'seekToBeat', 'moveControlPoint'])
 
-    const createControlPoint = ({ sourceId, e, minBeat, maxBeat }) => {
-      const dim = e.target.getBoundingClientRect()
-      const x = e.clientX - dim.left
-      const y = e.clientY - dim.top
+    const primaryTrackChannelActions = {
+      createControlPoint: ({ sourceId, e, minBeat, maxBeat }) => {
+        const { beat, value } = _getPosition({ e, scaleX, rowHeight })
+        this.props.createControlPoint({
+          sourceId, beat, value, minBeat, maxBeat
+        })
 
-      this.props.createControlPoint({
-        sourceId,
-        beat: (x / scaleX),
-        value: 1 - (y / rowHeight),
-        minBeat,
-        maxBeat
-      })
+        // TODO: remove this hack
+        // Make sure this.props.mix is updated from previous action
+        window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
+      },
 
-      // TODO: remove this hack
-      // Make sure this.props.mix is updated from previous action
-      window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
-    }
+      deleteControlPoint: (...args) => {
+        this.props.deleteControlPoint(...args)
 
-    const deleteControlPoint = (...args) => {
-      this.props.deleteControlPoint(...args)
+        // TODO: remove this hack
+        // Make sure this.props.mix is updated from previous action
+        window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
+      },
 
-      // TODO: remove this hack
-      // Make sure this.props.mix is updated from previous action
-      window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
+      createAutomationClipWithControlPoint: ({ channelId, e, minBeat, maxBeat }) => {
+        const { beat, value } = _getPosition({ e, scaleX, rowHeight })
+        this.props.createAutomationClipWithControlPoint({
+          channelId, beat, value, minBeat, maxBeat
+        })
+
+        // TODO: remove this hack
+        // Make sure this.props.mix is updated from previous action
+        window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
+      },
     }
 
     const { transition } = fromTrack
     const beatScale = get(mix, 'channel.beatScale')
-
-    console.log('mix-arrangement-detail', { fromTrack, toTrack, transition })
-
     const trackControls = map([fromTrack, toTrack], (track) =>
       <TrackControl
         key={track.id + '_control'}
@@ -53,6 +56,7 @@ class MixArrangementDetail extends React.Component {
         bpm={track.meta.bpm}
       />
     )
+    console.log('mix-arrangement-detail', { fromTrack, toTrack, transition })
 
     return <MixArrangementLayout
       mix={mix}
@@ -69,14 +73,13 @@ class MixArrangementDetail extends React.Component {
         beatScale={beatScale}
         translateY={0}
         scaleX={scaleX}
-        createControlPoint={createControlPoint}
-        deleteControlPoint={deleteControlPoint}
         canDrag
         canDragTransition
         canDragAutomations
         showAutomations
         showTransition
         color={d3.interpolateCool(0.25)}
+        {...primaryTrackChannelActions}
       />
 
       <PrimaryTrackChannel
@@ -85,12 +88,11 @@ class MixArrangementDetail extends React.Component {
         beatScale={beatScale}
         translateY={rowHeight}
         scaleX={scaleX}
-        createControlPoint={createControlPoint}
-        deleteControlPoint={deleteControlPoint}
         canDrag
         canDragAutomations
         showAutomations
         color={d3.interpolateCool(0.75)}
+        {...primaryTrackChannelActions}
       />
     </MixArrangementLayout>
   }
@@ -104,3 +106,14 @@ MixArrangementDetail.defaultProps = {
 }
 
 module.exports = MixArrangementDetail
+
+function _getPosition({ e, scaleX, rowHeight }) {
+  const dim = e.target.getBoundingClientRect()
+  const x = e.clientX - dim.left
+  const y = e.clientY - dim.top
+
+  return {
+    beat: (x / scaleX),
+    value: 1 - (y / rowHeight),
+  }
+}
