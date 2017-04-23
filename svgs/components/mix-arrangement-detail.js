@@ -68,6 +68,7 @@ class MixArrangementDetail extends React.Component {
         channel={fromTrack.channel}
         beatScale={beatScale}
         translateY={0}
+        scaleX={scaleX}
         createControlPoint={createControlPoint}
         deleteControlPoint={deleteControlPoint}
         canDrag
@@ -83,6 +84,7 @@ class MixArrangementDetail extends React.Component {
         channel={toTrack.channel}
         beatScale={beatScale}
         translateY={rowHeight}
+        scaleX={scaleX}
         createControlPoint={createControlPoint}
         deleteControlPoint={deleteControlPoint}
         canDrag

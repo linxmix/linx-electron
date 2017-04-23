@@ -42,6 +42,7 @@ SampleClip.defaultProps = {
   height: 100,
   color: 'green',
   resolution: 1,
+  scaleX: 1,
   canDrag: false
 }
 

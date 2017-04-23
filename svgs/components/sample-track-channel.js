@@ -8,7 +8,7 @@ const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../../clips/constant
 
 class SampleTrackChannel extends React.Component {
   render () {
-    const { channel, color, beatScale, translateY,
+    const { channel, color, beatScale, translateY, scaleX,
       canDragAutomations, height, showAutomations, connectDragSource } = this.props
     if (!channel) { return null }
 
@@ -17,6 +17,7 @@ class SampleTrackChannel extends React.Component {
         <SampleClip
           key={clip.id}
           clip={clip}
+          scaleX={scaleX}
           beatScale={beatScale}
           color={color}
           height={height}
@@ -28,6 +29,7 @@ class SampleTrackChannel extends React.Component {
         <AutomationClip
           key={clip.id}
           clip={clip}
+          scaleX={scaleX}
           minBeat={channel.startBeat}
           maxBeat={channel.beatCount}
           createControlPoint={this.props.createControlPoint}
@@ -43,6 +45,7 @@ class SampleTrackChannel extends React.Component {
 
 SampleTrackChannel.defaultProps = {
   translateY: 0,
+  scaleX: 1,
   canDrag: false,
   canDragAutomations: false,
   height: 100,
