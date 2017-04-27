@@ -7,7 +7,7 @@ const { beatToTime } = require('../../lib/number-utils')
 
 class SampleClip extends React.Component {
   render () {
-    const { clip, height, color, resolution, connectDragSource, isDragging } = this.props
+    const { clip, height, color, sampleResolution, connectDragSource, isDragging } = this.props
     if (!clip || (clip.status !== 'loaded')) { return null }
 
     const { sample, startBeat, audioStartTime, beatCount } = clip
@@ -16,7 +16,7 @@ class SampleClip extends React.Component {
       audioBuffer,
       startTime: audioStartTime,
       endTime: audioStartTime + beatToTime(beatCount, audioBpm),
-      length: beatCount * resolution
+      length: beatCount * sampleResolution
     })
 
     const median = Math.ceil(height / 2.0)
@@ -41,7 +41,7 @@ class SampleClip extends React.Component {
 SampleClip.defaultProps = {
   height: 100,
   color: 'green',
-  resolution: 1,
+  sampleResolution: 1,
   scaleX: 1,
   canDrag: false
 }

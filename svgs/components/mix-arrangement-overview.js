@@ -30,6 +30,7 @@ class MixArrangementOverview extends React.Component {
           key={channel.id}
           beatScale={beatScale}
           channel={channel}
+          sampleResolution={0.5}
           color={d3.interpolateCool(i / channels.length)}
         />
       )}

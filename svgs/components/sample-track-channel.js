@@ -24,7 +24,7 @@ class SampleTrackChannel extends React.Component {
   }
 
   render () {
-    const { channel, color, beatScale, translateY, scaleX,
+    const { channel, color, beatScale, translateY, scaleX, sampleResolution,
       canDragAutomations, height, showAutomations, connectDragSource } = this.props
     if (!channel) { return null }
 
@@ -38,6 +38,7 @@ class SampleTrackChannel extends React.Component {
           scaleX={scaleX}
           beatScale={beatScale}
           color={color}
+          sampleResolution={sampleResolution}
           height={height}
           canDrag={this.props.canDrag}
         />

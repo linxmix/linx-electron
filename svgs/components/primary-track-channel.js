@@ -42,6 +42,7 @@ class PrimaryTrackChannel extends React.Component {
           canDragAutomations={this.props.canDragAutomations}
           showAutomations={this.props.showAutomations}
           color={this.props.color}
+          sampleResolution={this.props.sampleResolution}
         />
       )}
     </g>)
