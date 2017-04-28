@@ -16,7 +16,7 @@ const getClips = Getter(
   getSamples,
   (clips, dirtyClips, samples) => {
     return mapValues(clips, clip => {
-      let startBeat, beatCount, sample, status, audioStartTime, controlPoints
+      let startBeat, beatCount, sample, status, audioStartTime, controlPoints, gridMarkers
 
       if (clip.type === CLIP_TYPE_SAMPLE) {
         sample = samples[clip.sampleId] || {}
@@ -48,6 +48,10 @@ const getClips = Getter(
 
         // compute startBeat
         startBeat = validNumberOrDefault(clip.startBeat, 0)
+
+        // sort gridMarkers
+        gridMarkers = sortBy(clip.gridMarkers || [], 'beat')
+        
       } else if (clip.type === CLIP_TYPE_AUTOMATION) {
         controlPoints = sortBy(values(clip.controlPoints), 'beat', 'value')
         startBeat = validNumberOrDefault(Math.min(...map(controlPoints, 'beat')), 0)
@@ -62,6 +66,7 @@ const getClips = Getter(
         beatCount,
         audioStartTime,
         controlPoints,
+        gridMarkers,
         isDirty: includes(dirtyClips, clip.id)
       }
     })

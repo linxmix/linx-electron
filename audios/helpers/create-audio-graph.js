@@ -104,7 +104,6 @@ function _addGainAutomationToAudioGraph({
 
     // if seeking beyond clip, just report final value
     if (currentBeat >= clipEndBeat) {
-      console.log('final value', last(gainControlPoints).value, beatScale(clipEndBeat), currentTime)
       return ['setValueAtTime',
         last(gainControlPoints).value,
         Math.max(0, currentTime + beatScale(clipEndBeat) - beatScale(currentBeat))]

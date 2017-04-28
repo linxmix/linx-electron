@@ -5,22 +5,44 @@ const { DragSource } = require('react-dnd')
 const SampleClip = require('./sample-clip')
 const AutomationClip = require('./automation-clip')
 const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../../clips/constants')
+const { isRightClick } = require('../../lib/mouse-event-utils')
 
 class SampleTrackChannel extends React.Component {
+  handleClick (e) {
+    if (isRightClick(e) && this.props.showAutomations) {
+      e.preventDefault()
+      e.stopPropagation()
+
+      const { channel, createAutomationClipWithControlPoint } = this.props
+      createAutomationClipWithControlPoint({
+        e,
+        channelId: channel.id,
+        minBeat: channel.startBeat,
+        maxBeat: channel.beatCount,
+      })
+    }
+  }
+
   render () {
-    const { channel, color, beatScale, translateY,
+    const { channel, color, beatScale, translateY, scaleX, sampleResolution,
       canDragAutomations, height, showAutomations, connectDragSource } = this.props
     if (!channel) { return null }
 
-    return connectDragSource(<g transform={`translate(${channel.startBeat},${translateY})`}>
+    return connectDragSource(<g
+      onMouseUp={this.handleClick.bind(this)}
+      transform={`translate(${channel.startBeat},${translateY})`}>
       {map(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip =>
         <SampleClip
           key={clip.id}
           clip={clip}
+          scaleX={scaleX}
           beatScale={beatScale}
           color={color}
+          sampleResolution={sampleResolution}
           height={height}
           canDrag={this.props.canDrag}
+          showGridMarkers={this.props.showGridMarkers}
+          selectGridMarker={({ clip, marker }) => this.props.selectGridMarker({ channel, clip, marker })}
         />
       )}
 
@@ -28,6 +50,7 @@ class SampleTrackChannel extends React.Component {
         <AutomationClip
           key={clip.id}
           clip={clip}
+          scaleX={scaleX}
           minBeat={channel.startBeat}
           maxBeat={channel.beatCount}
           createControlPoint={this.props.createControlPoint}
@@ -43,10 +66,12 @@ class SampleTrackChannel extends React.Component {
 
 SampleTrackChannel.defaultProps = {
   translateY: 0,
+  scaleX: 1,
   canDrag: false,
   canDragAutomations: false,
   height: 100,
-  showAutomations: false
+  showAutomations: false,
+  showGridMarkers: true
 }
 
 function collectDrag (connect, monitor) {

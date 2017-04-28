@@ -9,8 +9,9 @@ const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { updateZoom } = require('../../svgs/actions')
-const { moveClip, moveControlPoint,
-  createControlPoint, deleteControlPoint } = require('../../clips/actions')
+const { moveClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint,
+  deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker
+} = require('../../clips/actions')
 const { moveTransitionChannel, movePrimaryTrackChannel, resizeChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
@@ -18,10 +19,7 @@ const { PLAY_STATE_PLAYING } = require('../../audios/constants')
 
 class MixDetailContainer extends React.Component {
   componentDidMount () {
-    keymaster('space', () => {
-      console.log("SPACE")
-      this.props.playPause({ channel: this.props.mix.channel })
-    })
+    keymaster('space', () => this.props.playPause({ channel: this.props.mix.channel }))
 
     const { loadMix, mix } = this.props
     if (mix && !mix.channel.type) {
@@ -40,8 +38,9 @@ class MixDetailContainer extends React.Component {
 
     const arrangementActions = mapValues(
       pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
-        'createControlPoint', 'deleteControlPoint',
-        'moveClip', 'moveTransitionChannel', 'movePrimaryTrackChannel', 'resizeChannel']),
+        'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
+        'moveClip', 'moveTransitionChannel', 'movePrimaryTrackChannel', 'resizeChannel',
+        'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker']),
       (fn) => (options) => fn({
         quantization: _getQuantization(this.props.dragModifierKeys),
         ...options
@@ -51,8 +50,8 @@ class MixDetailContainer extends React.Component {
     const { playState, isSaving, isLoading, isDirty, channel } = mix
     const { status: masterChannelStatus } = channel
 
-    return <div>
-      <header style={{ border: '1px solid gray' }}>
+    return <div className='VerticalLayout VerticalLayout--fullHeight'>
+      <header className='VerticalLayout-fixedSection'>
         <h3>
           {fromTrack && fromTrack.meta.title} - {toTrack && toTrack.meta.title}
         </h3>
@@ -70,7 +69,7 @@ class MixDetailContainer extends React.Component {
         </button>
       </header>
 
-      <section>
+      <section className='VerticalLayout-flexSection VerticalLayout VerticalLayout--fullHeight'>
         <MixArrangementDetail
           mix={mix}
           audioContext={audioContext}
@@ -106,10 +105,14 @@ module.exports = connect(
     updateMeta,
     playPause,
     seekToBeat,
+    selectGridMarker,
     moveClip,
     moveControlPoint,
     createControlPoint,
     deleteControlPoint,
+    createAutomationClipWithControlPoint,
+    calculateGridMarkers,
+    clearGridMarkers,
     moveTransitionChannel,
     movePrimaryTrackChannel,
     resizeChannel,

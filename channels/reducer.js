@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { map, defaults, without, includes, findIndex,
+const { map, defaults, without, includes, findIndex, concat,
   clone, filter, values, omit, assign } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
@@ -17,6 +17,7 @@ const {
   moveTransitionChannel,
   movePrimaryTrackChannel,
   resizeChannel,
+  setClipsChannel,
   setChannelsParent,
   createPrimaryTrackFromFile,
   swapPrimaryTracks
@@ -98,7 +99,17 @@ function createReducer (config) {
       const parentChannel = state.records[parentChannelId] || {}
       return loop(state, Effects.constant(updateChannel({
         id: parentChannelId,
-        channelIds: (parentChannel.channelIds || []).concat(channelIds)
+        channelIds: concat((parentChannel.channelIds || []), channelIds)
+      })))
+    },
+    [setClipsChannel]: (state, action) => {
+      const { channelId, clipIds } = action.payload
+      assert(channelId && clipIds, 'Must have channelId and clipIds to setClipsChannel')
+
+      const channel = state.records[channelId] || {}
+      return loop(state, Effects.constant(updateChannel({
+        id: channelId,
+        clipIds: concat((channel.clipIds || []), clipIds)
       })))
     },
     [updateChannel]: (state, action) => {
@@ -126,8 +137,11 @@ function createReducer (config) {
           Effects.constant(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
           Effects.constant(createChannel({
             id: sampleChannelId,
-            type: CHANNEL_TYPE_SAMPLE_TRACK,
-            clipIds: [clipId] // TODO(FUTURE): maybe setClipChannel?
+            type: CHANNEL_TYPE_SAMPLE_TRACK
+          })),
+          Effects.constant(setClipsChannel({
+            channelId: sampleChannelId,
+            clipIds: [clipId]
           })),
           Effects.constant(createChannel({
             id: transitionChannelId,

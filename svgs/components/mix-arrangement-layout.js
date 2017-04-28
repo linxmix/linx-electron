@@ -7,7 +7,7 @@ const BeatAxis = require('./beat-axis')
 const Playhead = require('./playhead')
 const { validNumberOrDefault } = require('../../lib/number-utils')
 
-const ZOOM_STEP = 0.2
+const ZOOM_STEP = 0.5
 const MIN_SCALE_X = 0.1
 
 function _isNegative (n) {
@@ -137,60 +137,71 @@ class MixArrangementLayout extends React.Component {
     const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
 
     return connectDropTarget(<div
+      className='VerticalLayout VerticalLayout--fullHeight'
       onMouseDown={this.handleMouseDown.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
 
-      <svg
-        onMouseUp={this.handleClick.bind(this)}
-        width='100%'
-        height={topAxisHeight}
-        style={{ border: '1px solid gray' }}>
-        
-        <g transform={transform}>
-          <BeatAxis
-            scaleX={scaleX}
-            beatCount={mixBeatCount}
-            height='100%'
-            showText={true}
-            strokeWidth={1 / scaleX}
-          />
+      <div style={{ display: 'flex', flex: 1 }}>
+        {this.props.trackControls && <div style={{ flex: '0 0 auto', width: '200px', borderRight: '1px solid gray' }}>
+          <div style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray', height: topAxisHeight, width: '100%' }} />
+          {this.props.trackControls}
+        </div>}
 
-          <Playhead
-            playState={mix.playState}
-            beatScale={beatScale}
-            audioContext={audioContext}
-            height='100%'
-            strokeWidth={1.5 / scaleX}
-          />
-        </g>
-      </svg>
+        <div className='VerticalLayout VerticalLayout--fullHeight'
+          onMouseUp={this.handleClick.bind(this)}
+          style={{ flex: 1 }}>
+          <svg
+            className='VerticalLayout-fixedSection'
+            width='100%'
+            height={topAxisHeight}
+            style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray' }}>
+            
+            <g transform={transform}>
+              <BeatAxis
+                scaleX={scaleX}
+                beatCount={mixBeatCount}
+                height='100%'
+                strokeWidth={1 / scaleX}
+                showText
+              />
 
-      <svg
-        onMouseUp={this.handleClick.bind(this)}
-        width='100%'
-        height={height}
-        style={{ border: '1px solid gray' }}
-        ref='svg'>
+              <Playhead
+                playState={mix.playState}
+                beatScale={beatScale}
+                audioContext={audioContext}
+                height='100%'
+                strokeWidth={1.5 / scaleX}
+              />
+            </g>
+          </svg>
 
-        <g transform={transform}>
-          <BeatAxis
-            scaleX={scaleX}
-            beatCount={mixBeatCount}
+          <svg
+            className='VerticalLayout-flexSection'
+            width='100%'
             height={height}
-            strokeWidth={1 / scaleX}
-          />
+            ref='svg'>
 
-          {this.props.children}
+            <g transform={transform}>
+              <BeatAxis
+                scaleX={scaleX}
+                beatCount={mixBeatCount}
+                height={height}
+                strokeWidth={1 / scaleX}
+              />
 
-          <Playhead
-            playState={mix.playState}
-            beatScale={beatScale}
-            audioContext={audioContext}
-            height={height}
-            strokeWidth={1.5 / scaleX}
-          />
-        </g>
-      </svg>
+              {this.props.children}
+
+              <Playhead
+                playState={mix.playState}
+                beatScale={beatScale}
+                audioContext={audioContext}
+                height={height}
+                strokeWidth={1.5 / scaleX}
+              />
+            </g>
+          </svg>
+        </div>
+      </div>
     </div>)
   }
 }
@@ -200,7 +211,8 @@ MixArrangementLayout.defaultProps = {
   height: 100,
   scaleX: 1,
   translateX: 1,
-  translateY: 0
+  translateY: 0,
+  trackControls: false
 }
 
 const dropTarget = {
