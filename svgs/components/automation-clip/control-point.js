@@ -11,12 +11,13 @@ class ControlPoint extends React.Component {
   }
 
   render () {
-    const { beat, value, height, connectDragSource } = this.props
+    const { beat, value, height, radius, scaleX, connectDragSource } = this.props
 
-    return connectDragSource(<circle
+    return connectDragSource(<ellipse
       cx={beat}
       cy={(1 - value) * height}
-      r={10}
+      rx={radius / scaleX}
+      ry={radius}
       style={{ fill: '#B8DE44' }}
       onMouseUp={this.handleClick.bind(this)}
     />)
@@ -25,6 +26,8 @@ class ControlPoint extends React.Component {
 
 ControlPoint.defaultProps = {
   height: 100,
+  scaleX: 1,
+  radius: 10,
   canDrag: false
 }
 

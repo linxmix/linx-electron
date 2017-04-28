@@ -19,7 +19,8 @@ ResizeHandle.defaultProps = {
   height: 10,
   width: 10,
   translateX: 0,
-  translateY: 0
+  translateY: 0,
+  scaleX: 1
 }
 
 function collectDrag (connect, monitor) {

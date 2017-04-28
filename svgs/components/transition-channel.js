@@ -24,6 +24,7 @@ class TransitionChannel extends React.Component {
         id={channel.id}
         translateX={0}
         translateY={-10}
+        scaleX={this.props.scaleX}
         startBeat={channel.startBeat}
         beatCount={channel.beatCount}
         canDrag={canDrag}
@@ -32,6 +33,7 @@ class TransitionChannel extends React.Component {
         id={channel.id}
         translateX={channel.beatCount}
         translateY={-10}
+        scaleX={this.props.scaleX}
         startBeat={channel.startBeat}
         beatCount={channel.beatCount}
         canDrag={canDrag}
@@ -42,6 +44,7 @@ class TransitionChannel extends React.Component {
 
 TransitionChannel.defaultProps = {
   height: 100,
+  scaleX: 1,
   canDrag: false
 }
 
