@@ -17,12 +17,15 @@ const {
   moveControlPoint,
   createControlPoint,
   deleteControlPoint,
-  createAutomationClipWithControlPoint
+  createAutomationClipWithControlPoint,
+  calculateGridMarkers,
+  clearGridMarkers
 } = require('./actions')
 const { setClipsChannel } = require('../channels/actions')
+const { analyzeSample } = require('../samples/actions')
 const { CLIP_TYPES, CONTROL_TYPES,
   CLIP_TYPE_AUTOMATION, CONTROL_TYPE_GAIN } = require('./constants')
-const { quantizeBeat, clamp } = require('../lib/number-utils')
+const { quantizeBeat, clamp, beatToTime } = require('../lib/number-utils')
 
 module.exports = createReducer
 
@@ -153,6 +156,43 @@ function createReducer (config) {
           beat, value, minBeat, maxBeat, quantization
         }))
       ]))
+    },
+    [calculateGridMarkers]: (state, action) => {
+      const { id, bpm, startTime, endTime } = action.payload
+      const clip = state.records[id]
+      const { sampleId } = clip
+      assert(id && sampleId, 'Cannot calculateGridMarkers without id and sampleId')
+
+      const effectCreator = ({ attrs }) => {
+        const { peaks = [] } = attrs
+
+        return Effects.constant(updateClip({
+          id,
+          gridMarkers: map(peaks, peak => ({
+            id: uuid(),
+            stroke: 'blue',
+            strokeWidth: 1,
+            clickWidth: 5,
+            beat: beatToTime(peak.time, bpm)
+          }))
+        }))
+      }
+
+      return loop(state, Effects.constant(analyzeSample({
+        id: sampleId,
+        startTime,
+        endTime,
+        effectCreator
+      })))
+    },
+    [clearGridMarkers]: (state, action) => {
+      const { id } = action.payload
+      assert(id, 'Cannot clearGridMarkers without id')
+
+      return loop(state, Effects.constant(updateClip({
+        id,
+        gridMarkers: []
+      })))
     }
   }, {
     dirty: [],

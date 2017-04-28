@@ -1,13 +1,22 @@
 const React = require('react')
 const d3 = require('d3')
+const { map } = require('lodash')
 const { DragSource } = require('react-dnd')
 
 const getPeaks = require('../../samples/helpers/get-peaks')
 const { beatToTime } = require('../../lib/number-utils')
 
 class SampleClip extends React.Component {
+  handleGridMarkerClick (marker, e) {
+    console.log('handleGridMarkerClick', { marker, e })
+    e.preventDefault()
+    e.stopPropagation()
+
+    this.props.selectGridMarker({ clip: this.props.clip, marker })
+  }
+
   render () {
-    const { clip, height, color, sampleResolution, connectDragSource, isDragging } = this.props
+    const { clip, height, color, sampleResolution, scaleX, connectDragSource, isDragging } = this.props
     if (!clip || (clip.status !== 'loaded')) { return null }
 
     const { sample, startBeat, audioStartTime, beatCount } = clip
@@ -34,6 +43,18 @@ class SampleClip extends React.Component {
     return connectDragSource(<g transform={`translate(${startBeat})`}>
       <rect width={beatCount} height={height} fill='transparent' />
       <path fill={color} d={area(peaks)} opacity={isDragging ? 0.5 : 1} />
+
+      {this.props.showGridMarkers && map(clip.gridMarkers || [], (marker) => 
+        <g key={marker.id} transform={`translate(${marker.beat})`}
+          onMouseUp={this.handleGridMarkerClick.bind(this, marker)}>
+          <rect width={marker.clickWidth / scaleX} height={height} fill='transparent'/>
+          <line
+            style={{ stroke: marker.stroke, strokeWidth: marker.strokeWidth / scaleX }}
+            y1={0}
+            y2={height}
+          />
+        </g>
+      )}
     </g>)
   }
 }
@@ -43,7 +64,8 @@ SampleClip.defaultProps = {
   color: 'green',
   sampleResolution: 1,
   scaleX: 1,
-  canDrag: false
+  canDrag: false,
+  showGridMarkers: false
 }
 
 function collectDrag (connect, monitor) {

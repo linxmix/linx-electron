@@ -41,6 +41,8 @@ class SampleTrackChannel extends React.Component {
           sampleResolution={sampleResolution}
           height={height}
           canDrag={this.props.canDrag}
+          showGridMarkers={this.props.showGridMarkers}
+          selectGridMarker={({ clip, marker }) => this.props.selectGridMarker({ channel, clip, marker })}
         />
       )}
 
@@ -68,7 +70,8 @@ SampleTrackChannel.defaultProps = {
   canDrag: false,
   canDragAutomations: false,
   height: 100,
-  showAutomations: false
+  showAutomations: false,
+  showGridMarkers: true
 }
 
 function collectDrag (connect, monitor) {

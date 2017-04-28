@@ -15,14 +15,28 @@ class MixArrangementDetail extends React.Component {
     }
   }
 
-  toggleEditBeatgrid (id) {
+  toggleEditBeatgrid (channel) {
+    const { id, channels } = channel
+
+    // TODO: make this more robust
+    const sampleClip = get(channels, '[0].clips[0]')
+
     if (includes(this.state.editingBeatgrids, id)) {
       this.setState({
         editingBeatgrids: without(this.state.editingBeatgrids, id)
       })
+      this.props.clearGridMarkers({
+        id: sampleClip.id
+      })
     } else {
       this.setState({
         editingBeatgrids: [...this.state.editingBeatgrids, id]
+      })
+      this.props.calculateGridMarkers({
+        id: sampleClip.id,
+        // startTime: 0, // TODO: 30 seconds centered on playhead
+        // endTime: 30,
+        bpm: sampleClip.sample.meta.bpm
       })
     }
   }
@@ -61,6 +75,15 @@ class MixArrangementDetail extends React.Component {
         })
         this._asyncUpdateAudioGraph()
       },
+
+      selectGridMarker: ({ channel, clip, marker }) => {
+        this.props.updateClip({
+          id: clip.id,
+          startBeat: clip.startBeat + marker.beat // TODO: make this be smallest delta possible
+        })
+        this.props.clearGridMarkers({ id: clip.id })
+        this._asyncUpdateAudioGraph()
+      }
     }
 
     const { transition } = fromTrack
@@ -71,7 +94,7 @@ class MixArrangementDetail extends React.Component {
         title={track.meta.title}
         bpm={track.meta.bpm}
         isEditingBeatgrid={includes(this.state.editingBeatgrids, track.channel.id)}
-        toggleEditBeatgrid={this.toggleEditBeatgrid.bind(this, track.channel.id)}
+        toggleEditBeatgrid={this.toggleEditBeatgrid.bind(this, track.channel)}
       />
     )
     console.log('mix-arrangement-detail', { fromTrack, toTrack, transition })
@@ -99,11 +122,11 @@ class MixArrangementDetail extends React.Component {
         beatScale={beatScale}
         translateY={0}
         scaleX={scaleX}
-        canDrag
+        canDrag={false}
         canDragTransition
         canDragAutomations
-        showAutomations
         showTransition
+        showAutomations={!includes(this.state.editingBeatgrids, fromTrack.channel.id)}
         color={d3.interpolateCool(0.25)}
         sampleResolution={fromTrackSampleResolution}
         {...primaryTrackChannelActions}
@@ -117,7 +140,7 @@ class MixArrangementDetail extends React.Component {
         scaleX={scaleX}
         canDrag
         canDragAutomations
-        showAutomations
+        showAutomations={!includes(this.state.editingBeatgrids, toTrack.channel.id)}
         color={d3.interpolateCool(0.75)}
         sampleResolution={toTrackSampleResolution}
         {...primaryTrackChannelActions}
