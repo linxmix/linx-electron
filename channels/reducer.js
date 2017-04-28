@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { map, defaults, without, includes, findIndex,
+const { map, defaults, without, includes, findIndex, concat,
   clone, filter, values, omit, assign } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
@@ -17,7 +17,8 @@ const {
   moveTransitionChannel,
   movePrimaryTrackChannel,
   resizeChannel,
-  setChannelParent,
+  setClipsChannel,
+  setChannelsParent,
   createPrimaryTrackFromFile,
   swapPrimaryTracks
 } = require('./actions')
@@ -27,6 +28,8 @@ const {
 } = require('../samples/actions')
 const {
   CHANNEL_TYPE_PRIMARY_TRACK,
+  CHANNEL_TYPE_SAMPLE_TRACK,
+  CHANNEL_TYPE_TRANSITION,
   CHANNEL_TYPES
 } = require('./constants')
 const { CLIP_TYPE_SAMPLE } = require('../clips/constants')
@@ -88,19 +91,29 @@ function createReducer (config) {
         ...state, dirty: [...state.dirty, attrs.id]
       }, Effects.constant(setChannel(attrs)))
     },
-    [setChannelParent]: (state, action) => {
-      const { channelId, parentChannelId } = action.payload
-      assert(channelId && parentChannelId, 'Must have both channelId and parentChannelId to setChannelParent')
+    [setChannelsParent]: (state, action) => {
+      const { channelIds, parentChannelId } = action.payload
+      assert(channelIds && channelIds.length && parentChannelId,
+        'Must have channelIds and parentChannelId to setChannelsParent')
 
-      const parentChannel = state.records[parentChannelId]
+      const parentChannel = state.records[parentChannelId] || {}
       return loop(state, Effects.constant(updateChannel({
         id: parentChannelId,
-        channelIds: [...parentChannel.channelIds, channelId]
+        channelIds: concat((parentChannel.channelIds || []), channelIds)
+      })))
+    },
+    [setClipsChannel]: (state, action) => {
+      const { channelId, clipIds } = action.payload
+      assert(channelId && clipIds, 'Must have channelId and clipIds to setClipsChannel')
+
+      const channel = state.records[channelId] || {}
+      return loop(state, Effects.constant(updateChannel({
+        id: channelId,
+        clipIds: concat((channel.clipIds || []), clipIds)
       })))
     },
     [updateChannel]: (state, action) => {
       const { id } = action.payload
-      assert(id, 'Cannot updateChannel without id')
 
       return {
         ...state,
@@ -117,15 +130,36 @@ function createReducer (config) {
       const effectCreator = (sampleId) => {
         const channelId = uuid()
         const clipId = uuid()
+        const sampleChannelId = uuid()
+        const transitionChannelId = uuid()
 
         return Effects.batch([
           Effects.constant(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
+          Effects.constant(createChannel({
+            id: sampleChannelId,
+            type: CHANNEL_TYPE_SAMPLE_TRACK
+          })),
+          Effects.constant(setClipsChannel({
+            channelId: sampleChannelId,
+            clipIds: [clipId]
+          })),
+          Effects.constant(createChannel({
+            id: transitionChannelId,
+            type: CHANNEL_TYPE_TRANSITION,
+            startBeat: 100,
+            beatCount: 32,
+          })),
           Effects.constant(createChannel(assign({
             id: channelId,
-            type: CHANNEL_TYPE_PRIMARY_TRACK,
-            clipIds: [clipId] // TODO(FUTURE): maybe setClipChannel?
+            type: CHANNEL_TYPE_PRIMARY_TRACK
           }, attrs))),
-          Effects.constant(setChannelParent({ parentChannelId, channelId }))
+          Effects.constant(setChannelsParent({
+            parentChannelId: channelId,
+            channelIds: [sampleChannelId, transitionChannelId] })),
+          Effects.constant(setChannelsParent({
+            parentChannelId,
+            channelIds: [channelId]
+          }))
         ])
       }
 

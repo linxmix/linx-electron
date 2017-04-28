@@ -9,14 +9,14 @@ const {
 } = require('../../lib/number-utils')
 
 module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
-  bpmScale, beatScale }) {
+  bpmScale, beatScale, currentBeat, currentTime }) {
   const clipStartBeat = startBeat + clip.startBeat
   const clipEndBeat = clipStartBeat + clip.beatCount
   const audioBpm = clip.sample.meta.bpm
 
   // if not playing or seek is beyond clip, stop here
   if ((playState.status !== PLAY_STATE_PLAYING) ||
-    (playState.seekBeat > clipEndBeat)) {
+    (currentBeat > clipEndBeat)) {
     return
   }
 
@@ -31,21 +31,21 @@ module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
     beatCount: clip.beatCount
   })
 
-  let startTime = beatScale(clipStartBeat - playState.seekBeat)
+  let startTime = beatScale(clipStartBeat) - beatScale(currentBeat)
   let offsetTime = clip.audioStartTime
-  const stopTime = beatScale(clipEndBeat - playState.seekBeat)
+  const stopTime = beatScale(clipEndBeat) - beatScale(currentBeat)
 
   // if seek in middle of clip, start now and adjust offsetTime
-  if (playState.seekBeat > clipStartBeat) {
+  if (currentBeat > clipStartBeat) {
     startTime = 0
-    offsetTime += beatToTime(playState.seekBeat - clipStartBeat, audioBpm)
+    offsetTime += beatToTime(currentBeat - clipStartBeat, audioBpm)
   }
 
   console.log({
     name: clip.sample.meta.title,
     clipStartBeat,
     clipEndBeat,
-    'playState.seekBeat': playState.seekBeat,
+    currentBeat,
     startTime,
     stopTime,
     offsetTime,
@@ -55,9 +55,9 @@ module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
   audioGraph[clip.id] = ['soundtouchSource', outputs, {
     buffer: clip.sample.audioBuffer,
     offsetTime,
-    startTime: playState.absSeekTime + startTime,
-    stopTime: playState.absSeekTime + stopTime,
-    tempo: ['setValueCurveAtTime', tempoCurve, playState.absSeekTime + startTime, stopTime - startTime]
+    startTime: currentTime + startTime,
+    stopTime: currentTime + stopTime,
+    tempo: ['setValueCurveAtTime', tempoCurve, currentTime + startTime, stopTime - startTime]
   }]
 }
 

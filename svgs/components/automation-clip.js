@@ -3,10 +3,11 @@ const d3 = require('d3')
 const { map } = require('lodash')
 
 const ControlPoint = require('./automation-clip/control-point')
+const { isRightClick } = require('../../lib/mouse-event-utils')
 
 class AutomationClip extends React.Component {
   handleClick (e) {
-    if (e && e.nativeEvent && e.nativeEvent.which === 3) {
+    if (isRightClick(e)) {
       e.preventDefault()
       e.stopPropagation()
       this.props.createControlPoint({
@@ -19,7 +20,7 @@ class AutomationClip extends React.Component {
   }
 
   render () {
-    const { clip, height, color, canDrag, minBeat, maxBeat, deleteControlPoint } = this.props
+    const { clip, height, scaleX, color, canDrag, minBeat, maxBeat, deleteControlPoint } = this.props
     if (!clip) { return null }
 
     const { id, controlPoints } = clip
@@ -28,7 +29,7 @@ class AutomationClip extends React.Component {
       .y((controlPoint) => (1 - controlPoint.value) * height)
 
     return <g>
-      <path stroke={color} fill='transparent' d={line(controlPoints)} />
+      <path strokeWidth={1 / scaleX} stroke={color} fill='transparent' d={line(controlPoints)} />
 
       <rect width={maxBeat - minBeat} height={height} fill='transparent'
         onMouseUp={this.handleClick.bind(this)} />
@@ -37,6 +38,7 @@ class AutomationClip extends React.Component {
         key={controlPoint.id}
         sourceId={id}
         deleteControlPoint={deleteControlPoint}
+        scaleX={scaleX}
         id={controlPoint.id}
         beat={controlPoint.beat}
         value={controlPoint.value}
@@ -51,6 +53,7 @@ class AutomationClip extends React.Component {
 
 AutomationClip.defaultProps = {
   height: 100,
+  scaleX: 1,
   canDrag: false,
   color: 'red'
 }

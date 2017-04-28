@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { assign, keyBy, without, includes } = require('lodash')
+const { assign, keyBy, without, includes, omit } = require('lodash')
 const assert = require('assert')
 
 const {
@@ -114,7 +114,7 @@ function createReducer (config) {
       }, Effects.batch([
         Effects.constant(createMeta(meta)),
         Effects.constant(saveMeta(id)),
-        Effects.constant(analyzeSample(id)),
+        Effects.constant(analyzeSample({ id })),
         (effectCreator && effectCreator(id)) || Effects.none()
       ]))
     },
@@ -133,20 +133,24 @@ function createReducer (config) {
       ...state, creating: without(state.creating, action.payload)
     }),
     [analyzeSample]: (state, action) => {
-      const id = action.payload
+      const { id, startTime, endTime, effectCreator } = action.payload
       assert(id, 'Cannot analyzeSample without id')
 
       return loop({
         ...state, analyzing: [...state.analyzing, id]
       }, Effects.batch([
-        Effects.promise(runAnalyzeSample, id),
+        Effects.promise(runAnalyzeSample, { id, startTime, endTime, effectCreator }),
         Effects.constant(analyzeSampleEnd(id))
       ]))
     },
-    [analyzeSampleSuccess]: (state, action) => loop(state, Effects.batch([
-      Effects.constant(updateMeta(action.payload)),
-      Effects.constant(saveMeta(action.payload.id))
-    ])),
+    [analyzeSampleSuccess]: (state, action) => {
+      const { id, attrs, effectCreator } = action.payload
+
+      return loop(state, effectCreator ? effectCreator({ id, attrs }) : Effects.batch([
+        Effects.constant(updateMeta(omit(attrs, 'peaks'))),
+        Effects.constant(saveMeta(id))
+      ]))
+    },
     [analyzeSampleFailure]: (state, action) => ({
       ...state, error: action.payload.message
     }),
@@ -182,9 +186,9 @@ function createReducer (config) {
       .catch(createSampleFailure)
   }
 
-  function runAnalyzeSample (id) {
-    return service.analyzeSample(id)
-      .then(analyzeSampleSuccess)
+  function runAnalyzeSample ({ id, startTime, endTime, effectCreator }) {
+    return service.analyzeSample({ id, startTime, endTime })
+      .then(attrs => analyzeSampleSuccess({ id, attrs, effectCreator }))
       .catch(analyzeSampleFailure)
   }
 }
