@@ -17,12 +17,18 @@ const {
   moveControlPoint,
   createControlPoint,
   deleteControlPoint,
-  createAutomationClipWithControlPoint
+  createAutomationClipWithControlPoint,
+  calculateGridMarkers,
+  clearGridMarkers,
+  selectGridMarker
 } = require('./actions')
 const { setClipsChannel } = require('../channels/actions')
+const { updateMeta } = require('../metas/actions')
+const { analyzeSample } = require('../samples/actions')
 const { CLIP_TYPES, CONTROL_TYPES,
   CLIP_TYPE_AUTOMATION, CONTROL_TYPE_GAIN } = require('./constants')
-const { quantizeBeat, clamp } = require('../lib/number-utils')
+const { quantizeBeat, clamp, beatToTime, validNumberOrDefault,
+  bpmToSpb, isValidNumber } = require('../lib/number-utils')
 
 module.exports = createReducer
 
@@ -153,9 +159,85 @@ function createReducer (config) {
           beat, value, minBeat, maxBeat, quantization
         }))
       ]))
+    },
+    [calculateGridMarkers]: (state, action) => {
+      const { id, bpm, startTime, endTime } = action.payload
+      const clip = state.records[id]
+      const { sampleId } = clip
+      assert(id && sampleId, 'Cannot calculateGridMarkers without id and sampleId')
+
+      const effectCreator = ({ attrs }) => {
+        const { peaks = [] } = attrs
+
+        return Effects.constant(updateClip({
+          id,
+          gridMarkers: map(peaks, peak => ({
+            id: uuid(),
+            stroke: 'blue',
+            strokeWidth: 1,
+            clickWidth: 10,
+            beat: beatToTime(peak.time, bpm),
+            time: peak.time
+          }))
+        }))
+      }
+
+      return loop(state, Effects.constant(analyzeSample({
+        id: sampleId,
+        startTime,
+        endTime,
+        effectCreator
+      })))
+    },
+    [clearGridMarkers]: (state, action) => {
+      const { id } = action.payload
+      assert(id, 'Cannot clearGridMarkers without id')
+
+      return loop(state, Effects.constant(updateClip({
+        id,
+        gridMarkers: []
+      })))
+    },
+    [selectGridMarker]: (state, action) => {
+      const { channel, clip, marker } = action.payload
+
+      // TODO: make this operate correctly
+      const firstBarOffsetTime = _getFirstBarOffsetTime({
+        time: marker.time,
+        bpm: get(clip, 'sample.meta.bpm'),
+      })
+
+      return loop(state, Effects.batch([
+        Effects.constant(updateMeta({
+          id: clip.id,
+          barGridTime: firstBarOffsetTime
+        })),
+        Effects.constant(updateClip({
+          id: clip.id,
+          audioStartTime: firstBarOffsetTime
+        }))
+      ]))
     }
   }, {
     dirty: [],
     records: {}
   })
+}
+
+function _getFirstBarOffsetTime({ time, bpm, timeSignature = 4 }) {
+  const secondsPerBeat = bpmToSpb(bpm)
+  const secondsPerBar = secondsPerBeat * timeSignature
+
+  let firstBarOffsetTime = time
+  if (isValidNumber(bpm)
+    && isValidNumber(timeSignature)
+    && isValidNumber(firstBarOffsetTime)) {
+    while ((firstBarOffsetTime - secondsPerBar) >= 0) {
+      firstBarOffsetTime -= secondsPerBar
+    }
+
+    return firstBarOffsetTime * secondsPerBar
+  } else {
+    return 0;
+  }
 }
