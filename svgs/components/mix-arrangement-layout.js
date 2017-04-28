@@ -7,7 +7,7 @@ const BeatAxis = require('./beat-axis')
 const Playhead = require('./playhead')
 const { validNumberOrDefault } = require('../../lib/number-utils')
 
-const ZOOM_STEP = 0.2
+const ZOOM_STEP = 0.5
 const MIN_SCALE_X = 0.1
 
 function _isNegative (n) {

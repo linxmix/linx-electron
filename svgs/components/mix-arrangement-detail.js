@@ -77,12 +77,15 @@ class MixArrangementDetail extends React.Component {
       },
 
       selectGridMarker: ({ channel, clip, marker }) => {
-        this.props.updateClip({
-          id: clip.id,
-          startBeat: clip.startBeat + marker.beat // TODO: make this be smallest delta possible
-        })
+        this.props.selectGridMarker({ channel, clip, marker })
         this.props.clearGridMarkers({ id: clip.id })
         this._asyncUpdateAudioGraph()
+
+        console.log('setState', this.state.editingBeatgrids, channel.id)
+
+        this.setState({
+          editingBeatgrids: without(this.state.editingBeatgrids, channel.id)
+        })
       }
     }
 

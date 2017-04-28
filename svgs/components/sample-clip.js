@@ -8,7 +8,6 @@ const { beatToTime } = require('../../lib/number-utils')
 
 class SampleClip extends React.Component {
   handleGridMarkerClick (marker, e) {
-    console.log('handleGridMarkerClick', { marker, e })
     e.preventDefault()
     e.stopPropagation()
 
@@ -47,9 +46,11 @@ class SampleClip extends React.Component {
       {this.props.showGridMarkers && map(clip.gridMarkers || [], (marker) => 
         <g key={marker.id} transform={`translate(${marker.beat})`}
           onMouseUp={this.handleGridMarkerClick.bind(this, marker)}>
-          <rect width={marker.clickWidth / scaleX} height={height} fill='transparent'/>
-          <line
-            style={{ stroke: marker.stroke, strokeWidth: marker.strokeWidth / scaleX }}
+          <rect x={-(marker.clickWidth / scaleX) / 2}
+            width={marker.clickWidth / scaleX}
+            height={height}
+            fill='transparent' />
+          <line style={{ stroke: marker.stroke, strokeWidth: marker.strokeWidth / scaleX }}
             y1={0}
             y2={height}
           />

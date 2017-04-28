@@ -19,13 +19,16 @@ const {
   deleteControlPoint,
   createAutomationClipWithControlPoint,
   calculateGridMarkers,
-  clearGridMarkers
+  clearGridMarkers,
+  selectGridMarker
 } = require('./actions')
 const { setClipsChannel } = require('../channels/actions')
+const { updateMeta } = require('../metas/actions')
 const { analyzeSample } = require('../samples/actions')
 const { CLIP_TYPES, CONTROL_TYPES,
   CLIP_TYPE_AUTOMATION, CONTROL_TYPE_GAIN } = require('./constants')
-const { quantizeBeat, clamp, beatToTime } = require('../lib/number-utils')
+const { quantizeBeat, clamp, beatToTime, validNumberOrDefault,
+  bpmToSpb, isValidNumber } = require('../lib/number-utils')
 
 module.exports = createReducer
 
@@ -172,8 +175,9 @@ function createReducer (config) {
             id: uuid(),
             stroke: 'blue',
             strokeWidth: 1,
-            clickWidth: 5,
-            beat: beatToTime(peak.time, bpm)
+            clickWidth: 10,
+            beat: beatToTime(peak.time, bpm),
+            time: peak.time
           }))
         }))
       }
@@ -193,9 +197,47 @@ function createReducer (config) {
         id,
         gridMarkers: []
       })))
+    },
+    [selectGridMarker]: (state, action) => {
+      const { channel, clip, marker } = action.payload
+
+      // TODO: make this operate correctly
+      const firstBarOffsetTime = _getFirstBarOffsetTime({
+        time: marker.time,
+        bpm: get(clip, 'sample.meta.bpm'),
+      })
+
+      return loop(state, Effects.batch([
+        Effects.constant(updateMeta({
+          id: clip.id,
+          barGridTime: firstBarOffsetTime
+        })),
+        Effects.constant(updateClip({
+          id: clip.id,
+          audioStartTime: firstBarOffsetTime
+        }))
+      ]))
     }
   }, {
     dirty: [],
     records: {}
   })
+}
+
+function _getFirstBarOffsetTime({ time, bpm, timeSignature = 4 }) {
+  const secondsPerBeat = bpmToSpb(bpm)
+  const secondsPerBar = secondsPerBeat * timeSignature
+
+  let firstBarOffsetTime = time
+  if (isValidNumber(bpm)
+    && isValidNumber(timeSignature)
+    && isValidNumber(firstBarOffsetTime)) {
+    while ((firstBarOffsetTime - secondsPerBar) >= 0) {
+      firstBarOffsetTime -= secondsPerBar
+    }
+
+    return firstBarOffsetTime * secondsPerBar
+  } else {
+    return 0;
+  }
 }
