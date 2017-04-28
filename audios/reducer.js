@@ -62,7 +62,8 @@ function createReducer (config) {
       let { absSeekTime, seekBeat } = playState
       if (updateSeek) {
         const currentTime = state.audioContext.currentTime
-        seekBeat = beatScale.invert(beatScale(seekBeat) + currentTime - absSeekTime)
+        const elapsedTime = currentTime - absSeekTime
+        seekBeat = beatScale.invert(beatScale(seekBeat) + elapsedTime)
         absSeekTime = currentTime
       }
 
@@ -88,6 +89,7 @@ function createReducer (config) {
     },
     [seekToBeat]: (state, action) => {
       const { channel, seekBeat } = action.payload
+      const playState = state.playStates[channel.id] || {}
 
       return loop(state, Effects.batch([
         Effects.constant(updatePlayState({
@@ -95,7 +97,9 @@ function createReducer (config) {
           seekBeat: seekBeat,
           absSeekTime: state.audioContext.currentTime
         })),
-        Effects.constant(updateAudioGraph({ channel }))
+        playState.status === PLAY_STATE_PLAYING ?
+          Effects.constant(updateAudioGraph({ channel })) :
+          Effects.none()
       ]))
     },
     [updatePlayState]: (state, action) => {
@@ -107,7 +111,8 @@ function createReducer (config) {
         ...state,
         playStates: {
           ...state.playStates,
-          [channelId]: merge({}, state.playStates[channelId], playState)
+          [channelId]: merge({ status: PLAY_STATE_PAUSED }, state.playStates[channelId],
+            playState)
         }
       }
     },

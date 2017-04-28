@@ -1,8 +1,9 @@
-const { includes, some, every, map, concat, sortBy, omitBy, isNil } = require('lodash')
+const { filter, includes, some, every, map, concat, sortBy, omitBy, isNil } = require('lodash')
 const d3 = require('d3')
 
 const { validNumberOrDefault, beatToTime } = require('../../lib/number-utils')
 const { CHANNEL_TYPE_MIX, CHANNEL_TYPE_TRANSITION } = require('../constants')
+const { CLIP_TYPE_SAMPLE } = require('../../clips/constants')
 
 module.exports = nestChannels
 
@@ -15,26 +16,25 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
     return nestChannels({ channelId: childChannelId, channels, clips, dirtyChannels })
   })
   const childClips = clipIds.map(clipId => (clips[clipId] || {}))
+  const childSampleClips = filter(childClips, { type: CLIP_TYPE_SAMPLE })
 
   // compute status
   let status = 'unloaded'
-  if (some(childChannels, { status: 'loading' }) || some(childClips, { status: 'loading' })) {
+  if (some(childChannels, { status: 'loading' }) || some(childSampleClips, { status: 'loading' })) {
     status = 'loading'
-  } else if (every(childChannels, { status: 'loaded' }) && every(childClips, { status: 'loaded' })) {
+  } else if (every(childChannels, { status: 'loaded' }) && every(childSampleClips, { status: 'loaded' })) {
     status = 'loaded'
   }
 
   // compute beatCount
   let beatCount
-  // hack to give special beatCount to transition for testing
-  // TODO: remove hack
-  if (type !== CHANNEL_TYPE_TRANSITION) {
+  if (type === CHANNEL_TYPE_TRANSITION) {
+    beatCount = channel.beatCount
+  } else {
     beatCount = validNumberOrDefault(Math.max.apply(Math, map(
       concat(childChannels, childClips),
       ({ startBeat, beatCount }) => startBeat + beatCount,
     )), 0)
-  } else {
-    beatCount = channel.beatCount
   }
 
   // compute beatScale, bpmScale

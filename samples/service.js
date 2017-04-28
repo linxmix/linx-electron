@@ -66,13 +66,13 @@ function createService (config) {
     })
   }
 
-  function analyzeSample (id) {
+  function analyzeSample ({ id, startTime, endTime }) {
     return readSample(id).then(({ sample, path, data }) => {
       const { audioBuffer } = sample
 
       return Promise.all([
         readId3Tags(data),
-        calculateBeatGrid(audioBuffer)
+        calculateBeatGrid(audioBuffer, { id, startTime, endTime })
       ]).then(([{ tags }, { peaks, intervals }]) => {
         const tagBpm = parseFloat(tags.TBPM && tags.TBPM.data)
         const calculatedBpm = intervals[0].tempo
@@ -85,7 +85,8 @@ function createService (config) {
           bpm: validNumberOrDefault(bpm, 128),
           key: tags.comment && tags.comment.text,
           duration: audioBuffer.duration,
-          barGridTime: peaks[0].time
+          barGridTime: peaks[0].time,
+          peaks
         }
 
         return omitBy(attrs, isNil)

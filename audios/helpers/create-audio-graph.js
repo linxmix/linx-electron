@@ -1,16 +1,18 @@
-const { map, merge, forEach, filter } = require('lodash')
+const { map, merge, forEach, filter, find, last } = require('lodash')
 const d3 = require('d3')
 
 const createSoundtouchSource = (process.env.NODE_ENV === 'test')
   ? () => {} : require('./create-soundtouch-source')
 
-const { PLAY_STATE_PLAYING } = require('../constants')
 const getValueCurve = require('./get-value-curve')
+const addSampleClipToAudioGraph = require('./add-sample-clip-to-audio-graph')
+const { validNumberOrDefault } = require('../../lib/number-utils')
+const getCurrentBeat = require('./get-current-beat')
 const {
-  validNumberOrDefault,
-  isValidNumber,
-  beatToTime
-} = require('../../lib/number-utils')
+  CLIP_TYPE_SAMPLE,
+  CLIP_TYPE_AUTOMATION,
+  CONTROL_TYPE_GAIN
+} = require('../../clips/constants')
 
 module.exports = createAudioGraph
 
@@ -24,11 +26,14 @@ function createAudioGraph ({
   bpmScale
 }) {
   startBeat = validNumberOrDefault(startBeat, 0)
+  const currentBeat = getCurrentBeat({ playState, audioContext, beatScale })
+  const currentTime = audioContext.currentTime
   const { channels: nestedChannels = [] } = channel
 
   // hack to add createSoundtouchSource to audioContext
   audioContext.createSoundtouchSource = () => createSoundtouchSource(audioContext)
 
+  // generate nested channel audio graphs
   const nestedAudioGraphs = map(nestedChannels, (nestedChannel, i) =>
     createAudioGraph({
       channel: nestedChannel,
@@ -41,81 +46,108 @@ function createAudioGraph ({
     })
   )
 
-  // TODO(FUTURE):
-  // create FX chain
-  // add automations
+  // generate channel and FX chain nodes
+  const gainNodeKey = `${channel.id}_gain`
+  const gainAutomationClip = find(channel.clips, {
+    type: CLIP_TYPE_AUTOMATION,
+    controlType: CONTROL_TYPE_GAIN
+  })
+  const gainControlArray = [['setValueAtTime', 1, 0]] // start all volumes at 1
+
+  // TODO: get rid of ugly hacks. abstract for various automation types
+  if (gainAutomationClip) {
+    gainControlArray[1] = _addGainAutomationToAudioGraph({
+      clip: gainAutomationClip,
+      startBeat,
+      currentBeat,
+      beatScale,
+      currentTime
+    })
+  }
 
   const audioGraph = {
     // NOTE: virtual-audio-graph interprets numberOfOutputs here as the # of merger inputs
-    [channel.id]: ['channelMerger', outputs, { numberOfOutputs: nestedChannels.length }]
+    [channel.id]: ['channelMerger', gainNodeKey, { numberOfOutputs: nestedChannels.length }],
+    [gainNodeKey]: ['gain', outputs, { gain: gainControlArray }]
   }
 
-  forEach(channel.clips, clip => {
-    const clipStartBeat = startBeat + clip.startBeat
-    const clipEndBeat = clipStartBeat + clip.beatCount
-    const audioBpm = clip.sample.meta.bpm
-
-    // if not playing or seek is beyond clip, stop here
-    if ((playState.status !== PLAY_STATE_PLAYING) ||
-      (playState.seekBeat > clipEndBeat)) {
-      return
-    }
-
-    const tempoScale = _getSampleClipTempoScale({
-      bpmScale,
-      audioBpm,
-      startBeat: clipStartBeat,
-      endBeat: clipEndBeat
-    })
-    const tempoCurve = getValueCurve({
-      scale: tempoScale,
-      beatCount: clip.beatCount
-    })
-
-    let startTime = beatScale(clipStartBeat - playState.seekBeat)
-    let offsetTime = clip.audioStartTime
-    const stopTime = beatScale(clipEndBeat - playState.seekBeat)
-
-    // if seek in middle of clip, start now and adjust offsetTime
-    if (playState.seekBeat > clipStartBeat) {
-      startTime = 0
-      offsetTime += beatToTime(playState.seekBeat - clipStartBeat, audioBpm)
-    }
-
-    console.log({
-      name: clip.sample.meta.title,
-      clipStartBeat,
-      clipEndBeat,
-      'playState.seekBeat': playState.seekBeat,
-      startTime,
-      stopTime,
-      offsetTime,
-      audioBpm: clip.sample.meta.bpm
-    })
-
-    audioGraph[clip.id] = ['soundtouchSource', channel.id, {
-      buffer: clip.sample.audioBuffer,
-      offsetTime,
-      startTime: playState.absSeekTime + startTime,
-      stopTime: playState.absSeekTime + stopTime,
-      tempo: ['setValueCurveAtTime', tempoCurve, playState.absSeekTime + startTime, stopTime - startTime]
-    }]
-  })
+  // generate sample clip nodes
+  forEach(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip => addSampleClipToAudioGraph({
+    outputs: channel.id,
+    startBeat,
+    audioGraph,
+    clip,
+    playState,
+    bpmScale,
+    currentBeat,
+    currentTime,
+    beatScale
+  }))
 
   return merge(audioGraph, ...nestedAudioGraphs)
 }
 
-function _getSampleClipTempoScale ({ bpmScale, audioBpm, startBeat, endBeat }) {
-  const tempoScaleDomain = [startBeat]
-    .concat(filter(bpmScale.domain(), beat => (beat > startBeat && beat < endBeat)))
-    .concat([endBeat])
+function _addGainAutomationToAudioGraph({
+  currentBeat,
+  currentTime,
+  clip,
+  startBeat,
+  beatScale
+}) {
+    const gainControlPoints = clip.controlPoints || []
+    const gainScale = d3.scaleLinear()
+      // scale to gain automation clip start
+      .domain(map(map(gainControlPoints, 'beat'), beat => beat - clip.startBeat))
+      .range(map(gainControlPoints, 'value'))
+    const clipStartBeat = startBeat + clip.startBeat
+    const clipEndBeat = clipStartBeat + clip.beatCount
 
-  const tempoScaleRange = map(tempoScaleDomain, beat => {
-    const syncBpm = bpmScale(beat)
-    return (isValidNumber(syncBpm) && isValidNumber(audioBpm)) ? (syncBpm / audioBpm) : 1
-  })
+    // if seeking beyond clip, just report final value
+    if (currentBeat >= clipEndBeat) {
+      return ['setValueAtTime',
+        last(gainControlPoints).value,
+        Math.max(0, currentTime + beatScale(clipEndBeat) - beatScale(currentBeat))]
+    }
 
-  return d3.scaleLinear()
-    .domain(tempoScaleDomain)
-    .range(tempoScaleRange)
+    // if seek before clip, proceed as normal
+    let gainCurve, startTime, endTime, duration
+    if (currentBeat < clipStartBeat) {
+      startTime = beatScale(clipStartBeat) - beatScale(currentBeat)
+      endTime = beatScale(clipEndBeat) - beatScale(currentBeat)
+      duration = endTime - startTime
+      gainCurve = getValueCurve({
+        scale: gainScale,
+        beatCount: clipEndBeat - clipStartBeat
+      })
+
+    // if seek in middle of clip, start now and adjust duration
+    } else {
+      startTime = 0
+      endTime = beatScale(clipEndBeat) - beatScale(currentBeat)
+      duration = endTime - startTime
+
+      gainCurve = getValueCurve({
+        scale: gainScale,
+        startBeat: currentBeat - clipStartBeat,
+        beatCount: clipEndBeat - currentBeat
+      })
+    }
+
+    console.log('GAIN AUTOMATION CLIP', {
+      absStartTime: currentTime + startTime,
+      currentTime,
+      currentBeat,
+      startTime,
+      endTime,
+      duration,
+      clipStartBeat,
+      clipEndBeat,
+      gainCurve,
+      gainControlPoints,
+      startBeat: currentBeat - clipStartBeat,
+      beatCount: clipEndBeat - currentBeat
+    })
+
+  return ['setValueCurveAtTime', gainCurve,
+      currentTime + startTime, duration]
 }

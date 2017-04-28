@@ -6,4 +6,10 @@ const clipsHash = {
 }
 const CLIP_TYPES = values(clipsHash)
 
-module.exports = merge(clipsHash, { CLIP_TYPES })
+const controlsHash = {
+  CONTROL_TYPE_GAIN: 'gain-control'
+}
+
+const CONTROL_TYPES = values(controlsHash)
+
+module.exports = merge(clipsHash, controlsHash, { CLIP_TYPES, CONTROL_TYPES })

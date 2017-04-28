@@ -3,11 +3,11 @@ const d3 = require('d3')
 const { DropTarget } = require('react-dnd')
 const { throttle } = require('lodash')
 
-const Axis = require('./axis')
+const BeatAxis = require('./beat-axis')
 const Playhead = require('./playhead')
 const { validNumberOrDefault } = require('../../lib/number-utils')
 
-const ZOOM_STEP = 0.2
+const ZOOM_STEP = 0.5
 const MIN_SCALE_X = 0.1
 
 function _isNegative (n) {
@@ -128,56 +128,91 @@ class MixArrangementLayout extends React.Component {
   }
 
   render () {
-    const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY } = this.props
+    const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY,
+      topAxisHeight } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const transform = `translate(${translateX},${translateY}) scale(${scaleX}, 1)`
     const beatScale = mix.channel.beatScale
     const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
-    const mixPhraseCount = mixBeatCount / 32  // TODO: need to round?
-    const phraseScale = d3.scaleLinear()
-      .domain([0, mixPhraseCount])
-      .range([0, mixBeatCount])
 
     return connectDropTarget(<div
+      className='VerticalLayout VerticalLayout--fullHeight'
       onMouseDown={this.handleMouseDown.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
 
-      <svg
-        onMouseUp={this.handleClick.bind(this)}
-        width='100%'
-        height={height}
-        style={{ border: '1px solid gray' }}
-        ref='svg'>
+      <div style={{ display: 'flex', flex: 1 }}>
+        {this.props.trackControls && <div style={{ flex: '0 0 auto', width: '200px', borderRight: '1px solid gray' }}>
+          <div style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray', height: topAxisHeight, width: '100%' }} />
+          {this.props.trackControls}
+        </div>}
 
-        <g transform={transform} >
-          <Axis
-            scale={phraseScale}
-            tickCount={mixPhraseCount}
+        <div className='VerticalLayout VerticalLayout--fullHeight'
+          onMouseUp={this.handleClick.bind(this)}
+          style={{ flex: 1 }}>
+          <svg
+            className='VerticalLayout-fixedSection'
+            width='100%'
+            height={topAxisHeight}
+            style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray' }}>
+            
+            <g transform={transform}>
+              <BeatAxis
+                scaleX={scaleX}
+                beatCount={mixBeatCount}
+                height='100%'
+                strokeWidth={1 / scaleX}
+                showText
+              />
+
+              <Playhead
+                playState={mix.playState}
+                beatScale={beatScale}
+                audioContext={audioContext}
+                height='100%'
+                strokeWidth={1.5 / scaleX}
+              />
+            </g>
+          </svg>
+
+          <svg
+            className='VerticalLayout-flexSection'
+            width='100%'
             height={height}
-            strokeWidth={1 / scaleX}
-          />
+            ref='svg'>
 
-          {this.props.children}
+            <g transform={transform}>
+              <BeatAxis
+                scaleX={scaleX}
+                beatCount={mixBeatCount}
+                height={height}
+                strokeWidth={1 / scaleX}
+              />
 
-          <Playhead
-            playState={mix.playState}
-            beatScale={beatScale}
-            audioContext={audioContext}
-            height={height}
-            strokeWidth={1.5 / scaleX}
-          />
-        </g>
-      </svg>
+              {this.props.children}
+
+              <Playhead
+                playState={mix.playState}
+                beatScale={beatScale}
+                audioContext={audioContext}
+                height={height}
+                strokeWidth={1.5 / scaleX}
+              />
+            </g>
+          </svg>
+        </div>
+      </div>
     </div>)
   }
 }
 
 MixArrangementLayout.defaultProps = {
+  topAxisHeight: 25,
   height: 100,
   scaleX: 1,
   translateX: 1,
-  translateY: 0
+  translateY: 0,
+  trackControls: false
 }
 
 const dropTarget = {
@@ -190,22 +225,32 @@ const dropTarget = {
     component.setState({ dragCoords: null, isDragging: true })
 
     let action
+    const payload = {
+      diffBeats: (diff.x / props.scaleX),
+      ...item
+    }
     switch (monitor.getItemType()) {
-      case 'sample-clip':
-        action = props.moveClip
+      case 'primary-track-channel':
+        action = props.movePrimaryTrackChannel
+        payload.mixChannels = props.mix.channel.channels // TODO: does this belong in reducer?
         break
       case 'transition-channel':
-        action = props.moveChannel
+        action = props.moveTransitionChannel
+        payload.mixChannels = props.mix.channel.channels // TODO: does this belong in reducer?
+        break
+      case 'sample-clip':
+        action = props.moveClip
         break
       case 'resize-handle':
         action = props.resizeChannel
         break
+      case 'control-point':
+        action = props.moveControlPoint
+        payload.diffValue = (diff.y / item.height)
+        break
     }
 
-    action({
-      diffBeats: (diff.x / props.scaleX),
-      ...item
-    })
+    action(payload)
   }, 10),
   drop (props, monitor, component) {
     const item = monitor.getItem()
@@ -225,5 +270,6 @@ function collect (connect, monitor) {
   }
 }
 
-module.exports = DropTarget(['sample-clip', 'transition-channel', 'resize-handle'],
+module.exports = DropTarget(
+  ['primary-track-channel', 'transition-channel', 'sample-clip', 'resize-handle', 'control-point'],
   dropTarget, collect)(MixArrangementLayout)

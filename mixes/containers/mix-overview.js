@@ -70,8 +70,8 @@ class MixOverviewContainer extends React.Component {
         onChange={this.handleChangeMixTitle.bind(this)} />
     }
 
-    return <div>
-      <header>
+    return <div className='VerticalLayout VerticalLayout--fullHeight'>
+      <header className='VerticalLayout-fixedSection'>
         {titleElement}
         <div>{error || sampleError || 'no errors'}</div>
         <button disabled={!isDirty || (isLoading || isSaving)} onClick={() => saveMix(mix)}>
@@ -87,7 +87,7 @@ class MixOverviewContainer extends React.Component {
         </button>
       </header>
 
-      <section>
+      <section className='VerticalLayout-flexSection u-scrollable'>
         <PrimaryTrackTable
           mixId={mix.id}
           tracks={mix.tracks}
@@ -99,7 +99,7 @@ class MixOverviewContainer extends React.Component {
         />
       </section>
 
-      <section>
+      <section className='VerticalLayout-fixedSection'>
         <MixArrangementOverview
           mix={mix}
           updateZoom={updateZoom}
