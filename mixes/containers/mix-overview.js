@@ -10,7 +10,6 @@ const { updateMeta } = require('../../metas/actions')
 const { playPause, seekToBeat } = require('../../audios/actions')
 const { createPrimaryTrackFromFile } = require('../../channels/actions')
 const { updateZoom } = require('../../svgs/actions')
-const { validNumberOrDefault } = require('../../lib/number-utils')
 const PrimaryTrackTable = require('../components/primary-track-table')
 const MixArrangementOverview = require('../../svgs/components/mix-arrangement-overview')
 const { PLAY_STATE_PLAYING } = require('../../audios/constants')
@@ -32,7 +31,7 @@ class MixOverviewContainer extends React.Component {
   handleFilesDrop ({ files }) {
     const { mix, createPrimaryTrackFromFile } = this.props
     const mixBeatCount = mix && mix.channel && mix.channel.beatCount
-    const startBeat = validNumberOrDefault(mixBeatCount + 1, 0)
+    const startBeat = mixBeatCount ? mixBeatCount + 1 : 0
 
     forEach(files, (file, i) => createPrimaryTrackFromFile({
       file,
