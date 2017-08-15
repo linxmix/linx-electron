@@ -40,7 +40,7 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
   // compute beatScale, bpmScale
   let beatScale, bpmScale
   if (type === CHANNEL_TYPE_MIX) {
-    // TODO: update to use BPM automation
+    // TODO(BEATGRID): update to use BPM automation
     const bpm = validNumberOrDefault(channel.bpm, 128)
     bpmScale = d3.scaleLinear()
       .domain([0, beatCount])
