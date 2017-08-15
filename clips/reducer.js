@@ -27,7 +27,7 @@ const { updateMeta } = require('../metas/actions')
 const { analyzeSample } = require('../samples/actions')
 const { CLIP_TYPES, CONTROL_TYPES,
   CLIP_TYPE_AUTOMATION, CONTROL_TYPE_GAIN } = require('./constants')
-const { quantizeBeat, clamp, beatToTime, validNumberOrDefault,
+const { quantizeBeat, clamp, beatToTime, timeToBeat, validNumberOrDefault,
   bpmToSpb, isValidNumber } = require('../lib/number-utils')
 
 module.exports = createReducer
@@ -176,7 +176,7 @@ function createReducer (config) {
             stroke: 'blue',
             strokeWidth: 1,
             clickWidth: 10,
-            beat: beatToTime(peak.time, bpm),
+            beat: timeToBeat(peak.time, bpm),
             time: peak.time
           }))
         }))
@@ -201,10 +201,9 @@ function createReducer (config) {
     [selectGridMarker]: (state, action) => {
       const { channel, clip, marker } = action.payload
 
-      // TODO: make this operate correctly
       const firstBarOffsetTime = _getFirstBarOffsetTime({
         time: marker.time,
-        bpm: get(clip, 'sample.meta.bpm'),
+        bpm: get(clip, 'sample.meta.bpm')
       })
 
       return loop(state, Effects.batch([
@@ -224,7 +223,7 @@ function createReducer (config) {
   })
 }
 
-function _getFirstBarOffsetTime({ time, bpm, timeSignature = 4 }) {
+function _getFirstBarOffsetTime ({ time, bpm, timeSignature = 4 }) {
   const secondsPerBeat = bpmToSpb(bpm)
   const secondsPerBar = secondsPerBeat * timeSignature
 
@@ -236,8 +235,8 @@ function _getFirstBarOffsetTime({ time, bpm, timeSignature = 4 }) {
       firstBarOffsetTime -= secondsPerBar
     }
 
-    return firstBarOffsetTime * secondsPerBar
+    return firstBarOffsetTime
   } else {
-    return 0;
+    return 0
   }
 }

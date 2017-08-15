@@ -147,7 +147,7 @@ function createReducer (config) {
             id: transitionChannelId,
             type: CHANNEL_TYPE_TRANSITION,
             startBeat: 100,
-            beatCount: 32,
+            beatCount: 32
           })),
           Effects.constant(createChannel(assign({
             id: channelId,

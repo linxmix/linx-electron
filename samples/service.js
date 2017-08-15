@@ -85,7 +85,7 @@ function createService (config) {
           bpm: validNumberOrDefault(bpm, 128),
           key: tags.comment && tags.comment.text,
           duration: audioBuffer.duration,
-          barGridTime: peaks[0].time,
+          barGridTime: peaks[0].time, // naively assume first peak is correct first beat
           peaks
         }
 

@@ -11,7 +11,7 @@ function calculateBeatGrid (audioBuffer, options = {}) {
   assert(audioBuffer, 'Must provide audioBuffer to calculateBeatGrid')
 
   const startTime = Math.max(validNumberOrDefault(options.startTime, 0), 0)
-  const endTime = validNumberOrDefault(options.endTime, 60)
+  const endTime = Math.max(startTime, validNumberOrDefault(options.endTime, 60))
   const startPosition = startTime * SAMPLE_RATE
 
   return _getFilteredPeaks(audioBuffer, startTime, endTime).then((peaks) => {
