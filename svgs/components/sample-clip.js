@@ -1,6 +1,6 @@
 const React = require('react')
 const d3 = require('d3')
-const { map } = require('lodash')
+const { map, isEqual, omit } = require('lodash')
 const { DragSource } = require('react-dnd')
 
 const getPeaks = require('../../samples/helpers/get-peaks')
@@ -12,6 +12,14 @@ class SampleClip extends React.Component {
     e.stopPropagation()
 
     this.props.selectGridMarker({ clip: this.props.clip, marker })
+  }
+
+  // TODO(BEATGRID): need to make beatScale able to meet the equality check when unchanged
+  // also do not omit scaleX
+  shouldComponentUpdate(nextProps) {
+    return !isEqual(
+      omit(nextProps, ['connectDragSource', 'beatScale', 'selectGridMarker', 'scaleX']),
+      omit(this.props, ['connectDragSource', 'beatScale', 'selectGridMarker', 'scaleX']))
   }
 
   render () {
@@ -33,7 +41,7 @@ class SampleClip extends React.Component {
         const percent = i / peaks.length
         const audioBeat = percent * beatCount
 
-        // TODO: reverse process of what happens in createAudioGraph? map from audioBeat to mixBeat
+        // TODO(BEATGRID): reverse process of what happens in createAudioGraph? map from audioBeat to mixBeat
         return audioBeat
       })
       .y0(([ ymin, ymax ]) => median + ymin * median)

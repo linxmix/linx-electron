@@ -1,7 +1,7 @@
 const React = require('react')
 const { connect } = require('react-redux')
 const { Link } = require('react-router')
-const { findIndex, pick, mapValues } = require('lodash')
+const { find, pick, mapValues } = require('lodash')
 const keymaster = require('keymaster')
 
 const DetectDragModifierKeys = require('../../lib/detect-drag-modifier-keys')
@@ -90,10 +90,11 @@ module.exports = connect(
 
     const currentMixId = ownProps.params.mixId
     const mix = props.mixes[currentMixId]
-    const currentTrackId = ownProps.params.trackId
-    const currentTrackIndex = findIndex(mix.tracks, { id: currentTrackId })
-    const fromTrack = mix.tracks[currentTrackIndex]
-    const toTrack = mix.tracks[currentTrackIndex + 1]
+
+    const fromTrackId = ownProps.params.fromTrackId
+    const toTrackId = ownProps.params.toTrackId
+    const fromTrack = find(mix.tracks, { id: fromTrackId }) || {}
+    const toTrack = find(mix.tracks, { id: toTrackId }) || {}
 
     const zoom = props.zooms[currentMixId] || {}
 

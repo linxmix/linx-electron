@@ -60,7 +60,7 @@ class PrimaryTrackTable extends React.Component {
           <button className='delete-button' onClick={() => removeTrack(props.row.id)}>
             x
           </button>
-          <Link to={`/mixes/${mixId}/tracks/${props.row.id}`}>
+          <Link to={`/mixes/${mixId}/tracks/${props.row.id}/${(tracks[props.row.index + 1] || {}).id}`}>
             <button className='edit-button'>e</button>
           </Link>
         </span>

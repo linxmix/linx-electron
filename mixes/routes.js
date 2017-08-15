@@ -8,5 +8,5 @@ const MixDetailContainer = require('./containers/mix-detail')
 module.exports = <Route path='/mixes'>
   <IndexRoute component={MixListContainer} />
   <Route path=':mixId' component={MixOverviewContainer} />
-  <Route path=':mixId/tracks/:trackId' component={MixDetailContainer} />
+  <Route path=':mixId/tracks/:fromTrackId/:toTrackId' component={MixDetailContainer} />
 </Route>
