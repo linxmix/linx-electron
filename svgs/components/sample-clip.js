@@ -4,7 +4,7 @@ const { map, isEqual, omit } = require('lodash')
 const { DragSource } = require('react-dnd')
 
 const getPeaks = require('../../samples/helpers/get-peaks')
-const { beatToTime } = require('../../lib/number-utils')
+const { beatToTime, timeToBeat } = require('../../lib/number-utils')
 
 class SampleClip extends React.Component {
   handleGridMarkerClick (marker, e) {
@@ -28,6 +28,7 @@ class SampleClip extends React.Component {
 
     const { sample, startBeat, audioStartTime, beatCount } = clip
     const { audioBuffer, meta: { bpm: audioBpm } } = sample
+    const audioStartBeat = timeToBeat(audioStartTime, audioBpm)
     const peaks = getPeaks({
       audioBuffer,
       startTime: audioStartTime,
@@ -51,19 +52,21 @@ class SampleClip extends React.Component {
       <rect width={beatCount} height={height} fill='transparent' />
       <path fill={color} d={area(peaks)} opacity={isDragging ? 0.5 : 1} />
 
-      {this.props.showGridMarkers && map(clip.gridMarkers || [], (marker) => 
-        <g key={marker.id} transform={`translate(${marker.beat})`}
-          onMouseUp={this.handleGridMarkerClick.bind(this, marker)}>
-          <rect x={-(marker.clickWidth / scaleX) / 2}
-            width={marker.clickWidth / scaleX}
-            height={height}
-            fill='transparent' />
-          <line style={{ stroke: marker.stroke, strokeWidth: marker.strokeWidth / scaleX }}
-            y1={0}
-            y2={height}
-          />
-        </g>
-      )}
+      {this.props.showGridMarkers && <g transform={`translate(${-audioStartBeat})`}>
+        {map(clip.gridMarkers || [], (marker) =>
+          <g key={marker.id} transform={`translate(${marker.beat})`}
+            onMouseUp={this.handleGridMarkerClick.bind(this, marker)}>
+            <rect x={-(marker.clickWidth / scaleX) / 2}
+              width={marker.clickWidth / scaleX}
+              height={height}
+              fill='transparent' />
+            <line style={{ stroke: marker.stroke, strokeWidth: marker.strokeWidth / scaleX }}
+              y1={0}
+              y2={height}
+            />
+          </g>
+        )}
+      </g>}
     </g>)
   }
 }

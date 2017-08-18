@@ -6,6 +6,8 @@ const MixArrangementLayout = require('./mix-arrangement-layout')
 const PrimaryTrackChannel = require('./primary-track-channel')
 const TransitionChannel = require('./transition-channel')
 const TrackControl = require('./track-control')
+const getCurrentBeat = require('../../audios/helpers/get-current-beat')
+const { beatToTime } = require('../../lib/number-utils')
 
 class MixArrangementDetail extends React.Component {
   constructor (props) {
@@ -18,8 +20,9 @@ class MixArrangementDetail extends React.Component {
   toggleEditBeatgrid (channel) {
     const { id, channels } = channel
 
-    // TODO: make this more robust
-    const sampleClip = get(channels, '[0].clips[0]')
+    // TODO: make this more robust, maybe provide channel.primaryClip in getter?
+    const sampleChannel = get(channels, '[0]')
+    const sampleClip = get(sampleChannel || {}, 'clips[0]')
 
     if (includes(this.state.editingBeatgrids, id)) {
       this.setState({
@@ -29,13 +32,24 @@ class MixArrangementDetail extends React.Component {
         id: sampleClip.id
       })
     } else {
+      const { mix, audioContext } = this.props
+      const currentMixBeat = getCurrentBeat({
+        playState: mix.playState,
+        beatScale: mix.channel.beatScale,
+        audioContext: audioContext
+      })
+      const currentClipBeat = currentMixBeat - channel.startBeat - sampleChannel.startBeat -
+        sampleClip.startBeat
+      const currentAudioTime = beatToTime(currentClipBeat, sampleClip.sample.meta.bpm) +
+        sampleClip.audioStartTime
+
       this.setState({
         editingBeatgrids: [...this.state.editingBeatgrids, id]
       })
       this.props.calculateGridMarkers({
         id: sampleClip.id,
-        // startTime: 0, // TODO: 30 seconds centered on playhead
-        // endTime: 30,
+        startTime: currentAudioTime - 15,
+        endTime: currentAudioTime + 15,
         bpm: sampleClip.sample.meta.bpm
       })
     }
@@ -105,10 +119,9 @@ class MixArrangementDetail extends React.Component {
     const NORMAL_RESOLUTION = 5
     const ZOOM_RESOLUTION = 10
     const fromTrackSampleResolution = includes(this.state.editingBeatgrids, fromTrack.channel.id)
-      ? ZOOM_RESOLUTION : NORMAL_RESOLUTION;
+      ? ZOOM_RESOLUTION : NORMAL_RESOLUTION
     const toTrackSampleResolution = includes(this.state.editingBeatgrids, toTrack.channel.id)
-      ? ZOOM_RESOLUTION : NORMAL_RESOLUTION;
-
+      ? ZOOM_RESOLUTION : NORMAL_RESOLUTION
 
     return <MixArrangementLayout
       mix={mix}
@@ -161,13 +174,13 @@ MixArrangementDetail.defaultProps = {
 
 module.exports = MixArrangementDetail
 
-function _getPosition({ e, scaleX, rowHeight }) {
+function _getPosition ({ e, scaleX, rowHeight }) {
   const dim = e.target.getBoundingClientRect()
   const x = e.clientX - dim.left
   const y = e.clientY - dim.top
 
   return {
     beat: (x / scaleX),
-    value: 1 - (y / rowHeight),
+    value: 1 - (y / rowHeight)
   }
 }

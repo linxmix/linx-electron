@@ -155,7 +155,7 @@ class MixArrangementLayout extends React.Component {
             width='100%'
             height={topAxisHeight}
             style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray' }}>
-            
+
             <g transform={transform}>
               <BeatAxis
                 scaleX={scaleX}

@@ -87,67 +87,67 @@ function createAudioGraph ({
   return merge(audioGraph, ...nestedAudioGraphs)
 }
 
-function _addGainAutomationToAudioGraph({
+function _addGainAutomationToAudioGraph ({
   currentBeat,
   currentTime,
   clip,
   startBeat,
   beatScale
 }) {
-    const gainControlPoints = clip.controlPoints || []
-    const gainScale = d3.scaleLinear()
+  const gainControlPoints = clip.controlPoints || []
+  const gainScale = d3.scaleLinear()
       // scale to gain automation clip start
       .domain(map(map(gainControlPoints, 'beat'), beat => beat - clip.startBeat))
       .range(map(gainControlPoints, 'value'))
-    const clipStartBeat = startBeat + clip.startBeat
-    const clipEndBeat = clipStartBeat + clip.beatCount
+  const clipStartBeat = startBeat + clip.startBeat
+  const clipEndBeat = clipStartBeat + clip.beatCount
 
     // if seeking beyond clip, just report final value
-    if (currentBeat >= clipEndBeat) {
-      return ['setValueAtTime',
-        last(gainControlPoints).value,
-        Math.max(0, currentTime + beatScale(clipEndBeat) - beatScale(currentBeat))]
-    }
+  if (currentBeat >= clipEndBeat) {
+    return ['setValueAtTime',
+      last(gainControlPoints).value,
+      Math.max(0, currentTime + beatScale(clipEndBeat) - beatScale(currentBeat))]
+  }
 
     // if seek before clip, proceed as normal
-    let gainCurve, startTime, endTime, duration
-    if (currentBeat < clipStartBeat) {
-      startTime = beatScale(clipStartBeat) - beatScale(currentBeat)
-      endTime = beatScale(clipEndBeat) - beatScale(currentBeat)
-      duration = endTime - startTime
-      gainCurve = getValueCurve({
-        scale: gainScale,
-        beatCount: clipEndBeat - clipStartBeat
-      })
+  let gainCurve, startTime, endTime, duration
+  if (currentBeat < clipStartBeat) {
+    startTime = beatScale(clipStartBeat) - beatScale(currentBeat)
+    endTime = beatScale(clipEndBeat) - beatScale(currentBeat)
+    duration = endTime - startTime
+    gainCurve = getValueCurve({
+      scale: gainScale,
+      beatCount: clipEndBeat - clipStartBeat
+    })
 
     // if seek in middle of clip, start now and adjust duration
-    } else {
-      startTime = 0
-      endTime = beatScale(clipEndBeat) - beatScale(currentBeat)
-      duration = endTime - startTime
+  } else {
+    startTime = 0
+    endTime = beatScale(clipEndBeat) - beatScale(currentBeat)
+    duration = endTime - startTime
 
-      gainCurve = getValueCurve({
-        scale: gainScale,
-        startBeat: currentBeat - clipStartBeat,
-        beatCount: clipEndBeat - currentBeat
-      })
-    }
-
-    console.log('GAIN AUTOMATION CLIP', {
-      absStartTime: currentTime + startTime,
-      currentTime,
-      currentBeat,
-      startTime,
-      endTime,
-      duration,
-      clipStartBeat,
-      clipEndBeat,
-      gainCurve,
-      gainControlPoints,
+    gainCurve = getValueCurve({
+      scale: gainScale,
       startBeat: currentBeat - clipStartBeat,
       beatCount: clipEndBeat - currentBeat
     })
+  }
+
+  console.log('GAIN AUTOMATION CLIP', {
+    absStartTime: currentTime + startTime,
+    currentTime,
+    currentBeat,
+    startTime,
+    endTime,
+    duration,
+    clipStartBeat,
+    clipEndBeat,
+    gainCurve,
+    gainControlPoints,
+    startBeat: currentBeat - clipStartBeat,
+    beatCount: clipEndBeat - currentBeat
+  })
 
   return ['setValueCurveAtTime', gainCurve,
-      currentTime + startTime, duration]
+    currentTime + startTime, duration]
 }

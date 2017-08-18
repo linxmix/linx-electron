@@ -51,7 +51,6 @@ const getClips = Getter(
 
         // sort gridMarkers
         gridMarkers = sortBy(clip.gridMarkers || [], 'beat')
-        
       } else if (clip.type === CLIP_TYPE_AUTOMATION) {
         controlPoints = sortBy(values(clip.controlPoints), 'beat', 'value')
         startBeat = validNumberOrDefault(Math.min(...map(controlPoints, 'beat')), 0)

@@ -18,7 +18,7 @@ class SampleTrackChannel extends React.Component {
         e,
         channelId: channel.id,
         minBeat: channel.startBeat,
-        maxBeat: channel.beatCount,
+        maxBeat: channel.beatCount
       })
     }
   }
