@@ -9,7 +9,7 @@ const { isRightClick } = require('../../lib/mouse-event-utils')
 
 class SampleTrackChannel extends React.Component {
   handleClick (e) {
-    if (isRightClick(e) && this.props.showAutomations) {
+    if (isRightClick(e) && this.props.showAutomationControlType) {
       e.preventDefault()
       e.stopPropagation()
 
@@ -25,7 +25,7 @@ class SampleTrackChannel extends React.Component {
 
   render () {
     const { channel, color, beatScale, translateY, scaleX, sampleResolution,
-      canDragAutomations, height, showAutomations, connectDragSource } = this.props
+      canDragAutomations, height, showAutomationControlType, connectDragSource } = this.props
     if (!channel) { return null }
 
     return connectDragSource(<g
@@ -46,7 +46,10 @@ class SampleTrackChannel extends React.Component {
         />
       )}
 
-      {showAutomations && map(filter(channel.clips, { type: CLIP_TYPE_AUTOMATION }), clip =>
+      {showAutomationControlType && map(filter(channel.clips, {
+        type: CLIP_TYPE_AUTOMATION,
+        controlType: showAutomationControlType
+      }), clip =>
         <AutomationClip
           key={clip.id}
           clip={clip}
@@ -70,7 +73,7 @@ SampleTrackChannel.defaultProps = {
   canDrag: false,
   canDragAutomations: false,
   height: 100,
-  showAutomations: false,
+  showAutomationControlType: undefined,
   showGridMarkers: true
 }
 

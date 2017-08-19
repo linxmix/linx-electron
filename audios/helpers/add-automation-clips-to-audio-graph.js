@@ -3,10 +3,11 @@ const { map, reduce, sortBy, last } = require('lodash')
 
 const getValueCurve = require('./get-value-curve')
 const {
-  CONTROL_TYPE_GAIN
+  CONTROL_TYPE_GAIN,
+  CONTROL_TYPE_LOW_BAND
 } = require('../../clips/constants')
 
-const FX_CHAIN_ORDER = [CONTROL_TYPE_GAIN]
+const FX_CHAIN_ORDER = [CONTROL_TYPE_LOW_BAND, CONTROL_TYPE_GAIN]
 
 module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, beatScale, currentBeat, currentTime }) {
 
@@ -19,10 +20,10 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
     let automationParameters;
     switch(clip.controlType) {
       case CONTROL_TYPE_GAIN:
-        automationParameters = {
+        automationParameters = ['gain', previousOutput, {
           gain: [
             ['setValueAtTime', 1, 0], // start all at 1
-            _generateAutomationParameters({
+            _createSetValueCurveParameter({
               clip,
               startBeat,
               currentBeat,
@@ -30,20 +31,37 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
               currentTime
             })
           ]
-        }
+        }]
+        break;
+      case CONTROL_TYPE_LOW_BAND:
+        automationParameters = ['biquadFilter', previousOutput, {
+          frequency: 70,
+          type: 'lowshelf',
+          gain: [
+            ['setValueAtTime', 0, 0],
+            _createSetValueCurveParameter({
+              clip,
+              startBeat,
+              currentBeat,
+              beatScale,
+              currentTime
+            })
+          ]
+        }]
+        console.log("CREATE BIQUAD", automationParameters)
         break;
       default:
         console.error('Unknown controlType while adding automations to audio graph', clip.controlType)
     }
 
     const audioGraphKey = `${channel.id}_${clip.controlType}_${clip.id}`
-    audioGraph[audioGraphKey] = [clip.controlType, previousOutput, automationParameters]
+    audioGraph[audioGraphKey] = automationParameters
 
     return audioGraphKey
   }, outputs)
 }
 
-function _generateAutomationParameters ({
+function _createSetValueCurveParameter ({
   currentBeat,
   currentTime,
   clip,
