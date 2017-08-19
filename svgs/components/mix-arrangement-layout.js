@@ -1,11 +1,12 @@
 const React = require('react')
 const d3 = require('d3')
 const { DropTarget } = require('react-dnd')
-const { throttle } = require('lodash')
+const { map, throttle } = require('lodash')
 
 const BeatAxis = require('./beat-axis')
 const Playhead = require('./playhead')
 const { validNumberOrDefault } = require('../../lib/number-utils')
+const { CONTROL_TYPES } = require('../../clips/constants')
 
 const ZOOM_STEP = 0.5
 const MIN_SCALE_X = 0.1
@@ -143,7 +144,12 @@ class MixArrangementLayout extends React.Component {
 
       <div style={{ display: 'flex', flex: 1 }}>
         {this.props.trackControls && <div style={{ flex: '0 0 auto', width: '200px', borderRight: '1px solid gray' }}>
-          <div style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray', height: topAxisHeight, width: '100%' }} />
+          <div style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray', height: topAxisHeight, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+            <select style={{ width: '95%' }}>
+              {map(CONTROL_TYPES, controlType =>
+                <option key={controlType} value={controlType}>{controlType}</option>)}
+            </select>
+          </div>
           {this.props.trackControls}
         </div>}
 
