@@ -130,7 +130,7 @@ class MixArrangementLayout extends React.Component {
 
   render () {
     const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY,
-      topAxisHeight } = this.props
+      topAxisHeight, selectedControlType, selectControlType } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const transform = `translate(${translateX},${translateY}) scale(${scaleX}, 1)`
@@ -145,7 +145,10 @@ class MixArrangementLayout extends React.Component {
       <div style={{ display: 'flex', flex: 1 }}>
         {this.props.trackControls && <div style={{ flex: '0 0 auto', width: '200px', borderRight: '1px solid gray' }}>
           <div style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray', height: topAxisHeight, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-            <select style={{ width: '95%' }}>
+            <select
+              value={selectedControlType}
+              onChange={(event) => selectControlType(event.target.value)}
+              style={{ width: '95%' }}>
               {map(CONTROL_TYPES, controlType =>
                 <option key={controlType} value={controlType}>{controlType}</option>)}
             </select>

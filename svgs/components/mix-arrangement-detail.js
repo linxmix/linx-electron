@@ -9,12 +9,21 @@ const TrackControl = require('./track-control')
 const getCurrentBeat = require('../../audios/helpers/get-current-beat')
 const { beatToTime } = require('../../lib/number-utils')
 
+const { CONTROL_TYPE_GAIN } = require('../../clips/constants')
+
 class MixArrangementDetail extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      editingBeatgrids: []
+      editingBeatgrids: [],
+      selectedControlType: CONTROL_TYPE_GAIN
     }
+  }
+
+  selectControlType (controlType) {
+    this.setState({
+      selectedControlType: controlType
+    })
   }
 
   toggleEditBeatgrid (channel) {
@@ -130,6 +139,8 @@ class MixArrangementDetail extends React.Component {
       translateX={translateX}
       height={height}
       trackControls={trackControls}
+      selectControlType={this.selectControlType.bind(this)}
+      selectedControlType={this.state.selectedControlType}
       {...layoutActions}>
 
       <PrimaryTrackChannel
