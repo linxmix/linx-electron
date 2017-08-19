@@ -4,7 +4,9 @@ const { map, reduce, sortBy, last } = require('lodash')
 const getValueCurve = require('./get-value-curve')
 const {
   CONTROL_TYPE_GAIN,
-  CONTROL_TYPE_LOW_BAND
+  CONTROL_TYPE_LOW_BAND,
+  CONTROL_TYPE_MID_BAND,
+  CONTROL_TYPE_HIGH_BAND
 } = require('../../clips/constants')
 
 const FX_CHAIN_ORDER = [CONTROL_TYPE_LOW_BAND, CONTROL_TYPE_GAIN]
@@ -48,7 +50,38 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
             })
           ]
         }]
-        console.log("CREATE BIQUAD", automationParameters)
+        break;
+      case CONTROL_TYPE_MID_BAND:
+        automationParameters = ['biquadFilter', previousOutput, {
+          frequency: 1000,
+          type: 'peaking',
+          gain: [
+            ['setValueAtTime', 0, 0],
+            _createSetValueCurveParameter({
+              clip,
+              startBeat,
+              currentBeat,
+              beatScale,
+              currentTime
+            })
+          ]
+        }]
+        break;
+      case CONTROL_TYPE_HIGH_BAND:
+        automationParameters = ['biquadFilter', previousOutput, {
+          frequency: 13000,
+          type: 'highshelf',
+          gain: [
+            ['setValueAtTime', 0, 0],
+            _createSetValueCurveParameter({
+              clip,
+              startBeat,
+              currentBeat,
+              beatScale,
+              currentTime
+            })
+          ]
+        }]
         break;
       default:
         console.error('Unknown controlType while adding automations to audio graph', clip.controlType)
@@ -70,20 +103,20 @@ function _createSetValueCurveParameter ({
 }) {
   const controlPoints = clip.controlPoints || []
   const valueScale = d3.scaleLinear()
-      // scale to automation clip start
-      .domain(map(map(controlPoints, 'beat'), beat => beat - clip.startBeat))
-      .range(map(controlPoints, 'value'))
+    // scale to automation clip start
+    .domain(map(map(controlPoints, 'beat'), beat => beat - clip.startBeat))
+    .range(map(controlPoints, 'value'))
   const clipStartBeat = startBeat + clip.startBeat
   const clipEndBeat = clipStartBeat + clip.beatCount
 
-    // if seeking beyond clip, just report final value
+  // if seeking beyond clip, just report final value
   if (currentBeat >= clipEndBeat) {
     return ['setValueAtTime',
       last(controlPoints).value,
       Math.max(0, currentTime + beatScale(clipEndBeat) - beatScale(currentBeat))]
   }
 
-    // if seek before clip, proceed as normal
+  // if seek before clip, proceed as normal
   let valueCurve, startTime, endTime, duration
   if (currentBeat < clipStartBeat) {
     startTime = beatScale(clipStartBeat) - beatScale(currentBeat)
@@ -94,7 +127,7 @@ function _createSetValueCurveParameter ({
       beatCount: clipEndBeat - clipStartBeat
     })
 
-    // if seek in middle of clip, start now and adjust duration
+  // if seek in middle of clip, start now and adjust duration
   } else {
     startTime = 0
     endTime = beatScale(clipEndBeat) - beatScale(currentBeat)
