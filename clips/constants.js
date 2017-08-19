@@ -7,7 +7,7 @@ const clipsHash = {
 const CLIP_TYPES = values(clipsHash)
 
 const controlsHash = {
-  CONTROL_TYPE_GAIN: 'gain-control'
+  CONTROL_TYPE_GAIN: 'gain'
 }
 
 const CONTROL_TYPES = values(controlsHash)
