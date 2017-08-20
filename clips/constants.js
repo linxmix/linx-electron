@@ -11,15 +11,15 @@ const controlsHash = {
   CONTROL_TYPE_LOW_BAND: 'low-band',
   CONTROL_TYPE_MID_BAND: 'mid-band',
   CONTROL_TYPE_HIGH_BAND: 'high-band',
+  CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF: 'filter-highpass-cutoff',
+  CONTROL_TYPE_FILTER_HIGHPASS_Q: 'filter-highpass-q',
+  CONTROL_TYPE_FILTER_LOWPASS_CUTOFF: 'filter-lowpass-cutoff',
+  CONTROL_TYPE_FILTER_LOWPASS_Q: 'filter-lowpass-q',
 
   // TODO
   CONTROL_TYPE_PITCH: 'pitch',
   CONTROL_TYPE_DELAY_WET: 'delay-wet',
   CONTROL_TYPE_DELAY_CUTOFF: 'delay-cutoff',
-  CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF: 'filter-highpass-cutoff',
-  CONTROL_TYPE_FILTER_HIGHPASS_Q: 'filter-highpass-q',
-  CONTROL_TYPE_FILTER_LOWPASS_CUTOFF: 'filter-lowpass-cutoff',
-  CONTROL_TYPE_FILTER_LOWPASS_Q: 'filter-lowpass-q',
 }
 
 const CONTROL_TYPES = values(controlsHash)

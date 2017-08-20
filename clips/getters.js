@@ -11,6 +11,10 @@ const {
   CONTROL_TYPE_LOW_BAND,
   CONTROL_TYPE_MID_BAND,
   CONTROL_TYPE_HIGH_BAND,
+  CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF,
+  CONTROL_TYPE_FILTER_HIGHPASS_Q,
+  CONTROL_TYPE_FILTER_LOWPASS_CUTOFF,
+  CONTROL_TYPE_FILTER_LOWPASS_Q,
 } = require('../clips/constants')
 
 const getClipsRecords = (state) => state.clips.records
@@ -93,6 +97,10 @@ function _getControlPointsValueScale(controlType) {
   switch(controlType) {
     case CONTROL_TYPE_LOW_BAND: case CONTROL_TYPE_MID_BAND: case CONTROL_TYPE_HIGH_BAND:
       return d3.scaleLinear().domain([0, 1]).range([-40, 40])
+    case CONTROL_TYPE_FILTER_HIGHPASS_Q: case CONTROL_TYPE_FILTER_LOWPASS_Q:
+      return d3.scaleLinear().domain([0, 1]).range([0.001, 30])
+    case CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF: case CONTROL_TYPE_FILTER_LOWPASS_CUTOFF:
+      return d3.scalePow().domain([0, 1]).range([20, 22050])
     default:
       return d3.scaleIdentity()
   }

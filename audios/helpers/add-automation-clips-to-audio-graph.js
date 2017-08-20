@@ -6,7 +6,11 @@ const {
   CONTROL_TYPE_GAIN,
   CONTROL_TYPE_LOW_BAND,
   CONTROL_TYPE_MID_BAND,
-  CONTROL_TYPE_HIGH_BAND
+  CONTROL_TYPE_HIGH_BAND,
+  CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF,
+  CONTROL_TYPE_FILTER_HIGHPASS_Q,
+  CONTROL_TYPE_FILTER_LOWPASS_CUTOFF,
+  CONTROL_TYPE_FILTER_LOWPASS_Q,
 } = require('../../clips/constants')
 
 const FX_CHAIN_ORDER = [CONTROL_TYPE_LOW_BAND, CONTROL_TYPE_GAIN]
@@ -18,80 +22,93 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
 
   // connect automations in order, returning final output
   return reduce(sortedClips, (previousOutput, clip) => {
-
-    let automationParameters;
-    switch(clip.controlType) {
-      case CONTROL_TYPE_GAIN:
-        automationParameters = ['gain', previousOutput, {
-          gain: [
-            ['setValueAtTime', 1, 0], // start all at 1
-            _createSetValueCurveParameter({
-              clip,
-              startBeat,
-              currentBeat,
-              beatScale,
-              currentTime
-            })
-          ]
-        }]
-        break;
-      case CONTROL_TYPE_LOW_BAND:
-        automationParameters = ['biquadFilter', previousOutput, {
-          frequency: 70,
-          type: 'lowshelf',
-          gain: [
-            ['setValueAtTime', 0, 0],
-            _createSetValueCurveParameter({
-              clip,
-              startBeat,
-              currentBeat,
-              beatScale,
-              currentTime
-            })
-          ]
-        }]
-        break;
-      case CONTROL_TYPE_MID_BAND:
-        automationParameters = ['biquadFilter', previousOutput, {
-          frequency: 1000,
-          type: 'peaking',
-          gain: [
-            ['setValueAtTime', 0, 0],
-            _createSetValueCurveParameter({
-              clip,
-              startBeat,
-              currentBeat,
-              beatScale,
-              currentTime
-            })
-          ]
-        }]
-        break;
-      case CONTROL_TYPE_HIGH_BAND:
-        automationParameters = ['biquadFilter', previousOutput, {
-          frequency: 13000,
-          type: 'highshelf',
-          gain: [
-            ['setValueAtTime', 0, 0],
-            _createSetValueCurveParameter({
-              clip,
-              startBeat,
-              currentBeat,
-              beatScale,
-              currentTime
-            })
-          ]
-        }]
-        break;
-      default:
-        console.error('Unknown controlType while adding automations to audio graph', clip.controlType)
-    }
-
     const audioGraphKey = `${channel.id}_${clip.controlType}_${clip.id}`
-    audioGraph[audioGraphKey] = automationParameters
+    audioGraph[audioGraphKey] = _getAutomationParameters({
+      previousOutput, clip, startBeat, currentBeat, beatScale, currentTime })
 
     return audioGraphKey
   }, outputs)
+}
+
+function _getAutomationParameters({
+  previousOutput, clip, startBeat, currentBeat, beatScale, currentTime
+}) {
+  switch(clip.controlType) {
+    case CONTROL_TYPE_GAIN:
+      return ['gain', previousOutput, {
+        gain: [
+          ['setValueAtTime', 1, 0], // start all at 1
+          _createSetValueCurveParameter({
+            clip,
+            startBeat,
+            currentBeat,
+            beatScale,
+            currentTime
+          })
+        ]
+      }]
+    case CONTROL_TYPE_LOW_BAND:
+      return ['biquadFilter', previousOutput, {
+        frequency: 70,
+        type: 'lowshelf',
+        gain: [
+          ['setValueAtTime', 0, 0],
+          _createSetValueCurveParameter({
+            clip,
+            startBeat,
+            currentBeat,
+            beatScale,
+            currentTime
+          })
+        ]
+      }]
+    case CONTROL_TYPE_MID_BAND:
+      return ['biquadFilter', previousOutput, {
+        frequency: 1000,
+        type: 'peaking',
+        gain: [
+          ['setValueAtTime', 0, 0],
+          _createSetValueCurveParameter({
+            clip,
+            startBeat,
+            currentBeat,
+            beatScale,
+            currentTime
+          })
+        ]
+      }]
+    case CONTROL_TYPE_HIGH_BAND:
+      return ['biquadFilter', previousOutput, {
+        frequency: 13000,
+        type: 'highshelf',
+        gain: [
+          ['setValueAtTime', 0, 0],
+          _createSetValueCurveParameter({
+            clip,
+            startBeat,
+            currentBeat,
+            beatScale,
+            currentTime
+          })
+        ]
+      }]
+    case CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF:
+      return ['biquadFilter', previousOutput, {
+        type: 'highpass',
+        frequency: [
+          ['setValueAtTime', 0, 0],
+          _createSetValueCurveParameter({
+            clip,
+            startBeat,
+            currentBeat,
+            beatScale,
+            currentTime
+          })
+        ]
+      }]
+    default:
+      console.error('Unknown controlType while adding automations to audio graph', clip.controlType)
+  }
 }
 
 function _createSetValueCurveParameter ({
@@ -142,6 +159,8 @@ function _createSetValueCurveParameter ({
 
   console.log('GENERATE_AUTOMATION_PARAMETERS', {
     absStartTime: currentTime + startTime,
+    controlType: clip.controlType,
+    clip,
     currentTime,
     currentBeat,
     startTime,
