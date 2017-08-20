@@ -105,7 +105,7 @@ function _createSetValueCurveParameter ({
   const valueScale = d3.scaleLinear()
     // scale to automation clip start
     .domain(map(map(controlPoints, 'beat'), beat => beat - clip.startBeat))
-    .range(map(controlPoints, 'value'))
+    .range(map(controlPoints, 'scaledValue'))
   const clipStartBeat = startBeat + clip.startBeat
   const clipEndBeat = clipStartBeat + clip.beatCount
 
