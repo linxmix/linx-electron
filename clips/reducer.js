@@ -25,8 +25,7 @@ const {
 const { setClipsChannel } = require('../channels/actions')
 const { updateMeta } = require('../metas/actions')
 const { analyzeSample } = require('../samples/actions')
-const { CLIP_TYPES, CONTROL_TYPES,
-  CLIP_TYPE_AUTOMATION, CONTROL_TYPE_GAIN } = require('./constants')
+const { CLIP_TYPES, CONTROL_TYPES, CLIP_TYPE_AUTOMATION } = require('./constants')
 const { quantizeBeat, clamp, beatToTime, timeToBeat, validNumberOrDefault,
   bpmToSpb, isValidNumber } = require('../lib/number-utils')
 
@@ -139,8 +138,10 @@ function createReducer (config) {
       })))
     },
     [createAutomationClipWithControlPoint]: (state, action) => {
-      const { channelId, beat, value, minBeat, maxBeat, quantization } = action.payload
+      const { channelId, controlType, beat, value, minBeat, maxBeat, quantization } = action.payload
       assert(channelId, 'Cannot createAutomationClipWithControlPoint without channelId')
+      assert(includes(CONTROL_TYPES, controlType),
+        'Must have valid controlType to createAutomationClipWithControlPoint')
 
       const automationClipId = uuid()
 
@@ -148,7 +149,7 @@ function createReducer (config) {
         Effects.constant(createClip({
           id: automationClipId,
           type: CLIP_TYPE_AUTOMATION,
-          controlType: CONTROL_TYPE_GAIN // TODO: make this variable
+          controlType
         })),
         Effects.constant(setClipsChannel({
           channelId,

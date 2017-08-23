@@ -15,7 +15,7 @@ const {
 class PrimaryTrackChannel extends React.Component {
   render () {
     const { channel, color, beatScale, translateY, showTransition,
-      canDragAutomations, height, showAutomations, connectDragSource } = this.props
+      canDragAutomations, height, showAutomationControlType, connectDragSource } = this.props
     if (!channel) { return null }
 
     return connectDragSource(<g transform={`translate(${channel.startBeat},${translateY})`}>
@@ -41,7 +41,7 @@ class PrimaryTrackChannel extends React.Component {
           scaleX={this.props.scaleX}
           canDrag={false}
           canDragAutomations={this.props.canDragAutomations}
-          showAutomations={this.props.showAutomations}
+          showAutomationControlType={this.props.showAutomationControlType}
           color={this.props.color}
           sampleResolution={this.props.sampleResolution}
         />
@@ -57,7 +57,7 @@ PrimaryTrackChannel.defaultProps = {
   canDragAutomations: false,
   canDragTransition: false,
   height: 100,
-  showAutomations: false,
+  showAutomationControlType: undefined,
   showTransition: false
 }
 

@@ -9,12 +9,21 @@ const TrackControl = require('./track-control')
 const getCurrentBeat = require('../../audios/helpers/get-current-beat')
 const { beatToTime } = require('../../lib/number-utils')
 
+const { CONTROL_TYPE_GAIN } = require('../../clips/constants')
+
 class MixArrangementDetail extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      editingBeatgrids: []
+      editingBeatgrids: [],
+      selectedControlType: CONTROL_TYPE_GAIN
     }
+  }
+
+  selectControlType (controlType) {
+    this.setState({
+      selectedControlType: controlType
+    })
   }
 
   toggleEditBeatgrid (channel) {
@@ -63,6 +72,7 @@ class MixArrangementDetail extends React.Component {
 
   render () {
     const { mix, audioContext, height, rowHeight, fromTrack, toTrack, scaleX, translateX } = this.props
+    const { selectedControlType } = this.state
     if (!(mix && mix.channel)) { return null }
 
     const layoutActions = pick(this.props, ['updateZoom', 'moveClip', 'moveTransitionChannel',
@@ -85,7 +95,7 @@ class MixArrangementDetail extends React.Component {
       createAutomationClipWithControlPoint: ({ channelId, e, minBeat, maxBeat }) => {
         const { beat, value } = _getPosition({ e, scaleX, rowHeight })
         this.props.createAutomationClipWithControlPoint({
-          channelId, beat, value, minBeat, maxBeat
+          channelId, beat, value, minBeat, maxBeat, controlType: selectedControlType
         })
         this._asyncUpdateAudioGraph()
       },
@@ -130,6 +140,8 @@ class MixArrangementDetail extends React.Component {
       translateX={translateX}
       height={height}
       trackControls={trackControls}
+      selectControlType={this.selectControlType.bind(this)}
+      selectedControlType={selectedControlType}
       {...layoutActions}>
 
       <PrimaryTrackChannel
@@ -142,7 +154,7 @@ class MixArrangementDetail extends React.Component {
         canDragTransition
         canDragAutomations
         showTransition
-        showAutomations={!includes(this.state.editingBeatgrids, fromTrack.channel.id)}
+        showAutomationControlType={!includes(this.state.editingBeatgrids, fromTrack.channel.id) && selectedControlType}
         color={d3.interpolateCool(0.25)}
         sampleResolution={fromTrackSampleResolution}
         {...primaryTrackChannelActions}
@@ -156,7 +168,7 @@ class MixArrangementDetail extends React.Component {
         scaleX={scaleX}
         canDrag
         canDragAutomations
-        showAutomations={!includes(this.state.editingBeatgrids, toTrack.channel.id)}
+        showAutomationControlType={!includes(this.state.editingBeatgrids, toTrack.channel.id) && selectedControlType}
         color={d3.interpolateCool(0.75)}
         sampleResolution={toTrackSampleResolution}
         {...primaryTrackChannelActions}

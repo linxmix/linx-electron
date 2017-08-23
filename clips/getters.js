@@ -1,9 +1,21 @@
 const { createSelector: Getter } = require('reselect')
 const { map, mapValues, includes, get, sortBy, values } = require('lodash')
+const d3 = require('d3')
 
 const { isValidNumber, validNumberOrDefault, timeToBeat } = require('../lib/number-utils')
 const { getSamples } = require('../samples/getters')
-const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../clips/constants')
+const {
+  CLIP_TYPE_SAMPLE,
+  CLIP_TYPE_AUTOMATION,
+  CONTROL_TYPE_GAIN,
+  CONTROL_TYPE_LOW_BAND,
+  CONTROL_TYPE_MID_BAND,
+  CONTROL_TYPE_HIGH_BAND,
+  CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF,
+  CONTROL_TYPE_FILTER_HIGHPASS_Q,
+  CONTROL_TYPE_FILTER_LOWPASS_CUTOFF,
+  CONTROL_TYPE_FILTER_LOWPASS_Q,
+} = require('../clips/constants')
 
 const getClipsRecords = (state) => state.clips.records
 const getClipsDirty = (state) => state.clips.dirty
@@ -52,7 +64,12 @@ const getClips = Getter(
         // sort gridMarkers
         gridMarkers = sortBy(clip.gridMarkers || [], 'beat')
       } else if (clip.type === CLIP_TYPE_AUTOMATION) {
-        controlPoints = sortBy(values(clip.controlPoints), 'beat', 'value')
+        const controlPointsValueScale = _getControlPointsValueScale(clip.controlType)
+        controlPoints = map(values(clip.controlPoints), controlPoint => ({
+          ...controlPoint,
+          scaledValue: controlPointsValueScale(controlPoint.value)
+        }))
+        controlPoints = sortBy(controlPoints, 'beat', 'value')
         startBeat = validNumberOrDefault(Math.min(...map(controlPoints, 'beat')), 0)
         beatCount = validNumberOrDefault(Math.max(...map(controlPoints, 'beat')) - startBeat, 0)
       }
@@ -74,4 +91,17 @@ const getClips = Getter(
 
 module.exports = {
   getClips
+}
+
+function _getControlPointsValueScale(controlType) {
+  switch(controlType) {
+    case CONTROL_TYPE_LOW_BAND: case CONTROL_TYPE_MID_BAND: case CONTROL_TYPE_HIGH_BAND:
+      return d3.scaleLinear().domain([0, 1]).range([-40, 40])
+    case CONTROL_TYPE_FILTER_HIGHPASS_Q: case CONTROL_TYPE_FILTER_LOWPASS_Q:
+      return d3.scaleLinear().domain([0, 1]).range([0.001, 30])
+    case CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF: case CONTROL_TYPE_FILTER_LOWPASS_CUTOFF:
+      return d3.scalePow().domain([0, 1]).range([20, 22050])
+    default:
+      return d3.scaleIdentity()
+  }
 }
