@@ -1,5 +1,6 @@
-const { map, merge, forEach, filter, find, last } = require('lodash')
+const { map, merge, forEach, filter } = require('lodash')
 const d3 = require('d3')
+const Tuna = require('tunajs')
 
 const createSoundtouchSource = (process.env.NODE_ENV === 'test')
   ? () => {} : require('./create-soundtouch-source')
@@ -31,8 +32,25 @@ function createAudioGraph ({
   const { channels: nestedChannels = [] } = channel
   const audioGraph = {}
 
-  // hack to add createSoundtouchSource to audioContext
+  // hack to add custom node creation to audioContext
   audioContext.createSoundtouchSource = () => createSoundtouchSource(audioContext)
+  audioContext.createDelayNode = () => (new (new Tuna(audioContext)).Delay())
+
+  // generate automation clip nodes
+  const channelOutput = addAutomationClipsToAudioGraph({
+    clips: filter(channel.clips, { type: CLIP_TYPE_AUTOMATION }),
+    outputs,
+    channel,
+    startBeat,
+    audioGraph,
+    currentBeat,
+    currentTime,
+    beatScale
+  })
+
+  // add channel node
+  // TODO: do we even need a merger node here? what's going on?
+  audioGraph[channel.id] = ['gain', channelOutput]
 
   // generate sample clip nodes
   forEach(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip => addSampleClipToAudioGraph({
@@ -47,24 +65,8 @@ function createAudioGraph ({
     beatScale
   }))
 
-  // generate automation clip nodes
-  const channelOutput = addAutomationClipsToAudioGraph({
-    clips: filter(channel.clips, { type: CLIP_TYPE_AUTOMATION }),
-    outputs,
-    channel,
-    startBeat,
-    audioGraph,
-    currentBeat,
-    currentTime,
-    beatScale
-  })
-
-  // add channel merger node
-  // NOTE: virtual-audio-graph interprets numberOfOutputs here as the # of merger inputs
-  audioGraph[channel.id] = ['channelMerger', channelOutput, { numberOfOutputs: nestedChannels.length }]
-
   // generate audio graphs for nested channels
-  const nestedAudioGraphs = map(nestedChannels, (nestedChannel, i) =>
+  const nestedAudioGraphs = map(nestedChannels, (nestedChannel) =>
     createAudioGraph({
       channel: nestedChannel,
       audioContext,
@@ -72,7 +74,7 @@ function createAudioGraph ({
       beatScale,
       bpmScale,
       startBeat: startBeat + validNumberOrDefault(nestedChannel.startBeat, 0),
-      outputs: { key: channel.id, outputs: [i], inputs: [0] }
+      outputs: channel.id
     })
   )
 
