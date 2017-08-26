@@ -38,7 +38,8 @@ function createAudioGraph ({
 
   // generate automation clip nodes
   const channelOutput = addAutomationClipsToAudioGraph({
-    clips: filter(channel.clips, { type: CLIP_TYPE_AUTOMATION }),
+    clips: filter(channel.clips, clip =>
+      ((clip.type === CLIP_TYPE_AUTOMATION) && clip.controlPoints.length)),
     outputs,
     channel,
     startBeat,

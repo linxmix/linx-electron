@@ -9,10 +9,6 @@ const {
   CONTROL_TYPE_LOW_BAND,
   CONTROL_TYPE_MID_BAND,
   CONTROL_TYPE_HIGH_BAND,
-  CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF,
-  CONTROL_TYPE_FILTER_HIGHPASS_Q,
-  CONTROL_TYPE_FILTER_LOWPASS_CUTOFF,
-  CONTROL_TYPE_FILTER_LOWPASS_Q,
 } = require('../../clips/constants')
 
 class AutomationClip extends React.Component {
@@ -42,8 +38,8 @@ class AutomationClip extends React.Component {
     switch(clip.controlType) {
       case CONTROL_TYPE_GAIN: color = 'red'; break;
       case CONTROL_TYPE_LOW_BAND: case CONTROL_TYPE_MID_BAND: case CONTROL_TYPE_HIGH_BAND:
-        color = 'blue'; break
-      default: color = 'green'; break;
+        color = 'green'; break
+      default: color = 'blue'; break;
     }
 
     return <g>
