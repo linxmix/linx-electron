@@ -58,6 +58,7 @@
     "redux-logger": "^2.7.4",
     "redux-loop": "^2.2.2",
     "reselect": "^2.5.4",
+    "tunajs": "^1.0.0",
     "uuid": "^3.0.1",
     "virtual-audio-graph": "github:linxmix/virtual-audio-graph#master"
   },
