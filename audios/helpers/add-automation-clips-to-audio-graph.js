@@ -1,5 +1,5 @@
 const d3 = require('d3')
-const { map, reduce, sortBy, last } = require('lodash')
+const { map, reduce, sortBy, last, find, reject, difference, merge, isNil } = require('lodash')
 
 const getValueCurve = require('./get-value-curve')
 const {
@@ -11,23 +11,95 @@ const {
   CONTROL_TYPE_FILTER_HIGHPASS_Q,
   CONTROL_TYPE_FILTER_LOWPASS_CUTOFF,
   CONTROL_TYPE_FILTER_LOWPASS_Q,
+  CONTROL_TYPE_DELAY_WET,
+  CONTROL_TYPE_DELAY_CUTOFF,
 } = require('../../clips/constants')
 
-const FX_CHAIN_ORDER = [CONTROL_TYPE_LOW_BAND, CONTROL_TYPE_GAIN]
+const FX_CHAIN_ORDER = [
+  CONTROL_TYPE_HIGH_BAND,
+  CONTROL_TYPE_MID_BAND,
+  CONTROL_TYPE_LOW_BAND,
+  CONTROL_TYPE_GAIN
+]
 
 module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, beatScale, currentBeat, currentTime }) {
 
   // sort automation clips by FX chain order
-  const sortedClips = sortBy(clips, ({ controlType }) => FX_CHAIN_ORDER.indexOf(controlType))
+  const highpassClips = reject([
+    find(clips, { controlType: CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF }),
+    find(clips, { controlType: CONTROL_TYPE_FILTER_HIGHPASS_Q })
+  ], isNil)
+  const lowpassClips = reject([
+    find(clips, { controlType: CONTROL_TYPE_FILTER_LOWPASS_CUTOFF }),
+    find(clips, { controlType: CONTROL_TYPE_FILTER_LOWPASS_Q })
+  ], isNil)
+  const delayClips = reject([
+    find(clips, { controlType: CONTROL_TYPE_DELAY_CUTOFF }),
+    find(clips, { controlType: CONTROL_TYPE_DELAY_WET })
+  ], isNil)
+  const sortedLevelsClips = sortBy(difference(clips, highpassClips, lowpassClips, delayClips),
+    ({ controlType }) => FX_CHAIN_ORDER.indexOf(controlType))
 
-  // connect automations in order, returning final output
-  return reduce(sortedClips, (previousOutput, clip) => {
+  console.log({
+    highpassClips,
+    lowpassClips,
+    delayClips,
+    sortedLevelsClips
+  })
+
+  // 
+  // desired node order: channel => effects => levels => output
+  //
+  let previousOutput = outputs
+
+  // connect highpass, lowpass, and delay automations
+  if (delayClips.length) {
+    const audioProperties = reduce(
+      delayClips,
+      (audioProperties, clip) => merge({}, audioProperties, _getAutomationParameters({
+        previousOutput, clip, startBeat, currentBeat, beatScale, currentTime })),
+      {}
+    )
+
+    const audioGraphKey = `${channel.id}_delayNode`
+    audioGraph[audioGraphKey] = ['delayNode', previousOutput, audioProperties]
+    previousOutput = audioGraphKey
+  }
+
+  if (highpassClips.length) {
+    const audioProperties = reduce(
+      highpassClips,
+      (audioProperties, clip) => merge({}, audioProperties, _getAutomationParameters({
+        previousOutput, clip, startBeat, currentBeat, beatScale, currentTime })),
+      { type: 'highpass' }
+    )
+
+    const audioGraphKey = `${channel.id}_highpassNode`
+    audioGraph[audioGraphKey] = ['biquadFilter', previousOutput, audioProperties]
+    previousOutput = audioGraphKey
+  }
+
+  if (lowpassClips.length) {
+    const audioProperties = reduce(
+      lowpassClips,
+      (audioProperties, clip) => merge({}, audioProperties, _getAutomationParameters({
+        previousOutput, clip, startBeat, currentBeat, beatScale, currentTime })),
+      { type: 'lowpass' }
+    )
+
+    const audioGraphKey = `${channel.id}_lowpassNode`
+    audioGraph[audioGraphKey] = ['biquadFilter', previousOutput, audioProperties]
+    previousOutput = audioGraphKey
+  }
+
+  // connect levels automations in order, returning final output
+  return reduce(sortedLevelsClips, (previousOutput, clip) => {
     const audioGraphKey = `${channel.id}_${clip.controlType}_${clip.id}`
     audioGraph[audioGraphKey] = _getAutomationParameters({
       previousOutput, clip, startBeat, currentBeat, beatScale, currentTime })
 
     return audioGraphKey
-  }, outputs)
+  }, previousOutput)
 }
 
 function _getAutomationParameters({
@@ -93,8 +165,7 @@ function _getAutomationParameters({
         ]
       }]
     case CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF:
-      return ['biquadFilter', previousOutput, {
-        type: 'highpass',
+      return {
         frequency: [
           ['setValueAtTime', 0, 0],
           _createSetValueCurveParameter({
@@ -105,7 +176,72 @@ function _getAutomationParameters({
             currentTime
           })
         ]
-      }]
+      }
+    case CONTROL_TYPE_FILTER_HIGHPASS_Q:
+      return {
+        Q: [
+          ['setValueAtTime', 1, 0],
+          _createSetValueCurveParameter({
+            clip,
+            startBeat,
+            currentBeat,
+            beatScale,
+            currentTime
+          })
+        ]
+      }
+    case CONTROL_TYPE_FILTER_LOWPASS_CUTOFF:
+      return {
+        frequency: [
+          ['setValueAtTime', 22050, 0],
+          _createSetValueCurveParameter({
+            clip,
+            startBeat,
+            currentBeat,
+            beatScale,
+            currentTime
+          })
+        ]
+      }
+    case CONTROL_TYPE_FILTER_LOWPASS_Q:
+      return {
+        Q: [
+          ['setValueAtTime', 1, 0],
+          _createSetValueCurveParameter({
+            clip,
+            startBeat,
+            currentBeat,
+            beatScale,
+            currentTime
+          })
+        ]
+      }
+    case CONTROL_TYPE_DELAY_WET:
+      return {
+        'wet.gain': [
+          ['setValueAtTime', 0, 0],
+          _createSetValueCurveParameter({
+            clip,
+            startBeat,
+            currentBeat,
+            beatScale,
+            currentTime
+          })
+        ]
+      }
+    case CONTROL_TYPE_DELAY_CUTOFF:
+      return {
+        'filter.frequency': [
+          ['setValueAtTime', 0, 0],
+          _createSetValueCurveParameter({
+            clip,
+            startBeat,
+            currentBeat,
+            beatScale,
+            currentTime
+          })
+        ]
+      }
     default:
       console.error('Unknown controlType while adding automations to audio graph', clip.controlType)
   }
@@ -126,10 +262,10 @@ function _createSetValueCurveParameter ({
   const clipStartBeat = startBeat + clip.startBeat
   const clipEndBeat = clipStartBeat + clip.beatCount
 
-  // if seeking beyond clip, just report final value
-  if (currentBeat >= clipEndBeat) {
+  // if seeking beyond clip, or only one automation, just report final value
+  if (currentBeat >= clipEndBeat || controlPoints.length === 1) {
     return ['setValueAtTime',
-      last(controlPoints).value,
+      last(controlPoints).scaledValue,
       Math.max(0, currentTime + beatScale(clipEndBeat) - beatScale(currentBeat))]
   }
 
@@ -139,6 +275,7 @@ function _createSetValueCurveParameter ({
     startTime = beatScale(clipStartBeat) - beatScale(currentBeat)
     endTime = beatScale(clipEndBeat) - beatScale(currentBeat)
     duration = endTime - startTime
+    
     valueCurve = getValueCurve({
       scale: valueScale,
       beatCount: clipEndBeat - clipStartBeat
