@@ -4,6 +4,7 @@ const {
   CHANNEL_TYPE_TRANSITION,
   CHANNEL_TYPE_SAMPLE_TRACK
 } = require('../../channels/constants')
+const { CLIP_TYPE_SAMPLE } = require('../../clips/constants')
 
 module.exports = {
   getPrimaryTracks
@@ -16,7 +17,9 @@ function getPrimaryTracks (nestedChannel = {}, metas = []) {
   return map(primaryTrackChannels, (channel, i) => {
     const clips = channel.clips
     const sampleChannel = find(channel.channels || [], { type: CHANNEL_TYPE_SAMPLE_TRACK })
-    const sampleId = get(sampleChannel, 'clips.[0].sampleId')
+      || {}
+    const sampleClip = find(sampleChannel.clips || [], { type: CLIP_TYPE_SAMPLE }) || {}
+    const sampleId = get(sampleClip, 'sampleId')
 
     return {
       id: channel.id,
