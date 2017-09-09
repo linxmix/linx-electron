@@ -140,6 +140,7 @@ class MixArrangementDetail extends React.Component {
       translateX={translateX}
       height={height}
       trackControls={trackControls}
+      showTempoAxis
       selectControlType={this.selectControlType.bind(this)}
       selectedControlType={selectedControlType}
       {...layoutActions}>

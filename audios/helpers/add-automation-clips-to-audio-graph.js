@@ -262,11 +262,16 @@ function _createSetValueCurveParameter ({
   const clipStartBeat = startBeat + clip.startBeat
   const clipEndBeat = clipStartBeat + clip.beatCount
 
-  // if seeking beyond clip, or only one automation, just report final value
-  if (currentBeat >= clipEndBeat || controlPoints.length === 1) {
+  // if seeking beyond clip, just report final value
+  if (currentBeat >= clipEndBeat) {
     return ['setValueAtTime',
       last(controlPoints).scaledValue,
       Math.max(0, currentTime + beatScale(clipEndBeat) - beatScale(currentBeat))]
+  }
+
+  // if only one automation, just report final value
+  if (controlPoints.length === 1) {
+    return ['setValueAtTime', last(controlPoints).scaledValue, 0]
   }
 
   // if seek before clip, proceed as normal

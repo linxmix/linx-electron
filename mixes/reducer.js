@@ -14,13 +14,21 @@ const {
 const {
   unsetChannel,
   createChannel,
-  swapPrimaryTracks
+  swapPrimaryTracks,
+  setChannels,
+  undirtyChannels,
+  setClipsChannel
 } = require('../channels/actions')
 const {
   loadSample
 } = require('../samples/actions')
+const {
+  setClips,
+  undirtyClips,
+  createClip
+} = require('../clips/actions')
 const { CHANNEL_TYPE_MIX } = require('../channels/constants')
-const { CLIP_TYPE_SAMPLE } = require('../clips/constants')
+const { CLIP_TYPE_SAMPLE, CLIP_TYPE_TEMPO } = require('../clips/constants')
 
 const {
   loadMixList,
@@ -47,8 +55,6 @@ const {
   navigateToMixList
 } = require('./actions')
 const createService = require('./service')
-const { setChannels, undirtyChannels } = require('../channels/actions')
-const { setClips, undirtyClips } = require('../clips/actions')
 const flattenMix = require('./helpers/flatten')
 
 module.exports = createReducer
@@ -161,6 +167,7 @@ function createReducer (config) {
     }),
     [createMix]: (state, action) => {
       const newMix = { id: uuid(), channelId: uuid() }
+      const tempoClipId = uuid()
 
       return loop({
         ...state,
@@ -169,6 +176,14 @@ function createReducer (config) {
         Effects.constant(createChannel({
           id: newMix.channelId,
           type: CHANNEL_TYPE_MIX
+        })),
+        Effects.constant(createClip({
+          id: tempoClipId,
+          type: CLIP_TYPE_TEMPO
+        })),
+        Effects.constant(setClipsChannel({
+          channelId: newMix.channelId,
+          clipIds: [tempoClipId]
         })),
         Effects.constant(createMeta({
           id: newMix.id,

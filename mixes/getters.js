@@ -1,5 +1,5 @@
 const { createSelector: Getter, createStructuredSelector: Struct } = require('reselect')
-const { mapValues, values, includes } = require('lodash')
+const { find, get, mapValues, values, includes } = require('lodash')
 
 const { getPlayStates, getAudioContext } = require('../audios/getters')
 const { getMetas } = require('../metas/getters')
@@ -7,6 +7,7 @@ const { getChannels } = require('../channels/getters')
 const { getSamplesError } = require('../samples/getters')
 const { getZooms } = require('../svgs/getters')
 const { getPrimaryTracks } = require('./helpers/get-tracks')
+const { CLIP_TYPE_TEMPO } = require('../clips/constants')
 
 const getMixesRecords = (state) => state.mixes.records
 const getMixesIsLoadingList = (state) => state.mixes.isLoadingList
@@ -34,6 +35,7 @@ const getMixes = Getter(
         channel,
         meta,
         playState,
+        tempoClip: find(channel.clips || [], { type: CLIP_TYPE_TEMPO }) || {},
         tracks: getPrimaryTracks(channel, metas),
         isLoading: includes(loading, id),
         isSaving: includes(saving, id),

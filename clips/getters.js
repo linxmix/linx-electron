@@ -7,6 +7,7 @@ const { getSamples } = require('../samples/getters')
 const {
   CLIP_TYPE_SAMPLE,
   CLIP_TYPE_AUTOMATION,
+  CLIP_TYPE_TEMPO,
   CONTROL_TYPE_GAIN,
   CONTROL_TYPE_LOW_BAND,
   CONTROL_TYPE_MID_BAND,
@@ -73,6 +74,11 @@ const getClips = Getter(
         controlPoints = sortBy(controlPoints, 'beat', 'value')
         startBeat = validNumberOrDefault(Math.min(...map(controlPoints, 'beat')), 0)
         beatCount = validNumberOrDefault(Math.max(...map(controlPoints, 'beat')) - startBeat, 0)
+      } else if (clip.type === CLIP_TYPE_TEMPO) {
+        controlPoints = sortBy(values(clip.controlPoints), 'beat', 'value')
+        startBeat = validNumberOrDefault(Math.min(...map(controlPoints, 'beat')), 0)
+        beatCount = validNumberOrDefault(Math.max(...map(controlPoints, 'beat')) - startBeat, 0)
+
       }
 
       return {
