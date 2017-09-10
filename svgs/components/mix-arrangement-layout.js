@@ -130,7 +130,8 @@ class MixArrangementLayout extends React.Component {
 
   render () {
     const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY,
-      beatAxisHeight, tempoAxisHeight, selectedControlType, selectControlType } = this.props
+      beatAxisHeight, tempoAxisHeight, showTempoAxis, selectedControlType,
+      selectControlType } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const transform = `translate(${translateX},${translateY}) scale(${scaleX}, 1)`
@@ -153,6 +154,7 @@ class MixArrangementLayout extends React.Component {
                 <option key={controlType} value={controlType}>{controlType}</option>)}
             </select>
           </div>
+
           {this.props.trackControls}
         </div>}
 
@@ -210,7 +212,7 @@ class MixArrangementLayout extends React.Component {
             </g>
           </svg>
 
-          {this.props.showTempoAxis && <svg
+          {showTempoAxis && <svg
             className='VerticalLayout-fixedSection'
             width='100%'
             height={tempoAxisHeight}
@@ -224,6 +226,8 @@ class MixArrangementLayout extends React.Component {
                 height='100%'
                 strokeWidth={1.5 / scaleX}
               />
+
+              {this.props.tempoClip}
             </g>
           </svg>}
         </div>
@@ -239,7 +243,8 @@ MixArrangementLayout.defaultProps = {
   scaleX: 1,
   translateX: 1,
   translateY: 0,
-  trackControls: false
+  trackControls: false,
+  tempoClip: null
 }
 
 const dropTarget = {
@@ -271,9 +276,12 @@ const dropTarget = {
       case 'resize-handle':
         action = props.resizeChannel
         break
-      case 'control-point':
+      case 'automation-clip/control-point':
         action = props.moveControlPoint
         payload.diffValue = (diff.y / item.height)
+        break
+      case 'tempo-clip/control-point':
+        action = props.moveControlPoint
         break
     }
 
@@ -298,5 +306,6 @@ function collect (connect, monitor) {
 }
 
 module.exports = DropTarget(
-  ['primary-track-channel', 'transition-channel', 'sample-clip', 'resize-handle', 'control-point'],
+  ['primary-track-channel', 'transition-channel', 'sample-clip', 'resize-handle',
+    'automation-clip/control-point', 'tempo-clip/control-point'],
   dropTarget, collect)(MixArrangementLayout)

@@ -41,11 +41,10 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
   // compute beatScale, bpmScale
   let beatScale, bpmScale
   if (type === CHANNEL_TYPE_MIX) {
-    const tempoClip = find(childClips, { type: CLIP_TYPE_TEMPO })
-    const controlPoints = get(tempoClip, 'controlPoints')
+    const tempoClip = find(childClips, { type: CLIP_TYPE_TEMPO }) || {}
+    const controlPoints = get(tempoClip, 'controlPoints') || []
 
-      console.log('tempoClip', tempoClip)
-    if (tempoClip && controlPoints) {
+    if (controlPoints.length) {
       const controlPointValues = map(controlPoints, 'value')
       const controlPointBeats = map(controlPoints, 'beat')
 
@@ -67,7 +66,7 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
         "beatScale.range()": beatScale.range(),
       })
 
-    // TODO(BEATGRID): remove when all mixes have tempo clips
+    // TODO(BEATGRID): remove when all mixes have valid tempo clips
     } else {
       const bpm = validNumberOrDefault(channel.bpm, 128)
       bpmScale = d3.scaleLinear()
@@ -114,17 +113,17 @@ function _calculateBeatScaleRange(bpmScale) {
     const minutes = intervalBeatCount / averageBpm;
     const seconds = minutes * 60;
 
-    console.log('calculate seconds', {
-      startBeat,
-      endBeat,
-      startBpm,
-      endBpm,
-      intervalBeatCount,
-      averageBpm,
-      minutes,
-      seconds,
-      prevDuration
-    });
+    // console.log('calculate seconds', {
+    //   startBeat,
+    //   endBeat,
+    //   startBpm,
+    //   endBpm,
+    //   intervalBeatCount,
+    //   averageBpm,
+    //   minutes,
+    //   seconds,
+    //   prevDuration
+    // });
 
     if (isValidNumber(seconds)) {
       return [...range, prevDuration + seconds]

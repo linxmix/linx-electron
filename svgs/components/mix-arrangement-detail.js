@@ -6,6 +6,7 @@ const MixArrangementLayout = require('./mix-arrangement-layout')
 const PrimaryTrackChannel = require('./primary-track-channel')
 const TransitionChannel = require('./transition-channel')
 const TrackControl = require('./track-control')
+const TempoClip = require('./tempo-clip')
 const getCurrentBeat = require('../../audios/helpers/get-current-beat')
 const { beatToTime } = require('../../lib/number-utils')
 
@@ -71,26 +72,29 @@ class MixArrangementDetail extends React.Component {
   }
 
   render () {
-    const { mix, audioContext, height, rowHeight, fromTrack, toTrack, scaleX, translateX } = this.props
+    const { mix, audioContext, height, rowHeight, fromTrack, toTrack,
+      scaleX, translateX, tempoAxisHeight } = this.props
     const { selectedControlType } = this.state
     if (!(mix && mix.channel)) { return null }
+
+    const createControlPoint = ({ sourceId, e, minBeat, maxBeat }) => {
+      const { beat, value } = _getPosition({ e, scaleX, rowHeight })
+      this.props.createControlPoint({
+        sourceId, beat, value, minBeat, maxBeat
+      })
+      this._asyncUpdateAudioGraph()
+    }
+    const deleteControlPoint = (...args) => {
+      this.props.deleteControlPoint(...args)
+      this._asyncUpdateAudioGraph()
+    }
 
     const layoutActions = pick(this.props, ['updateZoom', 'moveClip', 'moveTransitionChannel',
       'movePrimaryTrackChannel', 'resizeChannel', 'updateAudioGraph', 'seekToBeat', 'moveControlPoint'])
 
     const primaryTrackChannelActions = {
-      createControlPoint: ({ sourceId, e, minBeat, maxBeat }) => {
-        const { beat, value } = _getPosition({ e, scaleX, rowHeight })
-        this.props.createControlPoint({
-          sourceId, beat, value, minBeat, maxBeat
-        })
-        this._asyncUpdateAudioGraph()
-      },
-
-      deleteControlPoint: (...args) => {
-        this.props.deleteControlPoint(...args)
-        this._asyncUpdateAudioGraph()
-      },
+      createControlPoint,
+      deleteControlPoint,
 
       createAutomationClipWithControlPoint: ({ channelId, e, minBeat, maxBeat }) => {
         const { beat, value } = _getPosition({ e, scaleX, rowHeight })
@@ -124,6 +128,19 @@ class MixArrangementDetail extends React.Component {
         toggleEditBeatgrid={this.toggleEditBeatgrid.bind(this, track.channel)}
       />
     )
+    const tempoClip = <TempoClip
+      clip={mix.tempoClip}
+      beatScale={beatScale}
+      scaleX={scaleX}
+      createControlPoint={createControlPoint}
+      deleteControlPoint={deleteControlPoint}
+      updateControlPointValue={this.props.updateControlPointValue}
+      height={tempoAxisHeight}
+      minBeat={get(mix, 'channel.startBeat')}
+      maxBeat={get(mix, 'channel.beatCount')}
+      canDrag
+    />
+
     console.log('mix-arrangement-detail', { fromTrack, toTrack, transition })
 
     const NORMAL_RESOLUTION = 5
@@ -141,6 +158,8 @@ class MixArrangementDetail extends React.Component {
       height={height}
       trackControls={trackControls}
       showTempoAxis
+      tempoAxisHeight={tempoAxisHeight}
+      tempoClip={tempoClip}
       selectControlType={this.selectControlType.bind(this)}
       selectedControlType={selectedControlType}
       {...layoutActions}>
@@ -182,7 +201,8 @@ MixArrangementDetail.defaultProps = {
   height: '100%',
   rowHeight: 100,
   scaleX: 1,
-  translateX: 1
+  translateX: 1,
+  tempoAxisHeight: 25
 }
 
 module.exports = MixArrangementDetail

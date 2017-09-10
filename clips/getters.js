@@ -65,6 +65,7 @@ const getClips = Getter(
 
         // sort gridMarkers
         gridMarkers = sortBy(clip.gridMarkers || [], 'beat')
+
       } else if (clip.type === CLIP_TYPE_AUTOMATION) {
         const controlPointsValueScale = _getControlPointsValueScale(clip.controlType)
         controlPoints = map(values(clip.controlPoints), controlPoint => ({
@@ -74,11 +75,11 @@ const getClips = Getter(
         controlPoints = sortBy(controlPoints, 'beat', 'value')
         startBeat = validNumberOrDefault(Math.min(...map(controlPoints, 'beat')), 0)
         beatCount = validNumberOrDefault(Math.max(...map(controlPoints, 'beat')) - startBeat, 0)
+        
       } else if (clip.type === CLIP_TYPE_TEMPO) {
         controlPoints = sortBy(values(clip.controlPoints), 'beat', 'value')
         startBeat = validNumberOrDefault(Math.min(...map(controlPoints, 'beat')), 0)
         beatCount = validNumberOrDefault(Math.max(...map(controlPoints, 'beat')) - startBeat, 0)
-
       }
 
       return {
