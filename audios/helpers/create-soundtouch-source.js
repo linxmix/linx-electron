@@ -85,9 +85,8 @@ function onaudioprocess ({
   const l = outputs[0][0]
   const r = outputs[0][1]
 
-  // naively take first pitch and tempo values for this sample
-  const pitch = parameters.pitch && parameters.pitch[0]
-  const tempo = parameters.tempo && parameters.tempo[0]
+  const pitch = parameters.pitch && _arrayAverage(parameters.pitch)
+  const tempo = parameters.tempo && _arrayAverage(parameters.tempo)
 
   const soundtouch = node.soundtouch
 
@@ -121,7 +120,7 @@ function onaudioprocess ({
     if (Math.abs(sampleDelta) >= SAMPLE_DRIFT_TOLERANCE) {
       // console.log('actualElapsedSamples', actualElapsedSamples);
       // console.log('expectedElapsedSamples', expectedElapsedSamples);
-      console.log("DRIFT", sampleDelta, extractFrameCount, BUFFER_SIZE);
+      // console.log("DRIFT", sampleDelta, extractFrameCount, BUFFER_SIZE);
 
       // if we're behind where we should be, extract dummy frames to catch up
       if (sampleDelta > 0) {
@@ -167,6 +166,10 @@ module.exports = function (audioContext) {
       {
         name: 'isPlaying',
         defaultValue: 0
+      },
+      {
+        name: 'time',
+        defaultValue: 0
       }
     ]
   })
@@ -181,6 +184,7 @@ module.exports = function (audioContext) {
       this.source = new SoundtouchBufferSource(buffer)
       this.filter = new SimpleFilter(this.source, this.soundtouch)
       this.filter.sourcePosition = this.startSample
+      this.filter.startSample = this.startSample
     }
   })
 
@@ -221,4 +225,12 @@ module.exports = function (audioContext) {
       this.isPlaying.setValueAtTime(0, stopTime)
     }
   })
+}
+
+function _arrayAverage(arr) {
+  let total = 0
+  for (let i = 0; i < arr.length; i++) {
+    total += arr[i]
+  }
+  return total / arr.length
 }

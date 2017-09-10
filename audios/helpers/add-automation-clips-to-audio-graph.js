@@ -1,7 +1,7 @@
 const d3 = require('d3')
-const { map, reduce, sortBy, last, find, reject, difference, merge, isNil } = require('lodash')
+const { map, reduce, sortBy, find, reject, difference, merge, isNil } = require('lodash')
 
-const getValueCurve = require('./get-value-curve')
+const valueScaleToAudioParameter = require('./value-scale-to-audio-parameter')
 const {
   CONTROL_TYPE_GAIN,
   CONTROL_TYPE_LOW_BAND,
@@ -40,12 +40,12 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
   const sortedLevelsClips = sortBy(difference(clips, highpassClips, lowpassClips, delayClips),
     ({ controlType }) => FX_CHAIN_ORDER.indexOf(controlType))
 
-  console.log({
-    highpassClips,
-    lowpassClips,
-    delayClips,
-    sortedLevelsClips
-  })
+  // console.log({
+  //   highpassClips,
+  //   lowpassClips,
+  //   delayClips,
+  //   sortedLevelsClips
+  // })
 
   // 
   // desired node order: channel => effects => levels => output
@@ -105,15 +105,22 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
 function _getAutomationParameters({
   previousOutput, clip, startBeat, currentBeat, beatScale, currentTime
 }) {
+  const controlPoints = clip.controlPoints || []
+  const valueScale = d3.scaleLinear()
+    // scale to automation clip start
+    .domain(map(map(controlPoints, 'beat'), beat => beat - clip.startBeat))
+    .range(map(controlPoints, 'scaledValue'))
+
   switch(clip.controlType) {
     case CONTROL_TYPE_GAIN:
       return ['gain', previousOutput, {
         gain: [
           ['setValueAtTime', 1, 0], // start all at 1
-          _createSetValueCurveParameter({
+          valueScaleToAudioParameter({
             clip,
             startBeat,
             currentBeat,
+            valueScale,
             beatScale,
             currentTime
           })
@@ -125,10 +132,11 @@ function _getAutomationParameters({
         type: 'lowshelf',
         gain: [
           ['setValueAtTime', 0, 0],
-          _createSetValueCurveParameter({
+          valueScaleToAudioParameter({
             clip,
             startBeat,
             currentBeat,
+            valueScale,
             beatScale,
             currentTime
           })
@@ -140,10 +148,11 @@ function _getAutomationParameters({
         type: 'peaking',
         gain: [
           ['setValueAtTime', 0, 0],
-          _createSetValueCurveParameter({
+          valueScaleToAudioParameter({
             clip,
             startBeat,
             currentBeat,
+            valueScale,
             beatScale,
             currentTime
           })
@@ -155,10 +164,11 @@ function _getAutomationParameters({
         type: 'highshelf',
         gain: [
           ['setValueAtTime', 0, 0],
-          _createSetValueCurveParameter({
+          valueScaleToAudioParameter({
             clip,
             startBeat,
             currentBeat,
+            valueScale,
             beatScale,
             currentTime
           })
@@ -168,10 +178,11 @@ function _getAutomationParameters({
       return {
         frequency: [
           ['setValueAtTime', 0, 0],
-          _createSetValueCurveParameter({
+          valueScaleToAudioParameter({
             clip,
             startBeat,
             currentBeat,
+            valueScale,
             beatScale,
             currentTime
           })
@@ -181,10 +192,11 @@ function _getAutomationParameters({
       return {
         Q: [
           ['setValueAtTime', 1, 0],
-          _createSetValueCurveParameter({
+          valueScaleToAudioParameter({
             clip,
             startBeat,
             currentBeat,
+            valueScale,
             beatScale,
             currentTime
           })
@@ -194,10 +206,11 @@ function _getAutomationParameters({
       return {
         frequency: [
           ['setValueAtTime', 22050, 0],
-          _createSetValueCurveParameter({
+          valueScaleToAudioParameter({
             clip,
             startBeat,
             currentBeat,
+            valueScale,
             beatScale,
             currentTime
           })
@@ -207,10 +220,11 @@ function _getAutomationParameters({
       return {
         Q: [
           ['setValueAtTime', 1, 0],
-          _createSetValueCurveParameter({
+          valueScaleToAudioParameter({
             clip,
             startBeat,
             currentBeat,
+            valueScale,
             beatScale,
             currentTime
           })
@@ -220,10 +234,11 @@ function _getAutomationParameters({
       return {
         'wet.gain': [
           ['setValueAtTime', 0, 0],
-          _createSetValueCurveParameter({
+          valueScaleToAudioParameter({
             clip,
             startBeat,
             currentBeat,
+            valueScale,
             beatScale,
             currentTime
           })
@@ -233,10 +248,11 @@ function _getAutomationParameters({
       return {
         'filter.frequency': [
           ['setValueAtTime', 0, 0],
-          _createSetValueCurveParameter({
+          valueScaleToAudioParameter({
             clip,
             startBeat,
             currentBeat,
+            valueScale,
             beatScale,
             currentTime
           })
@@ -245,77 +261,4 @@ function _getAutomationParameters({
     default:
       console.error('Unknown controlType while adding automations to audio graph', clip.controlType)
   }
-}
-
-function _createSetValueCurveParameter ({
-  currentBeat,
-  currentTime,
-  clip,
-  startBeat,
-  beatScale
-}) {
-  const controlPoints = clip.controlPoints || []
-  const valueScale = d3.scaleLinear()
-    // scale to automation clip start
-    .domain(map(map(controlPoints, 'beat'), beat => beat - clip.startBeat))
-    .range(map(controlPoints, 'scaledValue'))
-  const clipStartBeat = startBeat + clip.startBeat
-  const clipEndBeat = clipStartBeat + clip.beatCount
-
-  // if seeking beyond clip, just report final value
-  if (currentBeat >= clipEndBeat) {
-    return ['setValueAtTime',
-      last(controlPoints).scaledValue,
-      Math.max(0, currentTime + beatScale(clipEndBeat) - beatScale(currentBeat))]
-  }
-
-  // if only one automation, just report final value
-  if (controlPoints.length === 1) {
-    return ['setValueAtTime', last(controlPoints).scaledValue, 0]
-  }
-
-  // if seek before clip, proceed as normal
-  let valueCurve, startTime, endTime, duration
-  if (currentBeat < clipStartBeat) {
-    startTime = beatScale(clipStartBeat) - beatScale(currentBeat)
-    endTime = beatScale(clipEndBeat) - beatScale(currentBeat)
-    duration = endTime - startTime
-    
-    valueCurve = getValueCurve({
-      scale: valueScale,
-      beatCount: clipEndBeat - clipStartBeat
-    })
-
-  // if seek in middle of clip, start now and adjust duration
-  } else {
-    startTime = 0
-    endTime = beatScale(clipEndBeat) - beatScale(currentBeat)
-    duration = endTime - startTime
-
-    valueCurve = getValueCurve({
-      scale: valueScale,
-      startBeat: currentBeat - clipStartBeat,
-      beatCount: clipEndBeat - currentBeat
-    })
-  }
-
-  console.log('GENERATE_AUTOMATION_PARAMETERS', {
-    absStartTime: currentTime + startTime,
-    controlType: clip.controlType,
-    clip,
-    currentTime,
-    currentBeat,
-    startTime,
-    endTime,
-    duration,
-    clipStartBeat,
-    clipEndBeat,
-    valueCurve,
-    controlPoints,
-    startBeat: currentBeat - clipStartBeat,
-    beatCount: clipEndBeat - currentBeat
-  })
-
-  return ['setValueCurveAtTime', valueCurve,
-    currentTime + startTime, duration]
 }

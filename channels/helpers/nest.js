@@ -58,13 +58,13 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
         .domain(bpmScale.domain())
         .range(_calculateBeatScaleRange(bpmScale))
 
-      console.log('tempoClip', {
-        tempoClip,
-        "bpmScale.domain()": bpmScale.domain(),
-        "bpmScale.range()": bpmScale.range(),
-        "beatScale.domain()": beatScale.domain(),
-        "beatScale.range()": beatScale.range(),
-      })
+      // console.log('tempoClip', {
+      //   tempoClip,
+      //   "bpmScale.domain()": bpmScale.domain(),
+      //   "bpmScale.range()": bpmScale.range(),
+      //   "beatScale.domain()": beatScale.domain(),
+      //   "beatScale.range()": beatScale.range(),
+      // })
 
     } else {
       const bpm = 128
