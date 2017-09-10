@@ -71,11 +71,30 @@ class MixArrangementDetail extends React.Component {
     window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
   }
 
+   _wrapWithAsyncUpdatePlayState (func) {
+      return (...args) => {
+        func(...args)
+        
+        // TODO: remove this hack
+        // Make sure this.props.mix is updated from previous action
+        window.setTimeout(() => {
+          this.props.updatePlayStateForTempoChange({
+            channel: this.props.mix.channel,
+            playState: this.props.mix.playState,
+            beatScale: this.props.mix.channel.beatScale
+          })
+        })
+      }
+    }
+
   render () {
     const { mix, audioContext, height, rowHeight, fromTrack, toTrack,
       scaleX, translateX, tempoAxisHeight } = this.props
     const { selectedControlType } = this.state
     if (!(mix && mix.channel)) { return null }
+
+    const { transition } = fromTrack
+    const beatScale = get(mix, 'channel.beatScale')
 
     const createControlPoint = ({ sourceId, e, minBeat, maxBeat }) => {
       const { beat, value } = _getPosition({ e, scaleX, rowHeight })
@@ -86,6 +105,10 @@ class MixArrangementDetail extends React.Component {
     }
     const deleteControlPoint = (...args) => {
       this.props.deleteControlPoint(...args)
+      this._asyncUpdateAudioGraph()
+    }
+    const updateControlPointValue = (...args) => {
+      this.props.updateControlPointValue(...args)
       this._asyncUpdateAudioGraph()
     }
 
@@ -117,9 +140,7 @@ class MixArrangementDetail extends React.Component {
       }
     }
 
-    const { transition } = fromTrack
-    const beatScale = get(mix, 'channel.beatScale')
-    const trackControls = map([fromTrack, toTrack], (track) =>
+    const trackControlsElement = map([fromTrack, toTrack], (track) =>
       <TrackControl
         key={track.id + '_control'}
         title={track.meta.title}
@@ -128,13 +149,13 @@ class MixArrangementDetail extends React.Component {
         toggleEditBeatgrid={this.toggleEditBeatgrid.bind(this, track.channel)}
       />
     )
-    const tempoClip = <TempoClip
+    const tempoClipElement = <TempoClip
       clip={mix.tempoClip}
       beatScale={beatScale}
       scaleX={scaleX}
-      createControlPoint={createControlPoint}
-      deleteControlPoint={deleteControlPoint}
-      updateControlPointValue={this.props.updateControlPointValue}
+      createControlPoint={this._wrapWithAsyncUpdatePlayState(createControlPoint)}
+      deleteControlPoint={this._wrapWithAsyncUpdatePlayState(deleteControlPoint)}
+      updateControlPointValue={this._wrapWithAsyncUpdatePlayState(updateControlPointValue)}
       height={tempoAxisHeight}
       minBeat={get(mix, 'channel.startBeat')}
       maxBeat={get(mix, 'channel.beatCount')}
@@ -156,10 +177,10 @@ class MixArrangementDetail extends React.Component {
       scaleX={scaleX}
       translateX={translateX}
       height={height}
-      trackControls={trackControls}
+      trackControls={trackControlsElement}
       showTempoAxis
       tempoAxisHeight={tempoAxisHeight}
-      tempoClip={tempoClip}
+      tempoClip={tempoClipElement}
       selectControlType={this.selectControlType.bind(this)}
       selectedControlType={selectedControlType}
       {...layoutActions}>

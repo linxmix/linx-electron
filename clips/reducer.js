@@ -30,6 +30,8 @@ const { CLIP_TYPES, CONTROL_TYPES, CLIP_TYPE_AUTOMATION, CLIP_TYPE_TEMPO } = req
 const { quantizeBeat, clamp, beatToTime, timeToBeat, validNumberOrDefault,
   bpmToSpb, isValidNumber } = require('../lib/number-utils')
 
+const DEFAULT_TEMPO = 128
+
 module.exports = createReducer
 
 function createReducer (config) {
@@ -152,7 +154,7 @@ function createReducer (config) {
       }
 
       if (sourceClip.type === CLIP_TYPE_TEMPO) {
-        newControlPoint.value = 128
+        newControlPoint.value = DEFAULT_TEMPO
       }
 
       const sourceClipControlPoints = get(sourceClip, 'controlPoints') || {}

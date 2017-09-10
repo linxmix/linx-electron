@@ -66,9 +66,8 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
         "beatScale.range()": beatScale.range(),
       })
 
-    // TODO(BEATGRID): remove when all mixes have valid tempo clips
     } else {
-      const bpm = validNumberOrDefault(channel.bpm, 128)
+      const bpm = 128
       bpmScale = d3.scaleLinear()
         .domain([0, beatCount])
         .range([bpm, bpm])

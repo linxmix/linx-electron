@@ -6,16 +6,17 @@ const { isRightClick } = require('../../../lib/mouse-event-utils')
 
 class ControlPoint extends React.Component {
   handleClick (e) {
+    e.preventDefault()
+    e.stopPropagation()
+
     if (isRightClick(e)) {
-      e.preventDefault()
-      e.stopPropagation()
       this.props.deleteControlPoint({ id: this.props.id, sourceId: this.props.sourceId })
     }
   }
 
   handleChangeValue (e) {
     const newValue = parseFloat(e.target.value)
-    console.log('newValue', e.target.value, newValue)
+
     if (isValidNumber(newValue)) {
       this.props.updateValue({
         id: this.props.id,

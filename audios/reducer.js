@@ -6,6 +6,7 @@ const { merge } = require('lodash')
 
 const { isValidNumber } = require('../lib/number-utils')
 const { PLAY_STATE_PLAYING, PLAY_STATE_PAUSED } = require('./constants')
+const getCurrentBeat = require('./helpers/get-current-beat')
 
 const {
   play,
@@ -14,7 +15,8 @@ const {
   seekToBeat,
   updatePlayState,
   updateAudioGraph,
-  updateVirtualAudioGraph
+  updateVirtualAudioGraph,
+  updatePlayStateForTempoChange
 } = require('./actions')
 const createAudioGraph = require('./helpers/create-audio-graph')
 
@@ -101,6 +103,14 @@ function createReducer (config) {
           Effects.constant(updateAudioGraph({ channel })) :
           Effects.none()
       ]))
+    },
+    [updatePlayStateForTempoChange]: (state, action) => {
+      const { channel, playState, beatScale } = action.payload
+
+      return loop(state, Effects.constant(seekToBeat({
+        channel,
+        seekBeat: getCurrentBeat({ playState, beatScale, audioContext: state.audioContext })
+      })))
     },
     [updatePlayState]: (state, action) => {
       const playState = action.payload
