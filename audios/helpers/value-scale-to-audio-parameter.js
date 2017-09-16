@@ -1,6 +1,6 @@
-const { isValidNumber } = require('../../lib/number-utils')
+const { isValidNumber, validNumberOrDefault } = require('../../lib/number-utils')
 
-const TICKS_PER_BEAT = 100
+const TICKS_PER_BEAT = 1000
 
 function getValueCurve ({ scale, startBeat = 0, beatCount }) {
   if (!(scale && (beatCount > 0))) { return new Float32Array(0) }
@@ -44,7 +44,7 @@ module.exports = function valueScaleToAudioParameter ({
 }) {
   const clipStartBeat = startBeat + clip.startBeat
   const clipEndBeat = clipStartBeat + clip.beatCount
-  const endValue = valueScale(clip.beatCount)
+  const endValue = validNumberOrDefault(valueScale(clip.beatCount), valueScale.range()[0])
 
   // if seeking beyond clip, just report final value
   if (currentBeat >= clipEndBeat) {

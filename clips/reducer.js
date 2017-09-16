@@ -68,8 +68,13 @@ function createReducer (config) {
       }
 
       return loop({
-        ...state, dirty: [...state.dirty, attrs.id]
-      }, Effects.constant(setClip(attrs)))
+        ...state,
+        dirty: [...state.dirty, attrs.id],
+        records: {
+          ...state.records,
+          [attrs.id]: attrs
+        }
+      }, Effects.none())
     },
     [updateClip]: (state, action) => {
       const { id } = action.payload
