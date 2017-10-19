@@ -117,10 +117,11 @@ function onaudioprocess ({
     const sampleDelta = ~~(expectedElapsedSamples - actualElapsedSamples)
 
     // if we've drifed past tolerance, adjust frames to extract
+    // console.log({ playbackTime, 'startSample': node.filter.startSample, tempo });
     if (Math.abs(sampleDelta) >= SAMPLE_DRIFT_TOLERANCE) {
       // console.log('actualElapsedSamples', actualElapsedSamples);
       // console.log('expectedElapsedSamples', expectedElapsedSamples);
-      // console.log("DRIFT", sampleDelta, extractFrameCount, BUFFER_SIZE);
+      console.log("DRIFT", sampleDelta, extractFrameCount, BUFFER_SIZE);
 
       // if we're behind where we should be, extract dummy frames to catch up
       if (sampleDelta > 0) {
@@ -165,10 +166,6 @@ module.exports = function (audioContext) {
       },
       {
         name: 'isPlaying',
-        defaultValue: 0
-      },
-      {
-        name: 'time',
         defaultValue: 0
       }
     ]

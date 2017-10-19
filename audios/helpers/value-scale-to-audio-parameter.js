@@ -1,29 +1,36 @@
+const d3 = require('d3')
+
 const { isValidNumber, validNumberOrDefault } = require('../../lib/number-utils')
 
-const TICKS_PER_BEAT = 1000
+const TICKS_PER_SECOND = 500
 
-function getValueCurve ({ scale, startBeat = 0, beatCount }) {
-  if (!(scale && (beatCount > 0))) { return new Float32Array(0) }
+function _getValueCurve ({ startTime, duration, valueScale }) {
+  if (!(valueScale && (duration > 0))) { return new Float32Array(0) }
 
-  const startValue = scale(startBeat)
-  const endValue = scale(startBeat + beatCount)
+  // console.log('_getValueCurve', {
+  //   startValue: valueScale(startTime),
+  //   endValue: valueScale(startTime + duration),
+  //   startTime,
+  //   duration
+  // })
 
   // populate Float32Array by sampling Curve
-  const numTicks = Math.floor(beatCount * TICKS_PER_BEAT)
+  const numTicks = Math.floor(duration * TICKS_PER_SECOND)
   const values = new Float32Array(numTicks)
   for (let i = 0; i < numTicks; i++) {
     let value
 
-    // first first and last, use start or end of scale    
-    if (i === 0) { value = scale(startBeat) }
+    // for first and last, use start and end respectively
+    if (i === 0) { value = valueScale(startTime) }
 
-    // TODO use numTicks - 10 to make sure it gets there. this shouldnt have to happen!
-    else if (i >= numTicks - 10) { value = scale(startBeat + beatCount) }
+    // use numTicks - 10 to make sure it gets there. TODO: this shouldnt have to happen!
+    else if (i >= numTicks - 10) {
+      value = valueScale(startTime + duration) }
 
-    // otherwise, get value indicated by scale
+    // otherwise, get value
     else {
-      const beat = (i / numTicks) * beatCount
-      value = scale(startBeat + beat)
+      const time = startTime + ((i / numTicks) * duration)
+      value = valueScale(time)
     }
 
     values[i] = value
@@ -44,7 +51,8 @@ module.exports = function valueScaleToAudioParameter ({
 }) {
   const clipStartBeat = startBeat + clip.startBeat
   const clipEndBeat = clipStartBeat + clip.beatCount
-  const endValue = validNumberOrDefault(valueScale(clip.beatCount), valueScale.range()[0])
+  const fullDuration = beatScale(clipEndBeat) - beatScale(startBeat)
+  const endValue = validNumberOrDefault(valueScale(fullDuration), valueScale.range()[0])
 
   // if seeking beyond clip, just report final value
   if (currentBeat >= clipEndBeat) {
@@ -59,47 +67,44 @@ module.exports = function valueScaleToAudioParameter ({
   }
 
   // if seek before clip, proceed as normal
-  let valueCurve, startTime, endTime, duration
+  let valueCurve, startTime, duration
   if (currentBeat < clipStartBeat) {
     startTime = beatScale(clipStartBeat) - beatScale(currentBeat)
-    endTime = beatScale(clipEndBeat) - beatScale(currentBeat)
-    duration = endTime - startTime
+    duration = beatScale(clipEndBeat) - beatScale(clipStartBeat)
     
-    valueCurve = getValueCurve({
-      scale: valueScale,
-      beatCount: clipEndBeat - clipStartBeat
+    valueCurve = _getValueCurve({
+      startTime: 0,
+      duration,
+      valueScale
     })
 
   // if seek in middle of clip, start now and adjust duration
   } else {
     startTime = 0
-    endTime = beatScale(clipEndBeat) - beatScale(currentBeat)
-    duration = endTime - startTime
+    duration = beatScale(clipEndBeat) - beatScale(currentBeat)
 
-    valueCurve = getValueCurve({
-      scale: valueScale,
-      startBeat: currentBeat - clipStartBeat,
-      beatCount: clipEndBeat - currentBeat
+    valueCurve = _getValueCurve({
+      startTime: beatScale(currentBeat) - beatScale(clipStartBeat),
+      duration,
+      valueScale
     })
   }
 
-  console.log('valueScaleToAudioParameter', {
-    absStartTime: currentTime + startTime,
-    controlType: clip.controlType,
-    clip,
-    currentTime,
-    currentBeat,
-    startTime,
-    endTime,
-    duration,
-    clipStartBeat,
-    clipEndBeat,
-    valueCurve,
-    startBeat: currentBeat - clipStartBeat,
-    beatCount: clipEndBeat - currentBeat,
-    'valueScale.domain': valueScale.domain(),
-    'valueScale.range': valueScale.range(),
-  })
+  // console.log('valueScaleToAudioParameter', {
+  //   absStartTime: currentTime + startTime,
+  //   controlType: clip.controlType,
+  //   clip,
+  //   currentTime,
+  //   currentBeat,
+  //   startTime,
+  //   duration,
+  //   clipStartBeat,
+  //   clipEndBeat,
+  //   valueCurve,
+  //   startBeat,
+  //   'valueScale.domain': valueScale.domain(),
+  //   'valueScale.range': valueScale.range(),
+  // })
 
   return ['setValueCurveAtTime', valueCurve,
     currentTime + startTime, duration]

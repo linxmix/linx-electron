@@ -58,7 +58,7 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
         .domain(bpmScale.domain())
         .range(_calculateBeatScaleRange(bpmScale))
 
-      // console.log('tempoClip', {
+      // console.log('mix tempoClip', {
       //   tempoClip,
       //   "bpmScale.domain()": bpmScale.domain(),
       //   "bpmScale.range()": bpmScale.range(),
@@ -111,18 +111,6 @@ function _calculateBeatScaleRange(bpmScale) {
     const averageBpm = (endBpm + startBpm) / 2.0;
     const minutes = intervalBeatCount / averageBpm;
     const seconds = minutes * 60;
-
-    // console.log('calculate seconds', {
-    //   startBeat,
-    //   endBeat,
-    //   startBpm,
-    //   endBpm,
-    //   intervalBeatCount,
-    //   averageBpm,
-    //   minutes,
-    //   seconds,
-    //   prevDuration
-    // });
 
     if (isValidNumber(seconds)) {
       return [...range, prevDuration + seconds]

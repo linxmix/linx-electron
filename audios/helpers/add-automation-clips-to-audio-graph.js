@@ -106,10 +106,15 @@ function _getAutomationParameters({
   previousOutput, clip, startBeat, currentBeat, beatScale, currentTime
 }) {
   const controlPoints = clip.controlPoints || []
+
+  // scale to automation clip start in time domain
+  const clipStartTime = beatScale(startBeat + clip.startBeat)
+  const valueScaleDomain = map(controlPoints,
+      ({ beat }) => beatScale(beat + startBeat) - clipStartTime)
   const valueScale = d3.scaleLinear()
-    // scale to automation clip start
-    .domain(map(map(controlPoints, 'beat'), beat => beat - clip.startBeat))
+    .domain(valueScaleDomain)
     .range(map(controlPoints, 'scaledValue'))
+    .clamp(true)
 
   switch(clip.controlType) {
     case CONTROL_TYPE_GAIN:

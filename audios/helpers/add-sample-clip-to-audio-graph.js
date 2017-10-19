@@ -22,16 +22,18 @@ module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
 
   const tempoScale = _getSampleClipTempoScale({
     clip,
+    beatScale,
     bpmScale,
     audioBpm,
-    startBeat: clipStartBeat,
-    endBeat: clipEndBeat
+    clipStartBeat,
+    clipEndBeat
   })
 
   // this is in raw audio frame of reference
-  const timeScale = d3.scaleLinear()
-    .domain(tempoScale.domain())
-    .range(tempoScale.domain().map(beat => beatToTime(beat, audioBpm) / clip.sample.audioBuffer.duration))
+  // currently not used anywhere
+  // const timeScale = d3.scaleLinear()
+  //   .domain(tempoScale.domain())
+  //   .range(tempoScale.domain().map(beat => beatToTime(beat, audioBpm) / clip.sample.audioBuffer.duration))
 
   let startTime = beatScale(clipStartBeat) - beatScale(currentBeat)
   let offsetTime = clip.audioStartTime
@@ -54,8 +56,6 @@ module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
     audioBpm: clip.sample.meta.bpm,
     'tempoScale.domain': tempoScale.domain(),
     'tempoScale.range': tempoScale.range(),
-    'timeScale.domain': timeScale.domain(),
-    'timeScale.range': timeScale.range(),
   })
 
   audioGraph[clip.id] = ['soundtouchSource', outputs, {
@@ -70,32 +70,27 @@ module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
       currentTime,
       startBeat,
       valueScale: tempoScale
-    }),
-    // time: valueScaleToAudioParameter({
-    //   clip,
-    //   currentBeat,
-    //   beatScale,
-    //   currentTime,
-    //   startBeat,
-    //   valueScale: timeScale
-    // })
+    })
   }]
 }
 
-// convert from bpm scale, in mix frame of reference, to tempo scale, in clip frame of reference
-function _getSampleClipTempoScale ({ clip, bpmScale, audioBpm, startBeat, endBeat }) {
-  const bpmScaleDomainWithinClip = filter(bpmScale.domain(), beat => (beat > startBeat && beat < endBeat))
+// convert from beat=>bpm scale, in mix frame of reference, to time=>tempo scale, in clip frame of reference
+function _getSampleClipTempoScale ({ clip, startBeat, beatScale, bpmScale, audioBpm, clipStartBeat, clipEndBeat }) {
+  const beatScaleDomainWithinClip = filter(beatScale.domain(),
+    beat => (beat > clipStartBeat && beat < clipEndBeat))
+  const clipStartTime = beatScale(clipStartBeat)
 
   const tempoScaleDomain = [0]
-    .concat(map(bpmScaleDomainWithinClip, beat => beat - startBeat))
-    .concat([clip.beatCount])
+    .concat(map(beatScaleDomainWithinClip, beat => beatScale(beat) - clipStartTime))
+    .concat(beatScale(clipEndBeat) - clipStartTime)
 
-  const tempoScaleRange = map(tempoScaleDomain, beat => {
-    const syncBpm = bpmScale(beat + startBeat)
+  const tempoScaleRange = map(tempoScaleDomain, time => {
+    const syncBpm = bpmScale(beatScale.invert(time + clipStartTime))
     return (isValidNumber(syncBpm) && isValidNumber(audioBpm)) ? (syncBpm / audioBpm) : 1
   })
 
   return d3.scaleLinear()
     .domain(tempoScaleDomain)
     .range(tempoScaleRange)
+    .clamp(true)
 }

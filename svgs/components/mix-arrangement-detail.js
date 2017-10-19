@@ -1,6 +1,6 @@
 const React = require('react')
 const d3 = require('d3')
-const { pick, get, map, without, includes } = require('lodash')
+const { find, pick, get, map, without, includes } = require('lodash')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
 const PrimaryTrackChannel = require('./primary-track-channel')
@@ -10,7 +10,8 @@ const TempoClip = require('./tempo-clip')
 const getCurrentBeat = require('../../audios/helpers/get-current-beat')
 const { beatToTime } = require('../../lib/number-utils')
 
-const { CONTROL_TYPE_GAIN } = require('../../clips/constants')
+const { CONTROL_TYPE_GAIN, CLIP_TYPE_SAMPLE } = require('../../clips/constants')
+const { CHANNEL_TYPE_SAMPLE_TRACK } = require('../../channels/constants')
 
 class MixArrangementDetail extends React.Component {
   constructor (props) {
@@ -31,8 +32,8 @@ class MixArrangementDetail extends React.Component {
     const { id, channels } = channel
 
     // TODO: make this more robust, maybe provide channel.primaryClip in getter?
-    const sampleChannel = get(channels, '[0]')
-    const sampleClip = get(sampleChannel || {}, 'clips[0]')
+    const sampleChannel = find(channels, { type: CHANNEL_TYPE_SAMPLE_TRACK })
+    const sampleClip = find(sampleChannel.clips || [], { type: CLIP_TYPE_SAMPLE })
 
     if (includes(this.state.editingBeatgrids, id)) {
       this.setState({
