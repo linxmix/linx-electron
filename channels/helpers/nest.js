@@ -1,9 +1,10 @@
-const { filter, includes, some, every, map, concat, sortBy, omitBy, isNil } = require('lodash')
+const { get, find, filter, includes, some, every,
+  map, concat, sortBy, omitBy, isNil, head, last } = require('lodash')
 const d3 = require('d3')
 
-const { validNumberOrDefault, beatToTime } = require('../../lib/number-utils')
+const { isValidNumber, validNumberOrDefault, beatToTime } = require('../../lib/number-utils')
 const { CHANNEL_TYPE_MIX, CHANNEL_TYPE_TRANSITION } = require('../constants')
-const { CLIP_TYPE_SAMPLE } = require('../../clips/constants')
+const { CLIP_TYPE_SAMPLE, CLIP_TYPE_TEMPO } = require('../../clips/constants')
 
 module.exports = nestChannels
 
@@ -40,15 +41,41 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
   // compute beatScale, bpmScale
   let beatScale, bpmScale
   if (type === CHANNEL_TYPE_MIX) {
-    // TODO(BEATGRID): update to use BPM automation
-    const bpm = validNumberOrDefault(channel.bpm, 128)
-    bpmScale = d3.scaleLinear()
-      .domain([0, beatCount])
-      .range([bpm, bpm])
+    const tempoClip = find(childClips, { type: CLIP_TYPE_TEMPO }) || {}
+    const controlPoints = get(tempoClip, 'controlPoints') || []
 
-    beatScale = d3.scaleLinear()
-      .domain([0, beatCount])
-      .range([0, beatToTime(beatCount, bpm)])
+    if (controlPoints.length) {
+      const controlPointValues = map(controlPoints, 'value')
+      const controlPointBeats = map(controlPoints, 'beat')
+
+      bpmScale = d3.scaleLinear()
+        .domain([0].concat(controlPointBeats).concat(beatCount))
+        .range([head(controlPointValues)]
+          .concat(controlPointValues)
+          .concat(last(controlPointValues)))
+
+      beatScale = d3.scaleLinear()
+        .domain(bpmScale.domain())
+        .range(_calculateBeatScaleRange(bpmScale))
+
+      // console.log('mix tempoClip', {
+      //   tempoClip,
+      //   "bpmScale.domain()": bpmScale.domain(),
+      //   "bpmScale.range()": bpmScale.range(),
+      //   "beatScale.domain()": beatScale.domain(),
+      //   "beatScale.range()": beatScale.range(),
+      // })
+
+    } else {
+      const bpm = 128
+      bpmScale = d3.scaleLinear()
+        .domain([0, beatCount])
+        .range([bpm, bpm])
+
+      beatScale = d3.scaleLinear()
+        .domain([0, beatCount])
+        .range([0, beatToTime(beatCount, bpm)])
+    }
   }
 
   return omitBy({
@@ -65,4 +92,30 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
     channels: sortBy(childChannels, ['startBeat', 'id']),
     clips: sortBy(childClips, ['startBeat', 'id'])
   }, isNil)
+}
+
+function _calculateBeatScaleRange(bpmScale) {
+
+  // add durations from each linear interval
+  const domain = bpmScale.domain();
+  return domain.reduce((range, endBeat, i) => {
+    if (i === 0) { return [0] }
+
+    const prevDuration = range[i - 1];
+
+    const startBeat = domain[i - 1];
+    const startBpm = bpmScale(startBeat);
+    const endBpm = bpmScale(endBeat);
+
+    const intervalBeatCount = endBeat - startBeat;
+    const averageBpm = (endBpm + startBpm) / 2.0;
+    const minutes = intervalBeatCount / averageBpm;
+    const seconds = minutes * 60;
+
+    if (isValidNumber(seconds)) {
+      return [...range, prevDuration + seconds]
+    } else {
+      return [...range, prevDuration]
+    }
+  }, []);
 }

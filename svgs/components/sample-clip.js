@@ -41,8 +41,6 @@ class SampleClip extends React.Component {
       .x((peak, i) => {
         const percent = i / peaks.length
         const audioBeat = percent * beatCount
-
-        // TODO(BEATGRID): reverse process of what happens in createAudioGraph? map from audioBeat to mixBeat
         return audioBeat
       })
       .y0(([ ymin, ymax ]) => median + ymin * median)

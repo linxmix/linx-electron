@@ -1,9 +1,11 @@
 const React = require('react')
 const { DragSource } = require('react-dnd')
 
+const { isRightClick } = require('../../../lib/mouse-event-utils')
+
 class ControlPoint extends React.Component {
   handleClick (e) {
-    if (e && e.nativeEvent && e.nativeEvent.which === 3) {
+    if (isRightClick(e)) {
       e.preventDefault()
       e.stopPropagation()
       this.props.deleteControlPoint({ id: this.props.id, sourceId: this.props.sourceId })
@@ -59,4 +61,4 @@ const dragSource = {
   }
 }
 
-module.exports = DragSource('control-point', dragSource, collectDrag)(ControlPoint)
+module.exports = DragSource('automation-clip/control-point', dragSource, collectDrag)(ControlPoint)

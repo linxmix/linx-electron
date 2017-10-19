@@ -5,7 +5,6 @@ const Tuna = require('tunajs')
 const createSoundtouchSource = (process.env.NODE_ENV === 'test')
   ? () => {} : require('./create-soundtouch-source')
 
-const getValueCurve = require('./get-value-curve')
 const addSampleClipToAudioGraph = require('./add-sample-clip-to-audio-graph')
 const addAutomationClipsToAudioGraph = require('./add-automation-clips-to-audio-graph')
 const { validNumberOrDefault } = require('../../lib/number-utils')

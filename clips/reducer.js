@@ -17,6 +17,7 @@ const {
   moveControlPoint,
   createControlPoint,
   deleteControlPoint,
+  updateControlPointValue,
   createAutomationClipWithControlPoint,
   calculateGridMarkers,
   clearGridMarkers,
@@ -25,9 +26,11 @@ const {
 const { setClipsChannel } = require('../channels/actions')
 const { updateMeta } = require('../metas/actions')
 const { analyzeSample } = require('../samples/actions')
-const { CLIP_TYPES, CONTROL_TYPES, CLIP_TYPE_AUTOMATION } = require('./constants')
+const { CLIP_TYPES, CONTROL_TYPES, CLIP_TYPE_AUTOMATION, CLIP_TYPE_TEMPO } = require('./constants')
 const { quantizeBeat, clamp, beatToTime, timeToBeat, validNumberOrDefault,
   bpmToSpb, isValidNumber } = require('../lib/number-utils')
+
+const DEFAULT_TEMPO = 128
 
 module.exports = createReducer
 
@@ -65,8 +68,13 @@ function createReducer (config) {
       }
 
       return loop({
-        ...state, dirty: [...state.dirty, attrs.id]
-      }, Effects.constant(setClip(attrs)))
+        ...state,
+        dirty: [...state.dirty, attrs.id],
+        records: {
+          ...state.records,
+          [attrs.id]: attrs
+        }
+      }, Effects.none())
     },
     [updateClip]: (state, action) => {
       const { id } = action.payload
@@ -96,28 +104,65 @@ function createReducer (config) {
       const sourceClip = state.records[sourceId]
       assert(sourceClip, 'Cannot moveControlPoint for nonexistent sourceClip')
 
+      const controlPoint = sourceClip.controlPoints[id]
+      assert(controlPoint, 'Cannot moveControlPoint for nonexistent controlPoint')
+
       const newBeat = quantizeBeat({ quantization, beat: diffBeats }) + beat
+      const updatedControlPoint = {
+        ...controlPoint,
+        beat: clamp(minBeat, newBeat, maxBeat),
+      }
+      
+      if (isValidNumber(diffValue) && isValidNumber(value)) {
+        updatedControlPoint.value = clamp(0, value - diffValue, 1)
+      }
+
+      return loop(state, Effects.constant(updateClip({
+        id: sourceId,
+        controlPoints: {
+          ...sourceClip.controlPoints,
+          [id]: updatedControlPoint
+        }
+      })))
+    },
+    [updateControlPointValue]: (state, action) => {
+      const { sourceId, id, value } = action.payload
+      assert(isValidNumber(value), 'Cannot updateControlPointValue for invalid value')
+
+      const sourceClip = state.records[sourceId]
+      assert(sourceClip, 'Cannot updateControlPointValue for nonexistent sourceClip')
+
+      const controlPoint = sourceClip.controlPoints[id]
+      assert(controlPoint, 'Cannot updateControlPointValue for nonexistent controlPoint')
 
       return loop(state, Effects.constant(updateClip({
         id: sourceId,
         controlPoints: {
           ...sourceClip.controlPoints,
           [id]: {
-            id,
-            beat: clamp(minBeat, newBeat, maxBeat),
-            value: clamp(0, value - diffValue, 1)
+            ...controlPoint,
+            value
           }
         }
       })))
     },
     [createControlPoint]: (state, action) => {
       const { sourceId, beat, value, minBeat, maxBeat, quantization } = action.payload
+
+      const sourceClip = state.records[sourceId]
+      assert(sourceClip, 'Cannot createControlPoint for nonexistent sourceClip')
+
       const newControlPoint = {
         id: uuid(),
         beat: clamp(minBeat, quantizeBeat({ quantization, beat }), maxBeat),
         value: clamp(0, value, 1)
       }
-      const sourceClipControlPoints = get(state, `records[${sourceId}].controlPoints`) || {}
+
+      if (sourceClip.type === CLIP_TYPE_TEMPO) {
+        newControlPoint.value = DEFAULT_TEMPO
+      }
+
+      const sourceClipControlPoints = get(sourceClip, 'controlPoints') || {}
 
       return loop(state, Effects.constant(updateClip({
         id: sourceId,

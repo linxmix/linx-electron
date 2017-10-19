@@ -10,10 +10,11 @@ const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { updateZoom } = require('../../svgs/actions')
 const { moveClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint,
-  deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker
+  deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
 const { moveTransitionChannel, movePrimaryTrackChannel, resizeChannel } = require('../../channels/actions')
-const { playPause, seekToBeat, updateAudioGraph } = require('../../audios/actions')
+const { playPause, seekToBeat, updateAudioGraph,
+  updatePlayStateForTempoChange } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
 const { PLAY_STATE_PLAYING } = require('../../audios/constants')
 
@@ -39,8 +40,9 @@ class MixDetailContainer extends React.Component {
     const arrangementActions = mapValues(
       pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
-        'moveClip', 'moveTransitionChannel', 'movePrimaryTrackChannel', 'resizeChannel',
-        'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker']),
+        'updateControlPointValue', 'moveClip', 'moveTransitionChannel', 'movePrimaryTrackChannel',
+        'resizeChannel', 'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
+        'updatePlayStateForTempoChange']),
       (fn) => (options) => fn({
         quantization: _getQuantization(this.props.dragModifierKeys),
         ...options
@@ -111,6 +113,7 @@ module.exports = connect(
     moveControlPoint,
     createControlPoint,
     deleteControlPoint,
+    updateControlPointValue,
     createAutomationClipWithControlPoint,
     calculateGridMarkers,
     clearGridMarkers,
@@ -118,7 +121,8 @@ module.exports = connect(
     movePrimaryTrackChannel,
     resizeChannel,
     updateZoom,
-    updateAudioGraph
+    updateAudioGraph,
+    updatePlayStateForTempoChange
   }
 )(DetectDragModifierKeys({ listenForAllDragEvents: true })(MixDetailContainer))
 
