@@ -12,7 +12,7 @@ const {
   CHANNEL_TYPE_TRANSITION
 } = require('../../channels/constants')
 
-class PrimaryTrackChannel extends React.Component {
+class TrackGroup extends React.Component {
   render () {
     const { channel, color, beatScale, translateY, showTransition,
       canDragAutomations, height, showAutomationControlType, connectDragSource } = this.props
@@ -50,15 +50,14 @@ class PrimaryTrackChannel extends React.Component {
   }
 }
 
-PrimaryTrackChannel.defaultProps = {
+TrackGroup.defaultProps = {
   translateY: 0,
   scaleX: 1,
   canDrag: false,
   canDragAutomations: false,
   canDragTransition: false,
   height: 100,
-  showAutomationControlType: undefined,
-  showTransition: false
+  showAutomationControlType: undefined
 }
 
 function collectDrag (connect, monitor) {
@@ -84,4 +83,4 @@ const dragSource = {
   }
 }
 
-module.exports = DragSource('primary-track-channel', dragSource, collectDrag)(PrimaryTrackChannel)
+module.exports = DragSource('primary-track-channel', dragSource, collectDrag)(TrackGroup)

@@ -3,11 +3,7 @@ const { map, filter } = require('lodash')
 const d3 = require('d3')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
-const PrimaryTrackChannel = require('./primary-track-channel')
-const TransitionChannel = require('./transition-channel')
-const {
-  CHANNEL_TYPE_PRIMARY_TRACK
-} = require('../../channels/constants')
+const TrackChannel = require('./track-channel')
 
 class MixArrangementOverview extends React.Component {
   render () {
@@ -25,15 +21,14 @@ class MixArrangementOverview extends React.Component {
       translateX={translateX}
       height={height}>
 
-      {map(filter(mix.channel.channels, { type: CHANNEL_TYPE_PRIMARY_TRACK }),
-        (channel, i, channels) => <PrimaryTrackChannel
-          key={channel.id}
-          beatScale={beatScale}
-          channel={channel}
-          sampleResolution={0.5}
-          color={d3.interpolateCool(i / channels.length)}
-        />
-      )}
+      {map(mix.trackGroups, (trackGroup, i, trackGroups) => <TrackChannel
+        key={trackGroup.primaryTrack.id || trackGroup.id}
+        channel={trackGroup.primaryTrack}
+        beatScale={beatScale}
+        scaleX={this.props.scaleX}
+        sampleResolution={0.5}
+        color={d3.interpolateCool(i / trackGroups.length)}
+      />)}
     </MixArrangementLayout>
   }
 }

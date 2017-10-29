@@ -1,14 +1,13 @@
 const React = require('react')
 const { connect } = require('react-redux')
-const { forEach, get } = require('lodash')
+const { forEach, get, map } = require('lodash')
 const keymaster = require('keymaster')
 
 const { getMixProps } = require('../getters')
-const { saveMix, loadMix, deleteMix,
-  reorderPrimaryTrack, unsetPrimaryTrackFromMix } = require('../actions')
+const { saveMix, loadMix, deleteMix, unsetTrackGroupFromMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { playPause, seekToBeat } = require('../../audios/actions')
-const { createPrimaryTrackFromFile } = require('../../channels/actions')
+const { createTrackGroupFromFile, swapChannels } = require('../../channels/actions')
 const { updateZoom } = require('../../svgs/actions')
 const PrimaryTrackTable = require('../components/primary-track-table')
 const MixArrangementOverview = require('../../svgs/components/mix-arrangement-overview')
@@ -29,11 +28,11 @@ class MixOverviewContainer extends React.Component {
   }
 
   handleFilesDrop ({ files }) {
-    const { mix, createPrimaryTrackFromFile } = this.props
+    const { mix, createTrackGroupFromFile } = this.props
     const mixBeatCount = mix && mix.channel && mix.channel.beatCount
     const startBeat = Math.ceil(mixBeatCount ? mixBeatCount + 1 : 0)
 
-    forEach(files, (file, i) => createPrimaryTrackFromFile({
+    forEach(files, (file, i) => createTrackGroupFromFile({
       file,
       parentChannelId: mix.channel.id,
       attrs: {
@@ -49,8 +48,8 @@ class MixOverviewContainer extends React.Component {
   }
 
   render () {
-    const { mix, audioContext, error, sampleError, saveMix, deleteMix, reorderPrimaryTrack,
-      unsetPrimaryTrackFromMix, seekToBeat, updateZoom, zoom, playPause } = this.props
+    const { mix, audioContext, error, sampleError, saveMix, deleteMix, swapChannels,
+      unsetTrackGroupFromMix, seekToBeat, updateZoom, zoom, playPause } = this.props
     if (!mix) { return null }
     console.log('mix', mix)
 
@@ -89,12 +88,14 @@ class MixOverviewContainer extends React.Component {
       <section className='VerticalLayout-flexSection u-scrollable'>
         <PrimaryTrackTable
           mixId={mix.id}
-          tracks={mix.tracks}
-          reorderPrimaryTrack={reorderPrimaryTrack}
+          trackGroups={mix.trackGroups}
           isLoading={isLoading}
           handleFilesDrop={this.handleFilesDrop.bind(this)}
-          removeTrack={primaryTrackId => unsetPrimaryTrackFromMix({
-            id: mix.id, primaryTrackId })}
+          swapTrackGroups={swapChannels}
+          removeTrackGroup={trackGroupId => unsetTrackGroupFromMix({
+            trackGroupId,
+            id: mix.id
+          })}
         />
       </section>
 
@@ -137,9 +138,9 @@ module.exports = connect(
     loadMix,
     deleteMix,
     updateMeta,
-    createPrimaryTrackFromFile,
-    reorderPrimaryTrack,
-    unsetPrimaryTrackFromMix,
+    createTrackGroupFromFile,
+    swapChannels,
+    unsetTrackGroupFromMix,
     seekToBeat,
     updateZoom,
     playPause

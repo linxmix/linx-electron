@@ -3,18 +3,18 @@ const { get, find, filter, includes, some, every,
 const d3 = require('d3')
 
 const { isValidNumber, validNumberOrDefault, beatToTime } = require('../../lib/number-utils')
-const { CHANNEL_TYPE_MIX, CHANNEL_TYPE_TRANSITION } = require('../constants')
+const { CHANNEL_TYPE_MIX, CHANNEL_TYPE_TRACK_GROUP, CHANNEL_TYPE_PRIMARY_TRACK } = require('../constants')
 const { CLIP_TYPE_SAMPLE, CLIP_TYPE_TEMPO } = require('../../clips/constants')
 
 module.exports = nestChannels
 
-function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
+function nestChannels ({ channelId, channels, clips, samples, dirtyChannels = [] }) {
   const channel = channels[channelId] || {}
   const { id, type, startBeat, channelIds: childChannelIds = [], clipIds = [] } = channel
 
   // compute children
   const childChannels = childChannelIds.map(childChannelId => {
-    return nestChannels({ channelId: childChannelId, channels, clips, dirtyChannels })
+    return nestChannels({ channelId: childChannelId, channels, clips, samples, dirtyChannels })
   })
   const childClips = clipIds.map(clipId => (clips[clipId] || {}))
   const childSampleClips = filter(childClips, { type: CLIP_TYPE_SAMPLE })
@@ -28,17 +28,17 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
   }
 
   // compute beatCount
-  let beatCount
-  if (type === CHANNEL_TYPE_TRANSITION) {
-    beatCount = channel.beatCount
-  } else {
-    beatCount = validNumberOrDefault(Math.max.apply(Math, map(
-      concat(childChannels, childClips),
-      ({ startBeat, beatCount }) => startBeat + beatCount,
-    )), 0)
-  }
+  const beatCount = validNumberOrDefault(Math.max.apply(Math, map(
+    concat(childChannels, childClips),
+    ({ startBeat, beatCount }) => startBeat + beatCount,
+  )), 0)
 
-  // compute beatScale, bpmScale
+  // clip group channel properties
+  const primarySampleId = channel.primarySampleId
+  const primarySample = samples[primarySampleId] || {}
+  const primaryTrack = find(childChannels, { type: CHANNEL_TYPE_PRIMARY_TRACK }) || {}
+
+  // mix channel properties
   let beatScale, bpmScale
   if (type === CHANNEL_TYPE_MIX) {
     const tempoClip = find(childClips, { type: CLIP_TYPE_TEMPO }) || {}
@@ -85,6 +85,9 @@ function nestChannels ({ channelId, channels, clips, dirtyChannels = [] }) {
     beatCount,
     beatScale,
     bpmScale,
+    primarySample,
+    primarySampleId,
+    primaryTrack,
     startBeat: validNumberOrDefault(startBeat, 0),
     isDirty: (includes(dirtyChannels, id) ||
       some(childChannels, { isDirty: true }) ||

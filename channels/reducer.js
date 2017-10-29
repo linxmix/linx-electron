@@ -14,13 +14,12 @@ const {
   undirtyChannel,
   createChannel,
   updateChannel,
-  moveTransitionChannel,
-  movePrimaryTrackChannel,
+  moveTrackGroup,
   resizeChannel,
   setClipsChannel,
   setChannelsParent,
-  createPrimaryTrackFromFile,
-  swapPrimaryTracks
+  createTrackGroupFromFile,
+  swapChannels
 } = require('./actions')
 const { unsetClips, createClip } = require('../clips/actions')
 const {
@@ -28,8 +27,7 @@ const {
 } = require('../samples/actions')
 const {
   CHANNEL_TYPE_PRIMARY_TRACK,
-  CHANNEL_TYPE_SAMPLE_TRACK,
-  CHANNEL_TYPE_TRANSITION,
+  CHANNEL_TYPE_TRACK_GROUP,
   CHANNEL_TYPES
 } = require('./constants')
 const { CLIP_TYPE_SAMPLE } = require('../clips/constants')
@@ -124,53 +122,30 @@ function createReducer (config) {
         }
       }
     },
-    [createPrimaryTrackFromFile]: (state, action) => {
-      const { file, parentChannelId, attrs = {} } = action.payload
+    [resizeChannel]: (state, action) => {
+      const { id, startBeat, beatCount, diffBeats, isResizeLeft, quantization } = action.payload
+      const quantizedDiffBeats = quantizeBeat({ quantization, beat: diffBeats })
 
-      const effectCreator = (sampleId) => {
-        const channelId = uuid()
-        const clipId = uuid()
-        const sampleChannelId = uuid()
-        const transitionChannelId = uuid()
-
-        return Effects.batch([
-          Effects.constant(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
-          Effects.constant(createChannel({
-            id: sampleChannelId,
-            type: CHANNEL_TYPE_SAMPLE_TRACK
-          })),
-          Effects.constant(setClipsChannel({
-            channelId: sampleChannelId,
-            clipIds: [clipId]
-          })),
-          Effects.constant(createChannel({
-            id: transitionChannelId,
-            type: CHANNEL_TYPE_TRANSITION,
-            startBeat: 100,
-            beatCount: 32
-          })),
-          Effects.constant(createChannel(assign({
-            id: channelId,
-            type: CHANNEL_TYPE_PRIMARY_TRACK
-          }, attrs))),
-          Effects.constant(setChannelsParent({
-            parentChannelId: channelId,
-            channelIds: [sampleChannelId, transitionChannelId] })),
-          Effects.constant(setChannelsParent({
-            parentChannelId,
-            channelIds: [channelId]
-          }))
-        ])
+      let updatePayload
+      if (isResizeLeft) {
+        updatePayload = {
+          id,
+          startBeat: startBeat + quantizedDiffBeats,
+          beatCount: beatCount - quantizedDiffBeats
+        }
+      } else {
+        updatePayload = {
+          id,
+          beatCount: beatCount + quantizedDiffBeats
+        }
       }
 
-      return loop(state, Effects.constant(createSample({ file, effectCreator })))
+      return loop(state, Effects.constant(updateChannel(updatePayload)))
     },
-    [swapPrimaryTracks]: (state, action) => {
+    [swapChannels]: (state, action) => {
       const { sourceId, targetId } = action.payload
       if (sourceId === targetId) { return state }
 
-      // TODO(FUTURE): also update both associated transitions to same endBeat as track
-      // TODO(FUTURE): anything we need to do with track or transition length?
       const source = clone(state.records[sourceId])
       const target = clone(state.records[targetId])
 
@@ -188,30 +163,42 @@ function createReducer (config) {
         }
       }
     },
-    [moveTransitionChannel]: (state, action) => {
-      const { id, startBeat, diffBeats, quantization, mixChannels } = action.payload
-      const currentBeat = state.records[id].startBeat
+    [createTrackGroupFromFile]: (state, action) => {
+      const { file, parentChannelId, attrs = {} } = action.payload
 
-      // move toTrack when moving transition
-      const fromTrackChannelIndex = findIndex(mixChannels,
-        channel => includes(state.records[channel.id].channelIds, id))
-      const toTrackChannel = mixChannels[fromTrackChannelIndex + 1]
+      const effectCreator = (sampleId) => {
+        const clipId = uuid()
+        const primaryTrackId = uuid()
+        const trackGroupId = uuid()
 
-      return loop(state, Effects.batch([
-        Effects.constant(updateChannel({
-          id,
-          startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
-        })),
-        Effects.constant(movePrimaryTrackChannel({
-          id: toTrackChannel.id,
-          startBeat: toTrackChannel.startBeat - (currentBeat - startBeat),
-          diffBeats,
-          quantization,
-          mixChannels
-        }))
-      ]))
+        return Effects.batch([
+          Effects.constant(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
+          Effects.constant(createChannel({
+            id: primaryTrackId,
+            type: CHANNEL_TYPE_PRIMARY_TRACK
+          })),
+          Effects.constant(setClipsChannel({
+            channelId: primaryTrackId,
+            clipIds: [clipId]
+          })),
+          Effects.constant(createChannel(assign({
+            id: trackGroupId,
+            type: CHANNEL_TYPE_TRACK_GROUP,
+            primarySampleId: sampleId
+          }, attrs))),
+          Effects.constant(setChannelsParent({
+            parentChannelId: trackGroupId,
+            channelIds: [primaryTrackId] })),
+          Effects.constant(setChannelsParent({
+            parentChannelId,
+            channelIds: [trackGroupId]
+          }))
+        ])
+      }
+
+      return loop(state, Effects.constant(createSample({ file, effectCreator })))
     },
-    [movePrimaryTrackChannel]: (state, action) => {
+    [moveTrackGroup]: (state, action) => {
       const { id, startBeat, diffBeats, quantization, mixChannels } = action.payload
 
       // startBeat from payload is where drag started. we need to know how far we've already moved
@@ -235,26 +222,6 @@ function createReducer (config) {
           startBeat: nextStartBeat
         }))
       ].concat(nextEffects)))
-    },
-    [resizeChannel]: (state, action) => {
-      const { id, startBeat, beatCount, diffBeats, isResizeLeft, quantization } = action.payload
-      const quantizedDiffBeats = quantizeBeat({ quantization, beat: diffBeats })
-
-      let updatePayload
-      if (isResizeLeft) {
-        updatePayload = {
-          id,
-          startBeat: startBeat + quantizedDiffBeats,
-          beatCount: beatCount - quantizedDiffBeats
-        }
-      } else {
-        updatePayload = {
-          id,
-          beatCount: beatCount + quantizedDiffBeats
-        }
-      }
-
-      return loop(state, Effects.constant(updateChannel(updatePayload)))
     }
   }, {
     dirty: [],

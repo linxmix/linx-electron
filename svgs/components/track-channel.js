@@ -7,7 +7,7 @@ const AutomationClip = require('./automation-clip')
 const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../../clips/constants')
 const { isRightClick } = require('../../lib/mouse-event-utils')
 
-class SampleTrackChannel extends React.Component {
+class TrackChannel extends React.Component {
   handleClick (e) {
     if (isRightClick(e) && this.props.showAutomationControlType) {
       e.preventDefault()
@@ -16,7 +16,6 @@ class SampleTrackChannel extends React.Component {
       const { channel, createAutomationClipWithControlPoint } = this.props
       createAutomationClipWithControlPoint({
         e,
-        channelId: channel.id,
         minBeat: channel.startBeat,
         maxBeat: channel.beatCount
       })
@@ -42,7 +41,7 @@ class SampleTrackChannel extends React.Component {
           height={height}
           canDrag={this.props.canDrag}
           showGridMarkers={this.props.showGridMarkers}
-          selectGridMarker={({ clip, marker }) => this.props.selectGridMarker({ channel, clip, marker })}
+          selectGridMarker={this.props.selectGridMarker}
         />
       )}
 
@@ -67,10 +66,11 @@ class SampleTrackChannel extends React.Component {
   }
 }
 
-SampleTrackChannel.defaultProps = {
+TrackChannel.defaultProps = {
   translateY: 0,
   scaleX: 1,
-  canDrag: false,
+  canDragChannel: false,
+  canDragClips: false,
   canDragAutomations: false,
   height: 100,
   showAutomationControlType: undefined,
@@ -96,8 +96,8 @@ const dragSource = {
     return item && item.id && (item.id === props.channel.id)
   },
   canDrag (props) {
-    return props.canDrag
+    return props.canDragChannel
   }
 }
 
-module.exports = DragSource('sample-track-channel', dragSource, collectDrag)(SampleTrackChannel)
+module.exports = DragSource('track-channel', dragSource, collectDrag)(TrackChannel)

@@ -14,7 +14,7 @@ const {
 const {
   unsetChannel,
   createChannel,
-  swapPrimaryTracks,
+  swapChannels,
   setChannels,
   undirtyChannels,
   setClipsChannel
@@ -49,8 +49,8 @@ const {
   deleteMixEnd,
   setMix,
   createMix,
-  reorderPrimaryTrack,
-  unsetPrimaryTrackFromMix,
+  reorderTrackGroup,
+  unsetTrackGroupFromMix,
   navigateToMix,
   navigateToMixList
 } = require('./actions')
@@ -193,44 +193,11 @@ function createReducer (config) {
         Effects.constant(navigateToMix(newMix.id))
       ]))
     },
-    [reorderPrimaryTrack]: (state, action) => {
-      const { targetIndex, sourceIndex, tracks } = action.payload
-      if (sourceIndex === targetIndex) { return state }
+    [unsetTrackGroupFromMix]: (state, action) => {
+      const { id, trackGroupId } = action.payload
+      assert(id && trackGroupId, 'Must provide id && trackGroupId')
 
-      assert(sourceIndex >= 0 && sourceIndex < tracks.length,
-        'Must provide valid sourceIndex')
-      assert(targetIndex >= -1 && targetIndex < tracks.length,
-        'Must provide valid targetIndex')
-
-      let effects = []
-
-      // forward swap
-      if (sourceIndex < targetIndex) {
-        for (let i = sourceIndex + 1; i <= targetIndex; i++) {
-          effects.push(Effects.constant(swapPrimaryTracks({
-            sourceId: tracks[sourceIndex].id,
-            targetId: tracks[i].id
-          })))
-        }
-
-      // backward swap
-      } else {
-        for (let i = sourceIndex; i > targetIndex; i--) {
-          effects.push(Effects.constant(swapPrimaryTracks({
-            sourceId: tracks[sourceIndex].id,
-            targetId: tracks[i].id
-          })))
-        }
-      }
-
-      return loop(state, Effects.batch(effects))
-    },
-    [unsetPrimaryTrackFromMix]: (state, action) => {
-      const { id, primaryTrackId } = action.payload
-      assert(id && primaryTrackId, 'Must provide id && primaryTrackId')
-
-      // TODO(FUTURE): remove associated transition and move later tracks forward
-      return loop(state, Effects.constant(unsetChannel(primaryTrackId)))
+      return loop(state, Effects.constant(unsetChannel(trackGroupId)))
     },
     [navigateToMix]: (state, action) => loop(state,
       Effects.constant(push(`/mixes/${action.payload}`))),

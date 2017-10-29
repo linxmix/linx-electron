@@ -245,7 +245,7 @@ function createReducer (config) {
       })))
     },
     [selectGridMarker]: (state, action) => {
-      const { channel, clip, marker } = action.payload
+      const { clip, marker } = action.payload
 
       const firstBarOffsetTime = _getFirstBarOffsetTime({
         time: marker.time,

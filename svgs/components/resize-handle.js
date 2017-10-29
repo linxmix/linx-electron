@@ -1,6 +1,17 @@
 const React = require('react')
 const { DragSource } = require('react-dnd')
 
+// example usage:
+// <ResizeHandle
+  // id={channel.id}
+  // translateX={channel.beatCount}
+  // translateY={-10}
+  // scaleX={this.props.scaleX}
+  // startBeat={channel.startBeat}
+  // beatCount={channel.beatCount}
+  // canDrag={canDrag}
+// />
+
 class ResizeHandle extends React.Component {
   render () {
     const { height, width, connectDragSource, translateX, translateY } = this.props

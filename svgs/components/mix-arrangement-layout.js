@@ -227,7 +227,7 @@ class MixArrangementLayout extends React.Component {
                 strokeWidth={1.5 / scaleX}
               />
 
-              {this.props.tempoClip}
+              {this.props.tempoClipElement}
             </g>
           </svg>}
         </div>
@@ -244,7 +244,7 @@ MixArrangementLayout.defaultProps = {
   translateX: 1,
   translateY: 0,
   trackControls: false,
-  tempoClip: null
+  tempoClipElement: null
 }
 
 const dropTarget = {
@@ -262,12 +262,8 @@ const dropTarget = {
       ...item
     }
     switch (monitor.getItemType()) {
-      case 'primary-track-channel':
-        action = props.movePrimaryTrackChannel
-        payload.mixChannels = props.mix.channel.channels // TODO: does this belong in reducer?
-        break
-      case 'transition-channel':
-        action = props.moveTransitionChannel
+      case 'track-group-channel':
+        action = props.moveTrackGroup
         payload.mixChannels = props.mix.channel.channels // TODO: does this belong in reducer?
         break
       case 'sample-clip':
@@ -306,6 +302,6 @@ function collect (connect, monitor) {
 }
 
 module.exports = DropTarget(
-  ['primary-track-channel', 'transition-channel', 'sample-clip', 'resize-handle',
+  ['track-group-channel', 'sample-clip', 'resize-handle',
     'automation-clip/control-point', 'tempo-clip/control-point'],
   dropTarget, collect)(MixArrangementLayout)
