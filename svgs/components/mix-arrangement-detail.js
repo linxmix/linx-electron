@@ -3,7 +3,7 @@ const d3 = require('d3')
 const { find, pick, get, map, without, includes } = require('lodash')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
-const TrackChannel = require('./track-channel')
+const TrackGroup = require('./track-group')
 const TrackControl = require('./track-control')
 const TempoClip = require('./tempo-clip')
 const getCurrentBeat = require('../../audios/helpers/get-current-beat')
@@ -119,28 +119,28 @@ class MixArrangementDetail extends React.Component {
     const layoutActions = pick(this.props, ['updateZoom', 'moveClip',
       'moveTrackGroup', 'resizeChannel', 'updateAudioGraph', 'seekToBeat', 'moveControlPoint'])
 
-    const makeTrackGroupActions = trackGroup => ({
+    const trackChannelActions = {
       createControlPoint,
       deleteControlPoint,
 
-      createAutomationClipWithControlPoint: ({ e, minBeat, maxBeat }) => {
+      createAutomationClipWithControlPoint: ({ channel, e, minBeat, maxBeat }) => {
         const { beat, value } = _getPosition({ e, scaleX, rowHeight })
         this.props.createAutomationClipWithControlPoint({
-          channelId: trackGroup.id, beat, value, minBeat, maxBeat, controlType: selectedControlType
+          channelId: channel.id, beat, value, minBeat, maxBeat, controlType: selectedControlType
         })
         this._asyncUpdateAudioGraph()
       },
 
-      selectGridMarker: ({ clip, marker }) => {
+      selectGridMarker: ({ channel, clip, marker }) => {
         this.props.selectGridMarker({ clip, marker })
         this.props.clearGridMarkers({ id: clip.id })
         this._asyncUpdateAudioGraph()
 
         this.setState({
-          editingBeatgrids: without(this.state.editingBeatgrids, trackGroup.id)
+          editingBeatgrids: without(this.state.editingBeatgrids, channel.id)
         })
       }
-    })
+    }
 
     const tempoClipElement = <TempoClip
       clip={mix.tempoClip}
@@ -166,23 +166,6 @@ class MixArrangementDetail extends React.Component {
 
     console.log('mix-arrangement-detail', { fromTrackGroup, toTrackGroup })
 
-    const trackGroupElements = map([fromTrackGroup, toTrackGroup], (trackGroup, i) => 
-      <TrackChannel
-        key={trackGroup.id + '_channel'}
-        channel={trackGroup.primaryTrack}
-        beatScale={beatScale}
-        translateY={rowHeight * i}
-        scaleX={scaleX}
-        canDragClips
-        canDragAutomations
-        showAutomationControlType={!includes(this.state.editingBeatgrids, trackGroup.id) && selectedControlType}
-        color={d3.interpolateCool(0.25)}
-        sampleResolution={includes(this.state.editingBeatgrids, trackGroup.id)
-          ? ZOOM_RESOLUTION : NORMAL_RESOLUTION}
-        {...makeTrackGroupActions(trackGroup)}
-      />
-    )
-
     return <MixArrangementLayout
       mix={mix}
       audioContext={audioContext}
@@ -197,7 +180,36 @@ class MixArrangementDetail extends React.Component {
       selectControlType={this.selectControlType.bind(this)}
       {...layoutActions}>
 
-      {trackGroupElements}
+      <TrackGroup
+        key={fromTrackGroup.id}
+        channel={fromTrackGroup}
+        beatScale={beatScale}
+        translateY={0}
+        scaleX={scaleX}
+        rowHeight={rowHeight}
+        canEditClips
+        showAutomationControlType={!includes(this.state.editingBeatgrids, fromTrackGroup.id) && selectedControlType}
+        color={d3.interpolateCool(0.25)}
+        sampleResolution={includes(this.state.editingBeatgrids, fromTrackGroup.id)
+          ? ZOOM_RESOLUTION : NORMAL_RESOLUTION}
+        trackChannelActions={trackChannelActions}
+      />
+
+      <TrackGroup
+        key={toTrackGroup.id}
+        channel={toTrackGroup}
+        beatScale={beatScale}
+        translateY={rowHeight}
+        scaleX={scaleX}
+        rowHeight={rowHeight}
+        canDragGroup
+        showOnlyPrimaryTrack
+        showAutomationControlType={!includes(this.state.editingBeatgrids, toTrackGroup.id) && selectedControlType}
+        color={d3.interpolateCool(0.5)}
+        sampleResolution={includes(this.state.editingBeatgrids, toTrackGroup.id)
+          ? ZOOM_RESOLUTION : NORMAL_RESOLUTION}
+        trackChannelActions={trackChannelActions}
+      />
 
     </MixArrangementLayout>
   }

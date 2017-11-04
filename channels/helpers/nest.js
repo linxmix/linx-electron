@@ -3,7 +3,12 @@ const { get, find, filter, includes, some, every,
 const d3 = require('d3')
 
 const { isValidNumber, validNumberOrDefault, beatToTime } = require('../../lib/number-utils')
-const { CHANNEL_TYPE_MIX, CHANNEL_TYPE_TRACK_GROUP, CHANNEL_TYPE_PRIMARY_TRACK } = require('../constants')
+const {
+  CHANNEL_TYPE_MIX,
+  CHANNEL_TYPE_TRACK_GROUP,
+  CHANNEL_TYPE_PRIMARY_TRACK,
+  CHANNEL_TYPE_SAMPLE_TRACK
+} = require('../constants')
 const { CLIP_TYPE_SAMPLE, CLIP_TYPE_TEMPO } = require('../../clips/constants')
 
 module.exports = nestChannels
@@ -33,10 +38,20 @@ function nestChannels ({ channelId, channels, clips, samples, dirtyChannels = []
     ({ startBeat, beatCount }) => startBeat + beatCount,
   )), 0)
 
-  // clip group channel properties
+  // track group channel properties
   const primarySampleId = channel.primarySampleId
   const primarySample = samples[primarySampleId] || {}
   const primaryTrack = find(childChannels, { type: CHANNEL_TYPE_PRIMARY_TRACK }) || {}
+  const sampleTracks = filter(childChannels, { type: CHANNEL_TYPE_SAMPLE_TRACK }) || []
+
+  // if (channel.type === CHANNEL_TYPE_TRACK_GROUP) {
+  //   console.log('track group', {
+  //     primarySampleId,
+  //     primarySample,
+  //     primaryTrack,
+  //     sampleTracks
+  //   })
+  // }
 
   // mix channel properties
   let beatScale, bpmScale
@@ -88,6 +103,7 @@ function nestChannels ({ channelId, channels, clips, samples, dirtyChannels = []
     primarySample,
     primarySampleId,
     primaryTrack,
+    sampleTracks,
     startBeat: validNumberOrDefault(startBeat, 0),
     isDirty: (includes(dirtyChannels, id) ||
       some(childChannels, { isDirty: true }) ||

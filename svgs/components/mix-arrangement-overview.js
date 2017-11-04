@@ -3,11 +3,11 @@ const { map, filter } = require('lodash')
 const d3 = require('d3')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
-const TrackChannel = require('./track-channel')
+const TrackGroup = require('./track-group')
 
 class MixArrangementOverview extends React.Component {
   render () {
-    const { mix, audioContext, height, seekToBeat, scaleX, translateX, updateZoom } = this.props
+    const { mix, audioContext, height, seekToBeat, scaleX, translateX, sampleResolution, updateZoom } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const beatScale = mix.channel.beatScale
@@ -21,13 +21,16 @@ class MixArrangementOverview extends React.Component {
       translateX={translateX}
       height={height}>
 
-      {map(mix.trackGroups, (trackGroup, i, trackGroups) => <TrackChannel
-        key={trackGroup.primaryTrack.id || trackGroup.id}
-        channel={trackGroup.primaryTrack}
+      {map(mix.trackGroups, (trackGroup, i, trackGroups) => <TrackGroup
+        key={trackGroup.id}
+        channel={trackGroup}
         beatScale={beatScale}
-        scaleX={this.props.scaleX}
-        sampleResolution={0.5}
+        translateY={0}
+        scaleX={scaleX}
+        rowHeight={height}
+        showOnlyPrimaryTrack
         color={d3.interpolateCool(i / trackGroups.length)}
+        sampleResolution={sampleResolution}
       />)}
     </MixArrangementLayout>
   }
@@ -36,7 +39,8 @@ class MixArrangementOverview extends React.Component {
 MixArrangementOverview.defaultProps = {
   height: 100,
   scaleX: 1,
-  translateX: 1
+  translateX: 1,
+  sampleResolution: 0.5
 }
 
 module.exports = MixArrangementOverview

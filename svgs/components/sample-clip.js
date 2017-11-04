@@ -26,6 +26,7 @@ class SampleClip extends React.Component {
     const { clip, height, color, sampleResolution, scaleX, connectDragSource, isDragging } = this.props
     if (!clip || (clip.status !== 'loaded')) { return null }
 
+
     const { sample, startBeat, audioStartTime, beatCount } = clip
     const { audioBuffer, meta: { bpm: audioBpm } } = sample
     const audioStartBeat = timeToBeat(audioStartTime, audioBpm)

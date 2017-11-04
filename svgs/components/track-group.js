@@ -1,63 +1,52 @@
 const React = require('react')
-const { map, filter } = require('lodash')
+const { compact, concat, map, filter } = require('lodash')
 const { DragSource } = require('react-dnd')
 
-const SampleTrackChannel = require('./sample-track-channel')
-const TransitionChannel = require('./transition-channel')
-const SampleClip = require('./sample-clip')
-const AutomationClip = require('./automation-clip')
-const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../../clips/constants')
-const {
-  CHANNEL_TYPE_SAMPLE_TRACK,
-  CHANNEL_TYPE_TRANSITION
-} = require('../../channels/constants')
+const TrackChannel = require('./track-channel')
 
 class TrackGroup extends React.Component {
   render () {
-    const { channel, color, beatScale, translateY, showTransition,
-      canDragAutomations, height, showAutomationControlType, connectDragSource } = this.props
+    const { channel, color, beatScale, translateY, scaleX, sampleResolution, rowHeight,
+      showOnlyPrimaryTrack, canEditClips, showAutomationControlType,
+      connectDragSource, trackChannelActions } = this.props
     if (!channel) { return null }
 
-    return connectDragSource(<g transform={`translate(${channel.startBeat},${translateY})`}>
-      {showTransition && map(filter(channel.channels, { type: CHANNEL_TYPE_TRANSITION }),
-        (channel, i, channels) => <TransitionChannel
-          key={channel.id}
-          channel={channel}
-          scaleX={this.props.scaleX}
-          height={height}
-          canDrag={this.props.canDragTransition}
-        />
-      )}
+    const primaryTrack = channel.primaryTrack || {}
+    const sampleTracks = channel.sampleTracks || []
 
-      {map(filter(channel.channels, { type: CHANNEL_TYPE_SAMPLE_TRACK }),
-        (channel, i, channels) => <SampleTrackChannel
-          key={channel.id}
-          channel={channel}
-          beatScale={beatScale}
-          createControlPoint={this.props.createControlPoint}
-          deleteControlPoint={this.props.deleteControlPoint}
-          selectGridMarker={this.props.selectGridMarker}
-          createAutomationClipWithControlPoint={this.props.createAutomationClipWithControlPoint}
-          scaleX={this.props.scaleX}
-          canDrag={false}
-          canDragAutomations={this.props.canDragAutomations}
-          showAutomationControlType={this.props.showAutomationControlType}
-          color={this.props.color}
-          sampleResolution={this.props.sampleResolution}
-        />
-      )}
-    </g>)
+    const tracksToDisplay = filter(showOnlyPrimaryTrack ? [primaryTrack] : 
+      concat([primaryTrack], sampleTracks),
+      track => track.id)
+
+    return connectDragSource(<g transform={`translate(${channel.startBeat},${translateY})`}>
+      {map(tracksToDisplay, (track, i) => <TrackChannel
+        key={track.id}
+        channel={track}
+        beatScale={beatScale}
+        translateY={rowHeight * i}
+        height={rowHeight}
+        scaleX={scaleX}
+        canEditClips
+        showAutomationControlType={showAutomationControlType}
+        color={color}
+        sampleResolution={sampleResolution}
+        {...trackChannelActions}
+      />)}
+    </g>)      
   }
 }
 
 TrackGroup.defaultProps = {
+  channel: null,
+  beatScale: null,
+  trackChannelActions: {},
   translateY: 0,
   scaleX: 1,
-  canDrag: false,
-  canDragAutomations: false,
-  canDragTransition: false,
-  height: 100,
-  showAutomationControlType: undefined
+  rowHeight: 100,
+  canDragGroup: false,
+  canEditClips: false,
+  showOnlyPrimaryTrack: false,
+  showAutomationControlType: undefined,
 }
 
 function collectDrag (connect, monitor) {
@@ -79,8 +68,8 @@ const dragSource = {
     return item && item.id && (item.id === props.channel.id)
   },
   canDrag (props) {
-    return props.canDrag
+    return props.canDragGroup
   }
 }
 
-module.exports = DragSource('primary-track-channel', dragSource, collectDrag)(TrackGroup)
+module.exports = DragSource('track-group', dragSource, collectDrag)(TrackGroup)
