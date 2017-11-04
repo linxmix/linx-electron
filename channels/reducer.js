@@ -19,6 +19,7 @@ const {
   setClipsChannel,
   setChannelsParent,
   createTrackGroupFromFile,
+  createSampleTrackFromFile,
   swapChannels
 } = require('./actions')
 const { unsetClips, createClip } = require('../clips/actions')
@@ -27,6 +28,7 @@ const {
 } = require('../samples/actions')
 const {
   CHANNEL_TYPE_PRIMARY_TRACK,
+  CHANNEL_TYPE_SAMPLE_TRACK,
   CHANNEL_TYPE_TRACK_GROUP,
   CHANNEL_TYPES
 } = require('./constants')
@@ -192,6 +194,32 @@ function createReducer (config) {
           Effects.constant(setChannelsParent({
             parentChannelId,
             channelIds: [trackGroupId]
+          }))
+        ])
+      }
+
+      return loop(state, Effects.constant(createSample({ file, effectCreator })))
+    },
+    [createSampleTrackFromFile]: (state, action) => {
+      const { file, parentChannelId, attrs = {} } = action.payload
+
+      const effectCreator = (sampleId) => {
+        const clipId = uuid()
+        const sampleTrackId = uuid()
+
+        return Effects.batch([
+          Effects.constant(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
+          Effects.constant(createChannel({
+            id: sampleTrackId,
+            type: CHANNEL_TYPE_SAMPLE_TRACK
+          })),
+          Effects.constant(setClipsChannel({
+            channelId: sampleTrackId,
+            clipIds: [clipId]
+          })),
+          Effects.constant(setChannelsParent({
+            parentChannelId,
+            channelIds: [sampleTrackId]
           }))
         ])
       }

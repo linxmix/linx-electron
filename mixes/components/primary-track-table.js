@@ -112,7 +112,7 @@ class PrimaryTrackTable extends React.Component {
       maxWidth: 100
     }]
 
-    const dropClassName = (isOver && canDrop) ? 'primary-track-table-drag-over' : ''
+    const dropClassName = (isOver && canDrop) ? 'u-valid-file-drag-over' : ''
 
     return connectDropTarget(<div>
       <ReactTable

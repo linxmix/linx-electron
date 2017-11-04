@@ -1,7 +1,9 @@
 const React = require('react')
 const d3 = require('d3')
 const { DropTarget } = require('react-dnd')
+const HTML5Backend = require('react-dnd-html5-backend')
 const { map, throttle } = require('lodash')
+const classnames = require('classnames')
 
 const BeatAxis = require('./beat-axis')
 const Playhead = require('./playhead')
@@ -131,15 +133,17 @@ class MixArrangementLayout extends React.Component {
   render () {
     const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY,
       beatAxisHeight, tempoAxisHeight, showTempoAxis, selectedControlType,
-      selectControlType } = this.props
+      selectControlType, isOverWithFiles, canDropFiles } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const transform = `translate(${translateX},${translateY}) scale(${scaleX}, 1)`
     const beatScale = mix.channel.beatScale
     const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
 
+    const dropClassName = canDropFiles && isOverWithFiles ? 'u-valid-file-drag-over' : ''
+
     return connectDropTarget(<div
-      className='VerticalLayout VerticalLayout--fullHeight'
+      className={classnames('VerticalLayout', 'VerticalLayout--fullHeight', dropClassName)}
       onMouseDown={this.handleMouseDown.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
 
@@ -244,7 +248,8 @@ MixArrangementLayout.defaultProps = {
   translateX: 1,
   translateY: 0,
   trackControls: false,
-  tempoClipElement: null
+  tempoClipElement: null,
+  canDropFiles: false
 }
 
 const dropTarget = {
@@ -288,20 +293,26 @@ const dropTarget = {
     const diff = monitor.getDifferenceFromInitialOffset()
     console.log('endDrag', item, diff)
 
+    // handle files drop
+    if (item && props.canDropFiles && (monitor.getItemType() === HTML5Backend.NativeTypes.FILE)) {
+      props.handleFilesDrop(item)
+
     // report if clip moved
-    if (item && item.id && diff && (diff.x !== 0)) {
+    } else if (item && item.id && diff && (diff.x !== 0)) {
       props.updateAudioGraph({ channel: props.mix.channel })
     }
   }
 }
 
-function collect (connect, monitor) {
+function collectDrop (connect, monitor) {
   return {
-    connectDropTarget: connect.dropTarget()
+    connectDropTarget: connect.dropTarget(),
+    isOverWithFiles: monitor.isOver() && monitor.canDrop() &&
+      (monitor.getItemType() === HTML5Backend.NativeTypes.FILE)
   }
 }
 
 module.exports = DropTarget(
-  ['track-group-channel', 'sample-clip', 'resize-handle',
+  [HTML5Backend.NativeTypes.FILE, 'track-group-channel', 'sample-clip', 'resize-handle',
     'automation-clip/control-point', 'tempo-clip/control-point'],
-  dropTarget, collect)(MixArrangementLayout)
+  dropTarget, collectDrop)(MixArrangementLayout)

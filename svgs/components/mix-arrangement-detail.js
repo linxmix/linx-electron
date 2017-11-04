@@ -1,6 +1,6 @@
 const React = require('react')
 const d3 = require('d3')
-const { find, pick, get, map, without, includes } = require('lodash')
+const { find, forEach, pick, get, map, without, includes } = require('lodash')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
 const TrackGroup = require('./track-group')
@@ -28,6 +28,18 @@ class MixArrangementDetail extends React.Component {
     this.setState({
       selectedControlType: controlType
     })
+  }
+
+  handleFilesDrop ({ files }) {
+    const { fromTrackGroup, createSampleTrackFromFile } = this.props
+
+    forEach(files, (file, i) => createSampleTrackFromFile({
+      file,
+      parentChannelId: fromTrackGroup.id,
+      attrs: {
+        startBeat: i
+      }
+    }))
   }
 
   toggleEditBeatgrid (trackGroup) {
@@ -76,21 +88,21 @@ class MixArrangementDetail extends React.Component {
     window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
   }
 
-   _wrapWithAsyncUpdatePlayState (func) {
-      return (...args) => {
-        func(...args)
-        
-        // TODO: remove this hack
-        // Make sure this.props.mix is updated from previous action
-        window.setTimeout(() => {
-          this.props.updatePlayStateForTempoChange({
-            channel: this.props.mix.channel,
-            playState: this.props.mix.playState,
-            beatScale: this.props.mix.channel.beatScale
-          })
+  _wrapWithAsyncUpdatePlayState (func) {
+    return (...args) => {
+      func(...args)
+      
+      // TODO: remove this hack
+      // Make sure this.props.mix is updated from previous action
+      window.setTimeout(() => {
+        this.props.updatePlayStateForTempoChange({
+          channel: this.props.mix.channel,
+          playState: this.props.mix.playState,
+          beatScale: this.props.mix.channel.beatScale
         })
-      }
+      })
     }
+  }
 
   render () {
     const { mix, audioContext, height, rowHeight, fromTrackGroup, toTrackGroup,
@@ -178,6 +190,8 @@ class MixArrangementDetail extends React.Component {
       tempoAxisHeight={tempoAxisHeight}
       tempoClipElement={tempoClipElement}
       selectControlType={this.selectControlType.bind(this)}
+      canDropFiles
+      handleFilesDrop={this.handleFilesDrop.bind(this)}
       {...layoutActions}>
 
       <TrackGroup

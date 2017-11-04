@@ -1,12 +1,10 @@
+// Utils
 
+body {
+  margin: 0;
+}
 
-.file-drop-dragging-over-frame {
-  position: fixed;
-  top: 0;
-  left: 0; 
-  z-index: 9999999999;               
-  width: 100%;
-  height: 100%;         
+.u-valid-file-drag-over {
   background-color: rgba(0,0,0,0);
 
   animation: glow .5s;
@@ -19,18 +17,34 @@
   }
 }
 
-
-
-
-
-
-.primary-track-table-drag-over {
-  background-color: rgba(0,0,0,0);
-
-  animation: glow .5s;
-  animation-fill-mode: forwards;
+.u-scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
+.VerticalLayout {
+  display: flex;
+  flex-direction: column;
+}
+
+.VerticalLayout.VerticalLayout--fullHeight {
+  height: 100%;
+}
+
+.VerticalLayout.VerticalLayout--page {
+  height: 100vh;
+}
+
+.VerticalLayout-fixedSection {
+  flex: 0 0 auto;
+}
+
+.VerticalLayout-flexSection {
+  flex: 1;
+}
+
+
+// PrimaryTrackRow
 
 .primary-track-row .delete-button {
   cursor: pointer;
@@ -60,34 +74,3 @@
   cursor: pointer;
 }
 
-
-
-body {
-  margin: 0;
-}
-
-.u-scrollable {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.VerticalLayout {
-  display: flex;
-  flex-direction: column;
-}
-
-.VerticalLayout.VerticalLayout--fullHeight {
-  height: 100%;
-}
-
-.VerticalLayout.VerticalLayout--page {
-  height: 100vh;
-}
-
-.VerticalLayout-fixedSection {
-  flex: 0 0 auto;
-}
-
-.VerticalLayout-flexSection {
-  flex: 1;
-}
