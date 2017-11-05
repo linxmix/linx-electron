@@ -38,15 +38,17 @@ function nestChannels ({ channelId, channels, clips, samples, dirtyChannels = []
     ({ startBeat, beatCount }) => startBeat + beatCount,
   )), 0)
 
+  // track channels properties
+  const sampleId = channel.sampleId
+  const sample = samples[sampleId] || {}
+
   // track group channel properties
-  const primarySampleId = channel.primarySampleId
-  const primarySample = samples[primarySampleId] || {}
   const primaryTrack = find(childChannels, { type: CHANNEL_TYPE_PRIMARY_TRACK }) || {}
   const sampleTracks = filter(childChannels, { type: CHANNEL_TYPE_SAMPLE_TRACK }) || []
 
   // if (channel.type === CHANNEL_TYPE_TRACK_GROUP) {
   //   console.log('track group', {
-  //     primarySampleId,
+  //     sampleId,
   //     primarySample,
   //     primaryTrack,
   //     sampleTracks
@@ -100,8 +102,8 @@ function nestChannels ({ channelId, channels, clips, samples, dirtyChannels = []
     beatCount,
     beatScale,
     bpmScale,
-    primarySample,
-    primarySampleId,
+    sample,
+    sampleId,
     primaryTrack,
     sampleTracks,
     startBeat: validNumberOrDefault(startBeat, 0),

@@ -166,14 +166,33 @@ class MixArrangementDetail extends React.Component {
       maxBeat={get(mix, 'channel.beatCount')}
       canDrag
     />
-    const trackControlsElement = map([fromTrackGroup, toTrackGroup], trackGroup =>
-      <TrackControl
-        key={trackGroup.id + '_control'}
-        title={trackGroup.primarySample.meta.title}
-        bpm={trackGroup.primarySample.meta.bpm}
-        isEditingBeatgrid={includes(this.state.editingBeatgrids, trackGroup.id)}
-        toggleEditBeatgrid={this.toggleEditBeatgrid.bind(this, trackGroup)}
-      />
+
+    // TODO:
+    // - every track channel now has `sampleId`
+    // - figure out rowHeight and grouping, for controls and waves
+    // - add styling to distinguish track group, hover on clip etc
+    // - make sure adding sample track works
+    const trackGroups = [
+      {
+        trackGroup: fromTrackGroup,
+        tracks: fromTrackGroup.channels
+      },
+      {
+        trackGroup: toTrackGroup,
+        tracks: [toTrackGroup.primaryTrack]
+      }
+    ]
+
+    const trackControlsElement = map(trackGroups, ({ trackGroup, tracks }) =>
+      <div key={trackGroup.id}>
+        {map(tracks, track => <TrackControl
+          key={track.id + '_control'}
+          title={track.sample.meta.title}
+          bpm={track.sample.meta.bpm}
+          isEditingBeatgrid={includes(this.state.editingBeatgrids, track.id)}
+          toggleEditBeatgrid={this.toggleEditBeatgrid.bind(this, track)}
+        />)}
+      </div>
     )
 
     console.log('mix-arrangement-detail', { fromTrackGroup, toTrackGroup })
@@ -213,7 +232,7 @@ class MixArrangementDetail extends React.Component {
         key={toTrackGroup.id}
         channel={toTrackGroup}
         beatScale={beatScale}
-        translateY={rowHeight}
+        translateY={rowHeight * trackGroups[0].tracks.length}
         scaleX={scaleX}
         rowHeight={rowHeight}
         canDragGroup

@@ -87,12 +87,12 @@ class PrimaryTrackTable extends React.Component {
       width: 60
     }, {
       header: 'Title',
-      accessor: 'primarySample.meta.title',
+      accessor: 'primaryTrack.sample.meta.title',
       minWidth: 100,
       render: props => <span title={props.value}>{props.value}</span>
     }, {
       header: 'Artist',
-      accessor: 'primarySample.meta.artist',
+      accessor: 'primaryTrack.sample.meta.artist',
       minWidth: 100,
       render: props => <span title={props.value}>{props.value}</span>
     }, {
@@ -102,12 +102,12 @@ class PrimaryTrackTable extends React.Component {
       maxWidth: 100
     }, {
       header: 'Bpm',
-      accessor: 'primarySample.meta.bpm',
+      accessor: 'primaryTrack.sample.meta.bpm',
       minWidth: 50,
       maxWidth: 100
     }, {
       header: 'Key',
-      accessor: 'primarySample.meta.key',
+      accessor: 'primaryTrack.sample.meta.key',
       minWidth: 70,
       maxWidth: 100
     }]

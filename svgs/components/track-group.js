@@ -11,12 +11,10 @@ class TrackGroup extends React.Component {
       connectDragSource, trackChannelActions } = this.props
     if (!channel) { return null }
 
-    const primaryTrack = channel.primaryTrack || {}
-    const sampleTracks = channel.sampleTracks || []
-
-    const tracksToDisplay = filter(showOnlyPrimaryTrack ? [primaryTrack] : 
-      concat([primaryTrack], sampleTracks),
-      track => track.id)
+    const tracksToDisplay = filter(
+      showOnlyPrimaryTrack ? [channel.primaryTrack] : channel.channels,
+      track => track.id
+    )
 
     return connectDragSource(<g transform={`translate(${channel.startBeat},${translateY})`}>
       {map(tracksToDisplay, (track, i) => <TrackChannel

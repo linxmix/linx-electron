@@ -177,7 +177,8 @@ function createReducer (config) {
           Effects.constant(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
           Effects.constant(createChannel({
             id: primaryTrackId,
-            type: CHANNEL_TYPE_PRIMARY_TRACK
+            type: CHANNEL_TYPE_PRIMARY_TRACK,
+            sampleId
           })),
           Effects.constant(setClipsChannel({
             channelId: primaryTrackId,
@@ -185,8 +186,7 @@ function createReducer (config) {
           })),
           Effects.constant(createChannel(assign({
             id: trackGroupId,
-            type: CHANNEL_TYPE_TRACK_GROUP,
-            primarySampleId: sampleId
+            type: CHANNEL_TYPE_TRACK_GROUP
           }, attrs))),
           Effects.constant(setChannelsParent({
             parentChannelId: trackGroupId,
@@ -211,7 +211,8 @@ function createReducer (config) {
           Effects.constant(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
           Effects.constant(createChannel({
             id: sampleTrackId,
-            type: CHANNEL_TYPE_SAMPLE_TRACK
+            type: CHANNEL_TYPE_SAMPLE_TRACK,
+            sampleId
           })),
           Effects.constant(setClipsChannel({
             channelId: sampleTrackId,

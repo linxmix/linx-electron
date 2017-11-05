@@ -55,7 +55,7 @@ class MixDetailContainer extends React.Component {
     return <div className='VerticalLayout VerticalLayout--fullHeight'>
       <header className='VerticalLayout-fixedSection'>
         <h3>
-          {fromTrackGroup && fromTrackGroup.primarySample.meta.title} - {toTrackGroup && toTrackGroup.primarySample.meta.title}
+          {fromTrackGroup && fromTrackGroup.primaryTrack.sample.meta.title} - {toTrackGroup && toTrackGroup.primaryTrack.sample.meta.title}
         </h3>
         <Link to={`/mixes/${mix.id}`}>
           Back to Mix
