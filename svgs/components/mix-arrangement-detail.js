@@ -167,11 +167,6 @@ class MixArrangementDetail extends React.Component {
       canDrag
     />
 
-    // TODO:
-    // - every track channel now has `sampleId`
-    // - figure out rowHeight and grouping, for controls and waves
-    // - add styling to distinguish track group, hover on clip etc
-    // - make sure adding sample track works
     const trackGroups = [
       {
         trackGroup: fromTrackGroup,
@@ -182,9 +177,8 @@ class MixArrangementDetail extends React.Component {
         tracks: [toTrackGroup.primaryTrack]
       }
     ]
-
     const trackControlsElement = map(trackGroups, ({ trackGroup, tracks }) =>
-      <div key={trackGroup.id}>
+      <div key={trackGroup.id} style={{ borderBottom: '1px solid grey' }}>
         {map(tracks, track => <TrackControl
           key={track.id + '_control'}
           title={track.sample.meta.title}

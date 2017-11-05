@@ -8,7 +8,7 @@ class TrackControl extends React.Component {
     const { title, bpm, height, width, isEditingBeatgrid, toggleEditBeatgrid } = this.props
     const editBeatgridInputId = uuid()
 
-    return <div style={{ height, width, borderBottom: '1px solid gray' }}>
+    return <div className="TrackControl" style={{ height, width }}>
       {title}
       <div>BPM: {bpm}</div>
       <div>

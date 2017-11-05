@@ -236,10 +236,11 @@ function createReducer (config) {
       const nextStartBeat = previousStartBeat + beatsToMove
 
       // make sure following primary track channels also move
-      const channelsToMove = filter(mixChannels, channel =>
-        (channel.id !== id) &&
-        (channel.startBeat >= nextStartBeat) &&
-        (channel.type === CHANNEL_TYPE_PRIMARY_TRACK))
+      const channelsToMove = []
+      // const channelsToMove = filter(mixChannels, channel =>
+      //   (channel.id !== id) &&
+      //   (channel.startBeat >= nextStartBeat) &&
+      //   (channel.type === CHANNEL_TYPE_TRACK_GROUP))
       const nextEffects = map(channelsToMove, channel => Effects.constant(updateChannel({
         id: channel.id,
         startBeat: channel.startBeat + beatsToMove

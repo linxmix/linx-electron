@@ -16,7 +16,13 @@ class TrackGroup extends React.Component {
       track => track.id
     )
 
-    return connectDragSource(<g transform={`translate(${channel.startBeat},${translateY})`}>
+    return connectDragSource(<g
+      className="TrackGroup"
+      transform={`translate(${channel.startBeat},${translateY})`}>
+      <rect className="TrackGroup-backdrop"
+        width={channel.beatCount}
+        height={rowHeight * tracksToDisplay.length} />
+
       {map(tracksToDisplay, (track, i) => <TrackChannel
         key={track.id}
         channel={track}
@@ -24,7 +30,7 @@ class TrackGroup extends React.Component {
         translateY={rowHeight * i}
         height={rowHeight}
         scaleX={scaleX}
-        canEditClips
+        canEditClips={canEditClips}
         showAutomationControlType={showAutomationControlType}
         color={color}
         sampleResolution={sampleResolution}

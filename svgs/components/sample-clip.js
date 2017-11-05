@@ -47,8 +47,8 @@ class SampleClip extends React.Component {
       .y0(([ ymin, ymax ]) => median + ymin * median)
       .y1(([ ymin, ymax ]) => median + ymax * median)
 
-    return connectDragSource(<g transform={`translate(${startBeat})`}>
-      <rect width={beatCount} height={height} fill='transparent' />
+    return connectDragSource(<g className="SampleClip" transform={`translate(${startBeat})`}>
+      <rect className="SampleClip-backdrop" width={beatCount} height={height} />
       <path fill={color} d={area(peaks)} opacity={isDragging ? 0.5 : 1} />
 
       {this.props.showGridMarkers && <g transform={`translate(${-audioStartBeat})`}>

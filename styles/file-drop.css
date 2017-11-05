@@ -1,4 +1,4 @@
-// Utils
+/* Utils */
 
 body {
   margin: 0;
@@ -43,8 +43,38 @@ body {
   flex: 1;
 }
 
+/* SVG */
 
-// PrimaryTrackRow
+.SampleClip {
+  fill: transparent;
+}
+
+.SampleClip:hover {
+  cursor: pointer;
+}
+
+.SampleClip:hover .SampleClip-backdrop {
+  fill: rgba(0, 255, 255, 0.2);
+}
+
+.SampleClip-backdrop {
+  // stroke: gray;
+  // stroke-width: 1;
+  // stroke-dasharray: 5, 5;
+}
+
+.TrackGroup-backdrop {
+  fill: transparent;
+  stroke: gray;
+  stroke-width: 1;
+}
+
+/* TrackControl */
+.TrackControl:not(:last-child) {
+  border-bottom: 1px dotted grey;
+}
+
+/* PrimaryTrackRow */
 
 .primary-track-row .delete-button {
   cursor: pointer;

@@ -313,6 +313,6 @@ function collectDrop (connect, monitor) {
 }
 
 module.exports = DropTarget(
-  [HTML5Backend.NativeTypes.FILE, 'track-group-channel', 'sample-clip', 'resize-handle',
+  [HTML5Backend.NativeTypes.FILE, 'track-group', 'sample-clip', 'resize-handle',
     'automation-clip/control-point', 'tempo-clip/control-point'],
   dropTarget, collectDrop)(MixArrangementLayout)
