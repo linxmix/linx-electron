@@ -275,7 +275,7 @@ const dropTarget = {
         action = props.moveClip
         break
       case 'resize-handle':
-        action = props.resizeChannel
+        action = props.resizeSampleClip
         break
       case 'automation-clip/control-point':
         action = props.moveControlPoint

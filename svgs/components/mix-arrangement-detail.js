@@ -128,7 +128,7 @@ class MixArrangementDetail extends React.Component {
       this._asyncUpdateAudioGraph()
     }
 
-    const layoutActions = pick(this.props, ['updateZoom', 'moveClip',
+    const layoutActions = pick(this.props, ['updateZoom', 'moveClip', 'resizeSampleClip',
       'moveTrackGroup', 'resizeChannel', 'updateAudioGraph', 'seekToBeat', 'moveControlPoint'])
 
     const trackChannelActions = {
@@ -214,12 +214,20 @@ class MixArrangementDetail extends React.Component {
         translateY={0}
         scaleX={scaleX}
         rowHeight={rowHeight}
-        canEditClips
+        canResizeClips
+        canDragClips
         showAutomationControlType={!includes(this.state.editingBeatgrids, fromTrackGroup.id) && selectedControlType}
         color={d3.interpolateCool(0.25)}
         sampleResolution={includes(this.state.editingBeatgrids, fromTrackGroup.id)
           ? ZOOM_RESOLUTION : NORMAL_RESOLUTION}
         trackChannelActions={trackChannelActions}
+      />
+
+      <rect
+        height={1}
+        fill="rgba(0,0,0,0.7)"
+        width={mix.channel.beatCount}
+        y={rowHeight * trackGroups[0].tracks.length}
       />
 
       <TrackGroup
@@ -230,6 +238,7 @@ class MixArrangementDetail extends React.Component {
         scaleX={scaleX}
         rowHeight={rowHeight}
         canDragGroup
+        canResizeClips
         showOnlyPrimaryTrack
         showAutomationControlType={!includes(this.state.editingBeatgrids, toTrackGroup.id) && selectedControlType}
         color={d3.interpolateCool(0.5)}

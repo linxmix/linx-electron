@@ -9,8 +9,7 @@ const { isRightClick } = require('../../lib/mouse-event-utils')
 class TrackChannel extends React.Component {
   handleClick (e) {
     if (isRightClick(e)
-      && this.props.showAutomationControlType
-      && this.props.canEditClips) {
+      && this.props.showAutomationControlType) {
       e.preventDefault()
       e.stopPropagation()
 
@@ -26,7 +25,7 @@ class TrackChannel extends React.Component {
 
   render () {
     const { channel, color, beatScale, translateY, scaleX, sampleResolution, height,
-      canEditClips, showAutomationControlType, showGridMarkers } = this.props
+      canDragClips, canResizeClips, showAutomationControlType, showGridMarkers } = this.props
     if (!channel) { return null }
 
     return <g
@@ -41,7 +40,8 @@ class TrackChannel extends React.Component {
           color={color}
           sampleResolution={sampleResolution}
           height={height}
-          canDrag={canEditClips}
+          canDrag={canDragClips}
+          canResize={canResizeClips}
           showGridMarkers={showGridMarkers}
           selectGridMarker={options =>
             this.props.selectGridMarker(merge({ channel }, options))}
@@ -62,7 +62,7 @@ class TrackChannel extends React.Component {
           deleteControlPoint={this.props.deleteControlPoint}
           beatScale={beatScale}
           height={height}
-          canDrag={canEditClips}
+          canDrag
         />
       )}
     </g>
@@ -76,7 +76,8 @@ TrackChannel.defaultProps = {
   scaleX: 1,
   height: 100,
   color: 'green',
-  canEditClips: false,
+  canDragClips: false,
+  canResizeClips: false,
   showAutomationControlType: undefined,
   showGridMarkers: true
 }

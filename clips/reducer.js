@@ -14,6 +14,7 @@ const {
   updateClip,
   createClip,
   moveClip,
+  resizeSampleClip,
   moveControlPoint,
   createControlPoint,
   deleteControlPoint,
@@ -96,6 +97,37 @@ function createReducer (config) {
         id,
         startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
       })))
+    },
+    [resizeSampleClip]: (state, action) => {
+      const { id, startBeat, beatCount, diffBeats, isResizeLeft, quantization,
+        audioStartTime, audioBpm, maxAudioBeat } = action.payload
+      const quantizedDiffBeats = quantizeBeat({ quantization, beat: diffBeats })
+
+      let updatePayload
+      if (isResizeLeft) {
+        let newAudioStartTime = audioStartTime + beatToTime(quantizedDiffBeats, audioBpm)
+        let newStartBeat = startBeat + quantizedDiffBeats
+        let newBeatCount = beatCount - quantizedDiffBeats
+
+        // TODO: let this snap to earliest audio start time? if quantization is off
+        if (newAudioStartTime < 0) {
+          return state
+        }
+
+        updatePayload = {
+          id,
+          startBeat: newStartBeat,
+          audioStartTime: newAudioStartTime,
+          beatCount: newBeatCount
+        }
+      } else {
+        updatePayload = {
+          id,
+          beatCount: Math.min(beatCount + quantizedDiffBeats, maxAudioBeat)
+        }
+      }
+
+      return loop(state, Effects.constant(updateClip(updatePayload)))
     },
     [moveControlPoint]: (state, action) => {
       const { sourceId, id, beat, value, diffBeats, diffValue,

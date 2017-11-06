@@ -7,7 +7,7 @@ const TrackChannel = require('./track-channel')
 class TrackGroup extends React.Component {
   render () {
     const { channel, color, beatScale, translateY, scaleX, sampleResolution, rowHeight,
-      showOnlyPrimaryTrack, canEditClips, showAutomationControlType,
+      showOnlyPrimaryTrack, canDragClips, canResizeClips, showAutomationControlType,
       connectDragSource, trackChannelActions } = this.props
     if (!channel) { return null }
 
@@ -19,10 +19,6 @@ class TrackGroup extends React.Component {
     return connectDragSource(<g
       className="TrackGroup"
       transform={`translate(${channel.startBeat},${translateY})`}>
-      <rect className="TrackGroup-backdrop"
-        width={channel.beatCount}
-        height={rowHeight * tracksToDisplay.length} />
-
       {map(tracksToDisplay, (track, i) => <TrackChannel
         key={track.id}
         channel={track}
@@ -30,7 +26,8 @@ class TrackGroup extends React.Component {
         translateY={rowHeight * i}
         height={rowHeight}
         scaleX={scaleX}
-        canEditClips={canEditClips}
+        canDragClips={canDragClips}
+        canResizeClips={canResizeClips}
         showAutomationControlType={showAutomationControlType}
         color={color}
         sampleResolution={sampleResolution}
@@ -48,7 +45,8 @@ TrackGroup.defaultProps = {
   scaleX: 1,
   rowHeight: 100,
   canDragGroup: false,
-  canEditClips: false,
+  canDragClips: false,
+  canResizeClips: false,
   showOnlyPrimaryTrack: false,
   showAutomationControlType: undefined,
 }

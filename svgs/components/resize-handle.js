@@ -1,26 +1,16 @@
 const React = require('react')
 const { DragSource } = require('react-dnd')
 
-// example usage:
-// <ResizeHandle
-  // id={channel.id}
-  // translateX={channel.beatCount}
-  // translateY={-10}
-  // scaleX={this.props.scaleX}
-  // startBeat={channel.startBeat}
-  // beatCount={channel.beatCount}
-  // canDrag={canDrag}
-// />
-
 class ResizeHandle extends React.Component {
   render () {
     const { height, width, connectDragSource, translateX, translateY } = this.props
 
     return connectDragSource(<rect
-      transform={`translate(${translateX - width / 2}, ${translateY})`}
+      transform={`translate(${translateX === 0 ? 0 : translateX - width}, ${translateY})`}
       width={width}
       height={height}
-      style={{ fill: 'rgba(0,0,255,0.4' }}
+      cursor="col-resize"
+      style={{ fill: 'rgba(0,0,0,0.2' }}
     />)
   }
 }
@@ -31,7 +21,8 @@ ResizeHandle.defaultProps = {
   width: 10,
   translateX: 0,
   translateY: 0,
-  scaleX: 1
+  scaleX: 1,
+  onResizeArgs: {}
 }
 
 function collectDrag (connect, monitor) {
@@ -47,7 +38,8 @@ const dragSource = {
       id: props.id,
       startBeat: props.startBeat,
       beatCount: props.beatCount,
-      isResizeLeft: props.translateX === 0
+      isResizeLeft: props.translateX === 0,
+      ...props.onResizeArgs
     }
   },
   isDragging (props, monitor) {

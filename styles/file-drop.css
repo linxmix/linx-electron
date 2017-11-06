@@ -63,12 +63,6 @@ body {
   // stroke-dasharray: 5, 5;
 }
 
-.TrackGroup-backdrop {
-  fill: transparent;
-  stroke: gray;
-  stroke-width: 1;
-}
-
 /* TrackControl */
 .TrackControl:not(:last-child) {
   border-bottom: 1px dotted grey;

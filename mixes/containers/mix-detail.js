@@ -9,7 +9,7 @@ const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { updateZoom } = require('../../svgs/actions')
-const { moveClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint,
+const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint,
   deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
 const { moveTrackGroup, resizeChannel, createSampleTrackFromFile } = require('../../channels/actions')
@@ -40,7 +40,7 @@ class MixDetailContainer extends React.Component {
     const arrangementActions = mapValues(
       pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
-        'updateControlPointValue', 'moveClip', 'moveTrackGroup', 'createSampleTrackFromFile',
+        'updateControlPointValue', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile',
         'resizeChannel', 'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
         'updatePlayStateForTempoChange']),
       (fn) => (options) => fn({
@@ -110,6 +110,7 @@ module.exports = connect(
     seekToBeat,
     selectGridMarker,
     moveClip,
+    resizeSampleClip,
     moveControlPoint,
     createControlPoint,
     deleteControlPoint,
