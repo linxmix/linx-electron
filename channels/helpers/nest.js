@@ -1,4 +1,4 @@
-const { get, find, filter, includes, some, every,
+const { get, find, filter, includes, some, every, merge,
   map, concat, sortBy, omitBy, isNil, head, last } = require('lodash')
 const d3 = require('d3')
 
@@ -13,14 +13,20 @@ const { CLIP_TYPE_SAMPLE, CLIP_TYPE_TEMPO } = require('../../clips/constants')
 
 module.exports = nestChannels
 
-function nestChannels ({ channelId, channels, clips, samples, dirtyChannels = [] }) {
+function nestChannels ({ channelId, parentChannel, channels, clips, samples, dirtyChannels = [] }) {
   const channel = channels[channelId] || {}
   const { id, type, startBeat, channelIds: childChannelIds = [], clipIds = [] } = channel
+  const currentChannel = { id: channelId, parentChannel }
 
   // compute children
-  const childChannels = childChannelIds.map(childChannelId => {
-    return nestChannels({ channelId: childChannelId, channels, clips, samples, dirtyChannels })
-  })
+  const childChannels = childChannelIds.map(childChannelId => nestChannels({
+    channelId: childChannelId,
+    parentChannel: currentChannel,
+    channels,
+    clips,
+    samples,
+    dirtyChannels
+  }))
   const childClips = clipIds.map(clipId => (clips[clipId] || {}))
   const childSampleClips = filter(childClips, { type: CLIP_TYPE_SAMPLE })
 
@@ -95,7 +101,7 @@ function nestChannels ({ channelId, channels, clips, samples, dirtyChannels = []
     }
   }
 
-  return omitBy({
+  merge(currentChannel, omitBy({
     id,
     type,
     status,
@@ -112,7 +118,9 @@ function nestChannels ({ channelId, channels, clips, samples, dirtyChannels = []
       some(childClips, { isDirty: true })),
     channels: sortBy(childChannels, ['startBeat', 'id']),
     clips: sortBy(childClips, ['startBeat', 'id'])
-  }, isNil)
+  }, isNil))
+
+  return currentChannel
 }
 
 function _calculateBeatScaleRange(bpmScale) {

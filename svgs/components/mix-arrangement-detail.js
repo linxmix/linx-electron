@@ -42,8 +42,13 @@ class MixArrangementDetail extends React.Component {
     }))
   }
 
-  toggleEditBeatgrid (trackGroup) {
-    const { id } = trackGroup
+  toggleEditBeatgrid (track) {
+    const { id } = track
+
+    // hack: guess we're talking about a single clip in track channel
+    // TODO: fix this, track channels may have many clips. maybe needs a util
+    //       eg clipsAtTime(playTime, [mix|channel])
+    const sampleClip = find(track.clips, { type: CLIP_TYPE_SAMPLE })
 
     if (includes(this.state.editingBeatgrids, id)) {
       this.setState({
@@ -60,12 +65,7 @@ class MixArrangementDetail extends React.Component {
         audioContext: audioContext
       })
 
-      // hack: guess we're talking about a single clip in primary track channel
-      // TODO: fix this, primary track channel may have many clips. maybe needs a util
-      //       eg clipsAtTime(playTime, mix.channels)
-      const primaryTrackChannel = find(trackGroup.channels, { type: CHANNEL_TYPE_PRIMARY_TRACK })
-      const sampleClip = find(primaryTrackChannel.clips, { type: CLIP_TYPE_SAMPLE })
-      const currentClipBeat = currentMixBeat - trackGroup.startBeat - primaryTrackChannel.startBeat -
+      const currentClipBeat = currentMixBeat - track.parentChannel.startBeat - track.startBeat -
         sampleClip.startBeat
       const currentAudioTime = beatToTime(currentClipBeat, sampleClip.sample.meta.bpm) +
         sampleClip.audioStartTime
