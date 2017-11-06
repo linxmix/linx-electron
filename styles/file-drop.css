@@ -65,7 +65,7 @@ body {
 
 /* TrackControl */
 .TrackControl:not(:last-child) {
-  border-bottom: 1px dotted grey;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
 }
 
 /* PrimaryTrackRow */
