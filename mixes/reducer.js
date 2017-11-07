@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { pick, without, map, omit, values, filter } = require('lodash')
+const { pick, without, map, omit, values, filter, forEach } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -225,7 +225,10 @@ function createReducer (config) {
   }
 
   function runSaveMix (nestedMix) {
-    return service.saveMix(pick(nestedMix, ['id', 'channel']))
+    return service.saveMix({
+      id: nestedMix.id,
+      channel: _removeParentChannels(nestedMix.channel)
+    })
       .then(() => saveMixSuccess(nestedMix))
       .catch(saveMixFailure)
   }
@@ -235,4 +238,10 @@ function createReducer (config) {
       .then(() => deleteMixSuccess(id))
       .catch(deleteMixFailure)
   }
+}
+
+function _removeParentChannels(channel) {
+  channel.parentChannel = undefined
+  delete channel.parentChannel
+  forEach(channel.channels || [], _removeParentChannels)
 }
