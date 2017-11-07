@@ -8,12 +8,13 @@ const TrackControl = require('./track-control')
 const TempoClip = require('./tempo-clip')
 const getCurrentBeat = require('../../audios/helpers/get-current-beat')
 const { beatToTime } = require('../../lib/number-utils')
+const { getPosition } = require('../../lib/mouse-event-utils')
 
 const { CLIP_TYPE_SAMPLE } = require('../../clips/constants')
 const { CHANNEL_TYPE_SAMPLE_TRACK, CHANNEL_TYPE_PRIMARY_TRACK } = require('../../channels/constants')
 
-const ZOOM_RESOLUTION = 10
-const NORMAL_RESOLUTION = 5
+const ZOOM_RESOLUTION = 15
+const NORMAL_RESOLUTION = 10
 
 class MixArrangementDetail extends React.Component {
   constructor (props) {
@@ -114,7 +115,7 @@ class MixArrangementDetail extends React.Component {
     const beatScale = get(mix, 'channel.beatScale')
 
     const createControlPoint = ({ sourceId, e, minBeat, maxBeat }) => {
-      const { beat, value } = _getPosition({ e, scaleX, rowHeight })
+      const { beat, value } = getPosition({ e, scaleX, height: rowHeight })
       this.props.createControlPoint({
         sourceId, beat, value, minBeat, maxBeat
       })
@@ -136,10 +137,9 @@ class MixArrangementDetail extends React.Component {
       createControlPoint,
       deleteControlPoint,
 
-      createAutomationClipWithControlPoint: ({ channel, e, minBeat, maxBeat }) => {
-        const { beat, value } = _getPosition({ e, scaleX, rowHeight })
+      createAutomationClipWithControlPoint: ({ channelId, beat, value, minBeat, maxBeat }) => {
         this.props.createAutomationClipWithControlPoint({
-          channelId: channel.id, beat, value, minBeat, maxBeat, controlType: selectedControlType
+          channelId, beat, value, minBeat, maxBeat, controlType: selectedControlType
         })
         this._asyncUpdateAudioGraph()
       },
@@ -154,16 +154,11 @@ class MixArrangementDetail extends React.Component {
         })
       },
 
-      createSampleClip: ({ e, channelId, sampleId }) => {
-        const { beat } = _getPosition({ e, scaleX, rowHeight })
-        console.log('createSampleClip', { beat })
+      createSampleClip: ({ channelId, sampleId, clipOptions }) => {
         this.props.createSampleClip({
           channelId,
           sampleId,
-          clipOptions: {
-            startBeat: beat,
-            beatCount: 8
-          }
+          clipOptions
         })
         this._asyncUpdateAudioGraph()
       },
@@ -171,6 +166,13 @@ class MixArrangementDetail extends React.Component {
       deleteClip: ({ id }) => {
         this.props.unsetClip({ id })
         this._asyncUpdateAudioGraph()
+      },
+
+      snipClip: ({ e, clip, channel }) => {
+        const { beat: snipAtBeat } = getPosition({ e, scaleX, height: rowHeight })
+        const { audioStartTime } = clip
+        this.props.snipClip({ channel, clip, snipAtBeat })
+        // this._asyncUpdateAudioGraph()
       }
     }
 
@@ -243,6 +245,7 @@ class MixArrangementDetail extends React.Component {
         rowHeight={rowHeight}
         canResizeClips
         canDragClips
+        canEditClips
         showAutomationControlType={!includes(this.state.editingBeatgrids, fromTrackGroup.id) && selectedControlType}
         color={d3.interpolateCool(0.25)}
         sampleResolution={includes(this.state.editingBeatgrids, fromTrackGroup.id)
@@ -266,7 +269,6 @@ class MixArrangementDetail extends React.Component {
         rowHeight={rowHeight}
         mixBeatCount={mix.channel.beatCount}
         canDragGroup
-        canResizeClips
         showOnlyPrimaryTrack
         showAutomationControlType={!includes(this.state.editingBeatgrids, toTrackGroup.id) && selectedControlType}
         color={d3.interpolateCool(0.5)}
@@ -288,14 +290,3 @@ MixArrangementDetail.defaultProps = {
 }
 
 module.exports = MixArrangementDetail
-
-function _getPosition ({ e, scaleX, rowHeight }) {
-  const dim = e.target.getBoundingClientRect()
-  const x = e.clientX - dim.left
-  const y = e.clientY - dim.top
-
-  return {
-    beat: (x / scaleX),
-    value: 1 - (y / rowHeight)
-  }
-}

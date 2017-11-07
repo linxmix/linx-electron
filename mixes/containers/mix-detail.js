@@ -8,7 +8,7 @@ const DetectDragModifierKeys = require('../../lib/detect-drag-modifier-keys')
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
 const { updateZoom } = require('../../svgs/actions')
-const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint, createSampleClip, unsetClip,
+const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint, createSampleClip, unsetClip, snipClip,
   deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
 const { moveTrackGroup, resizeChannel, createSampleTrackFromFile, updateChannel } = require('../../channels/actions')
@@ -41,7 +41,7 @@ class MixDetailContainer extends React.Component {
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
         'updateControlPointValue', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'unsetClip',   
         'resizeChannel', 'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
-        'updatePlayStateForTempoChange']),
+        'updatePlayStateForTempoChange', 'snipClip']),
       (fn) => (options) => fn({
         quantization: _getQuantization(this.props.dragModifierKeys),
         ...options
@@ -117,6 +117,7 @@ module.exports = connect(
     createSampleTrackFromFile,
     createSampleClip,
     unsetClip,
+    snipClip,
     calculateGridMarkers,
     clearGridMarkers,
     moveTrackGroup,

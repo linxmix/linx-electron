@@ -23,7 +23,7 @@ class Waveform extends React.Component {
     const median = Math.ceil(height / 2.0)
     const area = d3.area()
       .x((peak, i) => {
-        const percent = i / peaks.length
+        const percent = i / (peaks.length - 1)
         const audioBeat = percent * beatCount
         return audioBeat
       })

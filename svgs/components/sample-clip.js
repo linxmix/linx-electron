@@ -10,11 +10,15 @@ const { isRightClick } = require('../../lib/mouse-event-utils')
 
 class SampleClip extends React.Component {
   handleClick (e) {
-    if (isRightClick(e)) {
+    if (isRightClick(e) && this.props.canEdit) {
       e.preventDefault()
       e.stopPropagation()
 
-      this.props.deleteClip({ id: this.props.clip.id })
+      if (e.shiftKey) {
+        this.props.deleteClip({ id: this.props.clip.id })
+      } else {
+        this.props.snipClip({ e, clip: this.props.clip })
+      }
     }
   }
 
@@ -48,6 +52,7 @@ class SampleClip extends React.Component {
         endTime={audioStartTime + beatToTime(beatCount, audioBpm)}
         length={beatCount * sampleResolution}
         beatCount={beatCount}
+        height={height}
         color={color}
         opacity={isDragging ? 0.5 : 1}
       />
@@ -104,6 +109,8 @@ SampleClip.defaultProps = {
   sampleResolution: 1,
   scaleX: 1,
   canDrag: false,
+  canResize: false,
+  canEdit: false,
   showGridMarkers: false
 }
 

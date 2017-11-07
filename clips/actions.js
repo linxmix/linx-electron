@@ -10,6 +10,7 @@ module.exports = createActions(
   'CREATE_CLIP',
   'UPDATE_CLIP',
   'MOVE_CLIP',
+  'SNIP_CLIP',
   'RESIZE_SAMPLE_CLIP',
   'MOVE_CONTROL_POINT',
   'CREATE_CONTROL_POINT',

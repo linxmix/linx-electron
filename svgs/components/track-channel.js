@@ -4,7 +4,7 @@ const { map, merge, filter } = require('lodash')
 const SampleClip = require('./sample-clip')
 const AutomationClip = require('./automation-clip')
 const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../../clips/constants')
-const { isRightClick } = require('../../lib/mouse-event-utils')
+const { isRightClick, getPosition } = require('../../lib/mouse-event-utils')
 
 class TrackChannel extends React.Component {
   handleClick (e) {
@@ -14,29 +14,39 @@ class TrackChannel extends React.Component {
       e.stopPropagation()
 
       if (this.props.showAutomationControlType) {
+        let { beat, value } = getPosition({ e, scaleX: this.props.scaleX, height: this.props.height })
+        beat -= channel.parentChannel.startBeat
+
         this.props.createAutomationClipWithControlPoint({
-          channel,
-          e,
-          minBeat: channel.startBeat,
-          maxBeat: channel.beatCount
-        })
-      } else {
-        this.props.createSampleClip({
-          e,
           channelId: channel.id,
-          sampleId: channel.sampleId
+          minBeat: channel.startBeat,
+          maxBeat: channel.beatCount,
+          beat,
+          value
+        })
+      } else if (this.props.canEditClips) {
+        let { beat } = getPosition({ e, scaleX: this.props.scaleX, height: this.props.height })
+        beat -= channel.parentChannel.startBeat
+
+        this.props.createSampleClip({
+          channelId: channel.id,
+          sampleId: channel.sampleId,
+          clipOptions: {
+            startBeat: beat,
+            beatCount: 8
+          }
         })
       }
     }
   }
 
   render () {
-    const { channel, color, beatScale, translateY, scaleX, sampleResolution, height,
+    const { channel, color, beatScale, translateY, scaleX, sampleResolution, height, canEditClips, 
       canDragClips, canResizeClips, showAutomationControlType, showGridMarkers } = this.props
     if (!channel) { return null }
 
     return <g className="TrackChannel" onMouseUp={this.handleClick.bind(this)}>
-      <rect transform={`translate(0,${translateY})`}
+      <rect transform={`translate(${-channel.parentChannel.startBeat},${translateY})`}
         height={height}
         width={this.props.mixBeatCount}
         fill="transparent"
@@ -54,6 +64,9 @@ class TrackChannel extends React.Component {
             height={height}
             canDrag={canDragClips}
             canResize={canResizeClips}
+            canEdit={canEditClips}
+            snipClip={options =>
+              this.props.snipClip(merge({ channel }, options))}
             deleteClip={this.props.deleteClip}
             showGridMarkers={showGridMarkers}
             selectGridMarker={options =>
@@ -93,6 +106,7 @@ TrackChannel.defaultProps = {
   color: 'green',
   canDragClips: false,
   canResizeClips: false,
+  canEditClips: false,
   showAutomationControlType: undefined,
   showGridMarkers: true
 }

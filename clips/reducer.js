@@ -14,6 +14,7 @@ const {
   updateClip,
   createClip,
   moveClip,
+  snipClip,
   resizeSampleClip,
   moveControlPoint,
   createControlPoint,
@@ -99,6 +100,30 @@ function createReducer (config) {
         id,
         startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
       })))
+    },
+    [snipClip]: (state, action) => {
+      const { channel, clip, snipAtBeat } = action.payload
+      const newClipId = uuid()
+      const audioBpm = clip.sample.meta.bpm
+
+      return loop(state, Effects.batch([
+        Effects.constant(updateClip({
+          id: clip.id,
+          beatCount: snipAtBeat
+        })),
+        Effects.constant(createClip({
+          id: newClipId,
+          type: CLIP_TYPE_SAMPLE,
+          sampleId: clip.sampleId,
+          audioStartTime: beatToTime(timeToBeat(clip.audioStartTime, audioBpm) + snipAtBeat, audioBpm),
+          beatCount: clip.beatCount - snipAtBeat,
+          startBeat: clip.startBeat + snipAtBeat
+        })),
+        Effects.constant(setClipsChannel({
+          channelId: channel.id,
+          clipIds: [newClipId]
+        })),
+      ]))
     },
     [resizeSampleClip]: (state, action) => {
       const { id, startBeat, beatCount, diffBeats, isResizeLeft, quantization,

@@ -8,7 +8,7 @@ class TrackGroup extends React.Component {
   render () {
     const { channel, color, beatScale, translateY, scaleX, sampleResolution, rowHeight,
       showOnlyPrimaryTrack, canDragClips, canResizeClips, showAutomationControlType,
-      connectDragSource, trackChannelActions } = this.props
+      connectDragSource, trackChannelActions, canEditClips } = this.props
     if (!channel) { return null }
 
     const tracksToDisplay = filter(
@@ -29,6 +29,7 @@ class TrackGroup extends React.Component {
         mixBeatCount={this.props.mixBeatCount}
         canDragClips={canDragClips}
         canResizeClips={canResizeClips}
+        canEditClips={canEditClips && !showAutomationControlType}
         showAutomationControlType={showAutomationControlType}
         color={color}
         sampleResolution={sampleResolution}
@@ -49,6 +50,7 @@ TrackGroup.defaultProps = {
   canDragGroup: false,
   canDragClips: false,
   canResizeClips: false,
+  canEditClips: false,
   showOnlyPrimaryTrack: false,
   showAutomationControlType: undefined,
 }
