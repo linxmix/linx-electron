@@ -152,6 +152,25 @@ class MixArrangementDetail extends React.Component {
         this.setState({
           editingBeatgrids: without(this.state.editingBeatgrids, channel.id)
         })
+      },
+
+      createSampleClip: ({ e, channelId, sampleId }) => {
+        const { beat } = _getPosition({ e, scaleX, rowHeight })
+        console.log('createSampleClip', { beat })
+        this.props.createSampleClip({
+          channelId,
+          sampleId,
+          clipOptions: {
+            startBeat: beat,
+            beatCount: 8
+          }
+        })
+        this._asyncUpdateAudioGraph()
+      },
+
+      deleteClip: ({ id }) => {
+        this.props.unsetClip({ id })
+        this._asyncUpdateAudioGraph()
       }
     }
 
@@ -220,6 +239,7 @@ class MixArrangementDetail extends React.Component {
         beatScale={beatScale}
         translateY={0}
         scaleX={scaleX}
+        mixBeatCount={mix.channel.beatCount}
         rowHeight={rowHeight}
         canResizeClips
         canDragClips
@@ -244,6 +264,7 @@ class MixArrangementDetail extends React.Component {
         translateY={rowHeight * trackGroups[0].tracks.length}
         scaleX={scaleX}
         rowHeight={rowHeight}
+        mixBeatCount={mix.channel.beatCount}
         canDragGroup
         canResizeClips
         showOnlyPrimaryTrack

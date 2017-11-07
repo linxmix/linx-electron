@@ -20,6 +20,7 @@ const {
   deleteControlPoint,
   updateControlPointValue,
   createAutomationClipWithControlPoint,
+  createSampleClip,
   calculateGridMarkers,
   clearGridMarkers,
   selectGridMarker
@@ -27,7 +28,8 @@ const {
 const { setClipsChannel } = require('../channels/actions')
 const { updateMeta } = require('../metas/actions')
 const { analyzeSample } = require('../samples/actions')
-const { CLIP_TYPES, CONTROL_TYPES, CLIP_TYPE_AUTOMATION, CLIP_TYPE_TEMPO } = require('./constants')
+const { CLIP_TYPES, CONTROL_TYPES, CLIP_TYPE_AUTOMATION,
+  CLIP_TYPE_TEMPO, CLIP_TYPE_SAMPLE } = require('./constants')
 const { quantizeBeat, clamp, beatToTime, timeToBeat, validNumberOrDefault,
   bpmToSpb, isValidNumber } = require('../lib/number-utils')
 
@@ -48,11 +50,11 @@ function createReducer (config) {
       }
     }),
     [unsetClips]: (state, action) => loop(state, Effects.batch(
-      map(action.payload, id => Effects.constant(unsetClip(id))))),
+      map(action.payload, id => Effects.constant(unsetClip({ id }))))),
     [unsetClip]: (state, action) => ({
       ...state,
-      dirty: without(state.dirty, action.payload),
-      records: omit(state.records, action.payload)
+      dirty: without(state.dirty, action.payload.id),
+      records: omit(state.records, action.payload.id)
     }),
     [undirtyClips]: (state, action) => loop(state, Effects.batch(
       map(action.payload, id => Effects.constant(undirtyClip(id))))),
@@ -235,6 +237,22 @@ function createReducer (config) {
         Effects.constant(createControlPoint({
           sourceId: automationClipId,
           beat, value, minBeat, maxBeat, quantization
+        }))
+      ]))
+    },
+    [createSampleClip]: (state, action) => {
+      const { channelId, sampleId, clipOptions } = action.payload
+      const clipId = uuid()
+
+      assert(channelId && sampleId, 'Must have valid channelId and sampleId to createTrackSampleClip')
+
+      return loop(state, Effects.batch([
+        Effects.constant(createClip(assign({
+          id: clipId, sampleId, type: CLIP_TYPE_SAMPLE
+        }, clipOptions))),
+        Effects.constant(setClipsChannel({
+          channelId: channelId,
+          clipIds: [clipId]
         }))
       ]))
     },

@@ -6,8 +6,18 @@ const { DragSource } = require('react-dnd')
 const { beatToTime, timeToBeat } = require('../../lib/number-utils')
 const ResizeHandle = require('./resize-handle')
 const Waveform = require('./waveform')
+const { isRightClick } = require('../../lib/mouse-event-utils')
 
 class SampleClip extends React.Component {
+  handleClick (e) {
+    if (isRightClick(e)) {
+      e.preventDefault()
+      e.stopPropagation()
+
+      this.props.deleteClip({ id: this.props.clip.id })
+    }
+  }
+
   handleGridMarkerClick (marker, e) {
     e.preventDefault()
     e.stopPropagation()
@@ -24,8 +34,14 @@ class SampleClip extends React.Component {
     const audioStartBeat = timeToBeat(audioStartTime, audioBpm)
     const maxAudioBeat = timeToBeat(duration - audioStartTime, audioBpm)
 
-    return connectDragSource(<g className="SampleClip" transform={`translate(${startBeat})`}>
-      <rect className="SampleClip-backdrop" width={beatCount} height={height} />
+    return connectDragSource(<g className="SampleClip"
+      transform={`translate(${startBeat})`}
+      onMouseUp={this.handleClick.bind(this)}>
+      <rect className="SampleClip-backdrop"
+        width={beatCount}
+        height={height}
+      />
+
       <Waveform
         audioBuffer={audioBuffer}
         startTime={audioStartTime}
