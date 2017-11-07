@@ -9,7 +9,7 @@ const TempoClip = require('./tempo-clip')
 const getCurrentBeat = require('../../audios/helpers/get-current-beat')
 const { beatToTime } = require('../../lib/number-utils')
 
-const { CONTROL_TYPE_GAIN, CLIP_TYPE_SAMPLE } = require('../../clips/constants')
+const { CLIP_TYPE_SAMPLE } = require('../../clips/constants')
 const { CHANNEL_TYPE_SAMPLE_TRACK, CHANNEL_TYPE_PRIMARY_TRACK } = require('../../channels/constants')
 
 const ZOOM_RESOLUTION = 10
@@ -20,7 +20,7 @@ class MixArrangementDetail extends React.Component {
     super(props)
     this.state = {
       editingBeatgrids: [],
-      selectedControlType: CONTROL_TYPE_GAIN
+      selectedControlType: null
     }
   }
 

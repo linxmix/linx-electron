@@ -151,9 +151,11 @@ class MixArrangementLayout extends React.Component {
         {this.props.trackControls && <div style={{ flex: '0 0 auto', width: '200px', borderRight: '1px solid gray' }}>
           <div style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray', height: beatAxisHeight, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
             <select
-              value={selectedControlType}
+              value={selectedControlType || ""}
               onChange={(event) => selectControlType(event.target.value)}
               style={{ width: '95%' }}>
+              <option key="none" value="">none</option>)}
+
               {map(CONTROL_TYPES, controlType =>
                 <option key={controlType} value={controlType}>{controlType}</option>)}
             </select>
