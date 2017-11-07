@@ -70,6 +70,7 @@ class MixArrangementDetail extends React.Component {
       const currentAudioTime = beatToTime(currentClipBeat, sampleClip.sample.meta.bpm) +
         sampleClip.audioStartTime
 
+    console.log('toggleEditBeatgrid', { track, sampleClip, currentClipBeat, currentAudioTime })
       this.setState({
         editingBeatgrids: [...this.state.editingBeatgrids, id]
       })
@@ -183,8 +184,14 @@ class MixArrangementDetail extends React.Component {
           key={track.id + '_control'}
           title={track.sample.meta.title}
           bpm={track.sample.meta.bpm}
+          musicalKey={track.sample.meta.key}
+          pitchSemitones={track.pitchSemitones}
           isEditingBeatgrid={includes(this.state.editingBeatgrids, track.id)}
           toggleEditBeatgrid={this.toggleEditBeatgrid.bind(this, track)}
+          updatePitchSemitones={pitchSemitones => {
+            this.props.updateChannel({ id: track.id, pitchSemitones })
+            this._asyncUpdateAudioGraph()
+          }}
         />)}
       </div>
     )

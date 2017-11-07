@@ -1,4 +1,4 @@
-const { get, find, filter, includes, some, every, merge,
+const { get, find, filter, includes, some, every, assign,
   map, concat, sortBy, omitBy, isNil, head, last } = require('lodash')
 const d3 = require('d3')
 
@@ -47,6 +47,7 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
   // track channels properties
   const sampleId = channel.sampleId
   const sample = samples[sampleId] || {}
+  const pitchSemitones = validNumberOrDefault(channel.pitchSemitones, 0)
 
   // track group channel properties
   const primaryTrack = find(childChannels, { type: CHANNEL_TYPE_PRIMARY_TRACK }) || {}
@@ -101,7 +102,7 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
     }
   }
 
-  merge(currentChannel, omitBy({
+  assign(currentChannel, omitBy({
     id,
     type,
     status,
@@ -112,6 +113,7 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
     sampleId,
     primaryTrack,
     sampleTracks,
+    pitchSemitones,
     startBeat: validNumberOrDefault(startBeat, 0),
     isDirty: (includes(dirtyChannels, id) ||
       some(childChannels, { isDirty: true }) ||

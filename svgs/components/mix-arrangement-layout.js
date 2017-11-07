@@ -152,7 +152,7 @@ class MixArrangementLayout extends React.Component {
           <div style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray', height: beatAxisHeight, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
             <select
               value={selectedControlType || ""}
-              onChange={(event) => selectControlType(event.target.value)}
+              onChange={event => selectControlType(event.target.value)}
               style={{ width: '95%' }}>
               <option key="none" value="">none</option>)}
 

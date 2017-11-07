@@ -9,7 +9,7 @@ const {
 } = require('../../lib/number-utils')
 
 module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
-  bpmScale, beatScale, currentBeat, currentTime }) {
+  bpmScale, beatScale, currentBeat, currentTime, pitchSemitones }) {
   const clipStartBeat = startBeat + clip.startBeat
   const clipEndBeat = clipStartBeat + clip.beatCount
   const audioBpm = clip.sample.meta.bpm
@@ -70,7 +70,8 @@ module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
       currentTime,
       startBeat,
       valueScale: tempoScale
-    })
+    }),
+    pitch: ['setValueAtTime', pitchSemitones, 0]
   }]
 }
 

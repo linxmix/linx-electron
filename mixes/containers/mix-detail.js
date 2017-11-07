@@ -7,12 +7,11 @@ const keymaster = require('keymaster')
 const DetectDragModifierKeys = require('../../lib/detect-drag-modifier-keys')
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
-const { updateMeta } = require('../../metas/actions')
 const { updateZoom } = require('../../svgs/actions')
 const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint,
   deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
-const { moveTrackGroup, resizeChannel, createSampleTrackFromFile } = require('../../channels/actions')
+const { moveTrackGroup, resizeChannel, createSampleTrackFromFile, updateChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph,
   updatePlayStateForTempoChange } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
@@ -40,7 +39,7 @@ class MixDetailContainer extends React.Component {
     const arrangementActions = mapValues(
       pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
-        'updateControlPointValue', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile',
+        'updateControlPointValue', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 
         'resizeChannel', 'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
         'updatePlayStateForTempoChange']),
       (fn) => (options) => fn({
@@ -105,7 +104,6 @@ module.exports = connect(
   {
     saveMix,
     loadMix,
-    updateMeta,
     playPause,
     seekToBeat,
     selectGridMarker,
@@ -121,6 +119,7 @@ module.exports = connect(
     clearGridMarkers,
     moveTrackGroup,
     resizeChannel,
+    updateChannel,
     updateZoom,
     updateAudioGraph,
     updatePlayStateForTempoChange

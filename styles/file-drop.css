@@ -17,6 +17,24 @@ body {
   }
 }
 
+.u-multiline-ellipsis-1 {
+  word-break: break-word;
+  text-overflow: ellipsis;
+  overflow-y: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.u-multiline-ellipsis-2 {
+  word-break: break-word;
+  text-overflow: ellipsis;
+  overflow-y: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 .u-scrollable {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -64,6 +82,7 @@ body {
 }
 
 /* TrackControl */
+
 .TrackControl:not(:last-child) {
   border-bottom: 1px solid rgba(0,0,0,0.1);
 }
