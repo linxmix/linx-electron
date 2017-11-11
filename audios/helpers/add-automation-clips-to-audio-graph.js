@@ -55,26 +55,6 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
   let previousOutput = outputs
 
   // connect highpass, lowpass, and delay automations
-  if (delayClips.length) {
-    const audioProperties = reduce(
-      delayClips,
-      (audioProperties, clip) => merge({}, audioProperties, _getAutomationParameters({
-        previousOutput, clip, startBeat, currentBeat, beatScale, currentTime })),
-      {}
-    )
-
-    // add delayTime in quarter notes
-    const audioBpm = channel.sample.meta.bpm
-    console.log('channel', delayClips[0].channel)
-    audioProperties['delay.delayTime'] = ['setValueAtTime', bpmToSpb(128), 0]
-
-    // TODO: if no cutoff, default to 10000
-
-    const audioGraphKey = `${channel.id}_delayNode`
-    audioGraph[audioGraphKey] = ['delayNode', previousOutput, audioProperties]
-    previousOutput = audioGraphKey
-  }
-
   if (highpassClips.length) {
     const audioProperties = reduce(
       highpassClips,
@@ -100,6 +80,28 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
     audioGraph[audioGraphKey] = ['biquadFilter', previousOutput, audioProperties]
     previousOutput = audioGraphKey
   }
+
+  if (delayClips.length) {
+    const audioProperties = reduce(
+      delayClips,
+      (audioProperties, clip) => merge({}, audioProperties, _getAutomationParameters({
+        previousOutput, clip, startBeat, currentBeat, beatScale, currentTime })),
+      {}
+    )
+
+    // add delayTime in quarter notes
+    const audioBpm = channel.sample.meta.bpm
+    audioProperties['delay.delayTime'] = ['setValueAtTime', bpmToSpb(128), 0]
+    audioProperties['feedbackNode.gain'] = ['setValueAtTime', 0.7, 0]
+
+    // TODO: set reasonable defaults for params not present
+    // cutoff: 10000. feedback: 0.7. delayTime: quarter note. wet: 0. dry: 1
+
+    const audioGraphKey = `${channel.id}_delayNode`
+    audioGraph[audioGraphKey] = ['delayNode', previousOutput, audioProperties]
+    previousOutput = audioGraphKey
+  }
+
 
   // connect levels automations in order, returning final output
   return reduce(sortedLevelsClips, (previousOutput, clip) => {

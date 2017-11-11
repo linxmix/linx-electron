@@ -18,8 +18,6 @@ const controlsHash = {
   CONTROL_TYPE_FILTER_LOWPASS_Q: 'filter-lowpass-q',
   CONTROL_TYPE_DELAY_WET: 'delay-wet',
   CONTROL_TYPE_DELAY_CUTOFF: 'delay-cutoff',
-
-  // TODO
   CONTROL_TYPE_PITCH: 'pitch',
 }
 
