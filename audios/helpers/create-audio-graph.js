@@ -45,7 +45,8 @@ function createAudioGraph ({
     audioGraph,
     currentBeat,
     currentTime,
-    beatScale
+    beatScale,
+    bpmScale
   })
 
   // add channel node

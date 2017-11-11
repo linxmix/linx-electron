@@ -1,8 +1,8 @@
 const d3 = require('d3')
-const { map, reduce, sortBy, find, reject, difference, merge, isNil } = require('lodash')
+const { map, reduce, filter, sortBy, find, reject, difference, merge, isNil } = require('lodash')
 
 const { bpmToSpb } = require('../../lib/number-utils')
-const valueScaleToAudioParameter = require('./value-scale-to-audio-parameter')
+const { getValueCurve, valueScaleToAudioParameter } = require('./value-scale-to-audio-parameter')
 const {
   CONTROL_TYPE_GAIN,
   CONTROL_TYPE_LOW_BAND,
@@ -24,7 +24,7 @@ const FX_CHAIN_ORDER = [
   CONTROL_TYPE_GAIN
 ]
 
-module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, beatScale, currentBeat, currentTime }) {
+module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, beatScale, bpmScale, currentBeat, currentTime }) {
 
   // sort automation clips by FX chain order
   const highpassClips = reject([
@@ -89,13 +89,24 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
       {}
     )
 
-    // add delayTime in quarter notes
-    const audioBpm = channel.sample.meta.bpm
-    audioProperties['delay.delayTime'] = ['setValueAtTime', bpmToSpb(128), 0]
+    // default feedback to 0.7
     audioProperties['feedbackNode.gain'] = ['setValueAtTime', 0.7, 0]
 
-    // TODO: set reasonable defaults for params not present
-    // cutoff: 10000. feedback: 0.7. delayTime: quarter note. wet: 0. dry: 1
+    // add delayTime in quarter notes
+    audioProperties['delay.delayTime'] = valueScaleToAudioParameter({
+      clip: { startBeat: 0, beatCount: channel.beatCount, controlType: 'delayTime for logging' },
+      startBeat,
+      currentBeat,
+      valueScale: _getDelayTimeValueScale({
+        quarterNoteFactor: 1,
+        beatScale,
+        bpmScale,
+        startBeat,
+        endBeat: startBeat + channel.beatCount
+      }),
+      beatScale,
+      currentTime
+    })
 
     const audioGraphKey = `${channel.id}_delayNode`
     audioGraph[audioGraphKey] = ['delayNode', previousOutput, audioProperties]
@@ -277,4 +288,24 @@ function _getAutomationParameters({
     default:
       console.error('Unknown controlType while adding automations to audio graph', clip.controlType)
   }
+}
+
+// convert from beat=>bpm scale, in mix frame of reference, to time=>delayTime scale, in clip frame of reference
+function _getDelayTimeValueScale ({ beatScale, bpmScale, startBeat, endBeat, quarterNoteFactor = 1 }) {
+  const beatScaleDomainWithinRange = filter(beatScale.domain(),
+    beat => (beat > startBeat && beat < endBeat))
+  const startTime = beatScale(startBeat)
+
+  const delayTimeDomain = [0]
+    .concat(map(beatScaleDomainWithinRange, beat => beatScale(beat) - startTime))
+    .concat(beatScale(endBeat) - startTime)
+
+  const delayTimeRange = map(delayTimeDomain, time => {
+    return bpmToSpb(bpmScale(beatScale.invert(time + startTime))) * quarterNoteFactor
+  })
+
+  return d3.scaleLinear()
+    .domain(delayTimeDomain)
+    .range(delayTimeRange)
+    .clamp(true)
 }
