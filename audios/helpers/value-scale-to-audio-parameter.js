@@ -111,6 +111,6 @@ function valueScaleToAudioParameter ({
 }
 
 module.exports = {
-  getValueCurve,
+  // getValueCurve,
   valueScaleToAudioParameter
 }
