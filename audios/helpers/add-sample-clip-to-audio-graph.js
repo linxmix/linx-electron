@@ -2,14 +2,14 @@ const d3 = require('d3')
 const { map, filter } = require('lodash')
 
 const { PLAY_STATE_PLAYING } = require('../constants')
-const valueScaleToAudioParameter = require('./value-scale-to-audio-parameter')
+const { valueScaleToAudioParameter } = require('./value-scale-to-audio-parameter')
 const {
   isValidNumber,
   beatToTime
 } = require('../../lib/number-utils')
 
 module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
-  bpmScale, beatScale, currentBeat, currentTime }) {
+  bpmScale, beatScale, currentBeat, currentTime, pitchSemitones }) {
   const clipStartBeat = startBeat + clip.startBeat
   const clipEndBeat = clipStartBeat + clip.beatCount
   const audioBpm = clip.sample.meta.bpm
@@ -21,7 +21,6 @@ module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
   }
 
   const tempoScale = _getSampleClipTempoScale({
-    clip,
     beatScale,
     bpmScale,
     audioBpm,
@@ -70,12 +69,13 @@ module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
       currentTime,
       startBeat,
       valueScale: tempoScale
-    })
+    }),
+    pitch: ['setValueAtTime', pitchSemitones, 0]
   }]
 }
 
 // convert from beat=>bpm scale, in mix frame of reference, to time=>tempo scale, in clip frame of reference
-function _getSampleClipTempoScale ({ clip, startBeat, beatScale, bpmScale, audioBpm, clipStartBeat, clipEndBeat }) {
+function _getSampleClipTempoScale ({ beatScale, bpmScale, audioBpm, clipStartBeat, clipEndBeat }) {
   const beatScaleDomainWithinClip = filter(beatScale.domain(),
     beat => (beat > clipStartBeat && beat < clipEndBeat))
   const clipStartTime = beatScale(clipStartBeat)

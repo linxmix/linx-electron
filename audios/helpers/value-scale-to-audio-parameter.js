@@ -4,10 +4,10 @@ const { isValidNumber, validNumberOrDefault } = require('../../lib/number-utils'
 
 const TICKS_PER_SECOND = 500
 
-function _getValueCurve ({ startTime, duration, valueScale }) {
+function getValueCurve ({ startTime, duration, valueScale }) {
   if (!(valueScale && (duration > 0))) { return new Float32Array(0) }
 
-  // console.log('_getValueCurve', {
+  // console.log('getValueCurve', {
   //   startValue: valueScale(startTime),
   //   endValue: valueScale(startTime + duration),
   //   startTime,
@@ -41,7 +41,7 @@ function _getValueCurve ({ startTime, duration, valueScale }) {
 
 // valueScale is defined in clip's frame of reference
 // startBeat, beatScale, currentBeat, beatTime are all defined in mix's frame of reference
-module.exports = function valueScaleToAudioParameter ({
+function valueScaleToAudioParameter ({
   currentBeat,
   currentTime,
   clip,
@@ -72,7 +72,7 @@ module.exports = function valueScaleToAudioParameter ({
     startTime = beatScale(clipStartBeat) - beatScale(currentBeat)
     duration = beatScale(clipEndBeat) - beatScale(clipStartBeat)
     
-    valueCurve = _getValueCurve({
+    valueCurve = getValueCurve({
       startTime: 0,
       duration,
       valueScale
@@ -83,7 +83,7 @@ module.exports = function valueScaleToAudioParameter ({
     startTime = 0
     duration = beatScale(clipEndBeat) - beatScale(currentBeat)
 
-    valueCurve = _getValueCurve({
+    valueCurve = getValueCurve({
       startTime: beatScale(currentBeat) - beatScale(clipStartBeat),
       duration,
       valueScale
@@ -108,4 +108,9 @@ module.exports = function valueScaleToAudioParameter ({
 
   return ['setValueCurveAtTime', valueCurve,
     currentTime + startTime, duration]
+}
+
+module.exports = {
+  getValueCurve,
+  valueScaleToAudioParameter
 }

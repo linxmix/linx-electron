@@ -1,7 +1,9 @@
 const React = require('react')
 const d3 = require('d3')
 const { DropTarget } = require('react-dnd')
+const HTML5Backend = require('react-dnd-html5-backend')
 const { map, throttle } = require('lodash')
+const classnames = require('classnames')
 
 const BeatAxis = require('./beat-axis')
 const Playhead = require('./playhead')
@@ -131,15 +133,17 @@ class MixArrangementLayout extends React.Component {
   render () {
     const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY,
       beatAxisHeight, tempoAxisHeight, showTempoAxis, selectedControlType,
-      selectControlType } = this.props
+      selectControlType, isOverWithFiles, canDropFiles } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const transform = `translate(${translateX},${translateY}) scale(${scaleX}, 1)`
     const beatScale = mix.channel.beatScale
     const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
 
+    const dropClassName = canDropFiles && isOverWithFiles ? 'u-valid-file-drag-over' : ''
+
     return connectDropTarget(<div
-      className='VerticalLayout VerticalLayout--fullHeight'
+      className={classnames('VerticalLayout', 'VerticalLayout--fullHeight', dropClassName)}
       onMouseDown={this.handleMouseDown.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
 
@@ -147,9 +151,11 @@ class MixArrangementLayout extends React.Component {
         {this.props.trackControls && <div style={{ flex: '0 0 auto', width: '200px', borderRight: '1px solid gray' }}>
           <div style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray', height: beatAxisHeight, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
             <select
-              value={selectedControlType}
-              onChange={(event) => selectControlType(event.target.value)}
+              value={selectedControlType || ""}
+              onChange={event => selectControlType(event.target.value)}
               style={{ width: '95%' }}>
+              <option key="none" value="">none</option>)}
+
               {map(CONTROL_TYPES, controlType =>
                 <option key={controlType} value={controlType}>{controlType}</option>)}
             </select>
@@ -227,7 +233,7 @@ class MixArrangementLayout extends React.Component {
                 strokeWidth={1.5 / scaleX}
               />
 
-              {this.props.tempoClip}
+              {this.props.tempoClipElement}
             </g>
           </svg>}
         </div>
@@ -244,7 +250,8 @@ MixArrangementLayout.defaultProps = {
   translateX: 1,
   translateY: 0,
   trackControls: false,
-  tempoClip: null
+  tempoClipElement: null,
+  canDropFiles: false
 }
 
 const dropTarget = {
@@ -262,19 +269,15 @@ const dropTarget = {
       ...item
     }
     switch (monitor.getItemType()) {
-      case 'primary-track-channel':
-        action = props.movePrimaryTrackChannel
-        payload.mixChannels = props.mix.channel.channels // TODO: does this belong in reducer?
-        break
-      case 'transition-channel':
-        action = props.moveTransitionChannel
+      case 'track-group':
+        action = props.moveTrackGroup
         payload.mixChannels = props.mix.channel.channels // TODO: does this belong in reducer?
         break
       case 'sample-clip':
         action = props.moveClip
         break
       case 'resize-handle':
-        action = props.resizeChannel
+        action = props.resizeSampleClip
         break
       case 'automation-clip/control-point':
         action = props.moveControlPoint
@@ -292,20 +295,26 @@ const dropTarget = {
     const diff = monitor.getDifferenceFromInitialOffset()
     console.log('endDrag', item, diff)
 
+    // handle files drop
+    if (item && props.canDropFiles && (monitor.getItemType() === HTML5Backend.NativeTypes.FILE)) {
+      props.handleFilesDrop(item)
+
     // report if clip moved
-    if (item && item.id && diff && (diff.x !== 0)) {
+    } else if (item && item.id && diff && (diff.x !== 0)) {
       props.updateAudioGraph({ channel: props.mix.channel })
     }
   }
 }
 
-function collect (connect, monitor) {
+function collectDrop (connect, monitor) {
   return {
-    connectDropTarget: connect.dropTarget()
+    connectDropTarget: connect.dropTarget(),
+    isOverWithFiles: monitor.isOver() && monitor.canDrop() &&
+      (monitor.getItemType() === HTML5Backend.NativeTypes.FILE)
   }
 }
 
 module.exports = DropTarget(
-  ['primary-track-channel', 'transition-channel', 'sample-clip', 'resize-handle',
+  [HTML5Backend.NativeTypes.FILE, 'track-group', 'sample-clip', 'resize-handle',
     'automation-clip/control-point', 'tempo-clip/control-point'],
-  dropTarget, collect)(MixArrangementLayout)
+  dropTarget, collectDrop)(MixArrangementLayout)

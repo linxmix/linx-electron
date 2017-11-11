@@ -121,7 +121,7 @@ function onaudioprocess ({
     if (Math.abs(sampleDelta) >= SAMPLE_DRIFT_TOLERANCE) {
       // console.log('actualElapsedSamples', actualElapsedSamples);
       // console.log('expectedElapsedSamples', expectedElapsedSamples);
-      console.log("DRIFT", sampleDelta, extractFrameCount, BUFFER_SIZE);
+      console.log("DRIFT", sampleDelta, elapsedTime)
 
       // if we're behind where we should be, extract dummy frames to catch up
       if (sampleDelta > 0) {

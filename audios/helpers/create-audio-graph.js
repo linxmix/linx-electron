@@ -45,7 +45,8 @@ function createAudioGraph ({
     audioGraph,
     currentBeat,
     currentTime,
-    beatScale
+    beatScale,
+    bpmScale
   })
 
   // add channel node
@@ -55,6 +56,7 @@ function createAudioGraph ({
   // generate sample clip nodes
   forEach(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip => addSampleClipToAudioGraph({
     outputs: channel.id,
+    pitchSemitones: channel.pitchSemitones,
     startBeat,
     audioGraph,
     clip,
@@ -62,7 +64,7 @@ function createAudioGraph ({
     bpmScale,
     currentBeat,
     currentTime,
-    beatScale
+    beatScale,
   }))
 
   // generate audio graphs for nested channels

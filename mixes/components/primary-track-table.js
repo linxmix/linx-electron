@@ -23,10 +23,28 @@ class PrimaryTrackTable extends React.Component {
     const PrimaryTrackRow = createPrimaryTrackRowClass({
       handleDragEnter: () => {},
       handleDrop: ({ sourceRowId, targetRowId }) => {
-        const tracks = this.props.tracks
-        const targetIndex = findIndex(tracks, { id: targetRowId })
-        const sourceIndex = findIndex(tracks, { id: sourceRowId })
-        this.props.reorderPrimaryTrack({ targetIndex, sourceIndex, tracks })
+        const trackGroups = this.props.trackGroups
+        const targetIndex = findIndex(trackGroups, { id: targetRowId })
+        const sourceIndex = findIndex(trackGroups, { id: sourceRowId })
+
+        // forward swap
+        if (sourceIndex < targetIndex) {
+          for (let i = sourceIndex + 1; i <= targetIndex; i++) {
+            this.props.swapTrackGroups({
+              sourceId: trackGroups[sourceIndex].id,
+              targetId: trackGroups[i].id
+            })
+          }
+
+        // backward swap
+        } else {
+          for (let i = sourceIndex; i > targetIndex; i--) {
+            this.props.swapTrackGroups({
+              sourceId: trackGroups[sourceIndex].id,
+              targetId: trackGroups[i].id
+            })
+          }
+        }
       },
       canDrag: () => {
         const tableSorting = this.state.tableSorting
@@ -40,27 +58,28 @@ class PrimaryTrackTable extends React.Component {
   render () {
     const {
       mixId,
-      tracks,
+      trackGroups,
       isLoading,
       isOver,
       canDrop,
       connectDropTarget,
-      removeTrack
+      removeTrackGroup
     } = this.props
 
     const columns = [{
       id: 'index',
       header: '#',
       sort: 'asc',
-      accessor: track => track.index + 1,
-      // providing this render function allows PrimaryTrackRow to access the track object
+      accessor: trackGroup => trackGroup.index + 1,
+      // providing this render function allows PrimaryTrackRow to access the trackGroup object
       render: props => <span>
         {props.value}
         <span className='edit-buttons'>
-          <button className='delete-button' onClick={() => removeTrack(props.row.id)}>
+          <button className='delete-button' onClick={() => removeTrackGroup(props.row.id)}>
             x
           </button>
-          <Link to={`/mixes/${mixId}/tracks/${props.row.id}/${(tracks[props.row.index + 1] || {}).id}`}>
+          <Link
+            to={`/mixes/${mixId}/trackGroups/${props.row.id}/${(trackGroups[props.row.index + 1] || {}).id}`}>
             <button className='edit-button'>e</button>
           </Link>
         </span>
@@ -68,12 +87,12 @@ class PrimaryTrackTable extends React.Component {
       width: 60
     }, {
       header: 'Title',
-      accessor: 'meta.title',
+      accessor: 'primaryTrack.sample.meta.title',
       minWidth: 100,
       render: props => <span title={props.value}>{props.value}</span>
     }, {
       header: 'Artist',
-      accessor: 'meta.artist',
+      accessor: 'primaryTrack.sample.meta.artist',
       minWidth: 100,
       render: props => <span title={props.value}>{props.value}</span>
     }, {
@@ -83,22 +102,22 @@ class PrimaryTrackTable extends React.Component {
       maxWidth: 100
     }, {
       header: 'Bpm',
-      accessor: 'meta.bpm',
+      accessor: 'primaryTrack.sample.meta.bpm',
       minWidth: 50,
       maxWidth: 100
     }, {
       header: 'Key',
-      accessor: 'meta.key',
+      accessor: 'primaryTrack.sample.meta.key',
       minWidth: 70,
       maxWidth: 100
     }]
 
-    const dropClassName = (isOver && canDrop) ? 'primary-track-table-drag-over' : ''
+    const dropClassName = (isOver && canDrop) ? 'u-valid-file-drag-over' : ''
 
     return connectDropTarget(<div>
       <ReactTable
         loading={isLoading}
-        data={tracks}
+        data={trackGroups}
         columns={columns}
         TrComponent={this.state.PrimaryTrackRow}
         showPagination={false}

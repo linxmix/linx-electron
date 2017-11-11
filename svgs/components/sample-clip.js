@@ -2,11 +2,31 @@ const React = require('react')
 const d3 = require('d3')
 const { map, isEqual, omit } = require('lodash')
 const { DragSource } = require('react-dnd')
+const classnames = require('classnames')
 
-const getPeaks = require('../../samples/helpers/get-peaks')
 const { beatToTime, timeToBeat } = require('../../lib/number-utils')
+const ResizeHandle = require('./resize-handle')
+const Waveform = require('./waveform')
+const { isRightClick } = require('../../lib/mouse-event-utils')
 
 class SampleClip extends React.Component {
+  handleClick (e) {
+    if (this.props.canEdit) {
+      e.preventDefault()
+      e.stopPropagation()
+
+      if (isRightClick(e)) {
+        if (e.shiftKey) {
+          this.props.snipClip({ e, clip: this.props.clip })
+        } else {
+          this.props.deleteClip({ clipId: this.props.clip.id })
+        }
+      } else {
+        this.props.selectClip({ clip: this.props.clip })
+      }
+    }
+  }
+
   handleGridMarkerClick (marker, e) {
     e.preventDefault()
     e.stopPropagation()
@@ -14,41 +34,61 @@ class SampleClip extends React.Component {
     this.props.selectGridMarker({ clip: this.props.clip, marker })
   }
 
-  // TODO(BEATGRID): need to make beatScale able to meet the equality check when unchanged
-  // also do not omit scaleX
-  shouldComponentUpdate(nextProps) {
-    return !isEqual(
-      omit(nextProps, ['connectDragSource', 'beatScale', 'selectGridMarker', 'scaleX']),
-      omit(this.props, ['connectDragSource', 'beatScale', 'selectGridMarker', 'scaleX']))
-  }
-
   render () {
-    const { clip, height, color, sampleResolution, scaleX, connectDragSource, isDragging } = this.props
+    const { clip, height, color, sampleResolution, scaleX, connectDragSource, isDragging, isSelected,
+      canResize } = this.props
     if (!clip || (clip.status !== 'loaded')) { return null }
 
     const { sample, startBeat, audioStartTime, beatCount } = clip
-    const { audioBuffer, meta: { bpm: audioBpm } } = sample
+    const { audioBuffer, meta: { bpm: audioBpm, duration } } = sample
     const audioStartBeat = timeToBeat(audioStartTime, audioBpm)
-    const peaks = getPeaks({
-      audioBuffer,
-      startTime: audioStartTime,
-      endTime: audioStartTime + beatToTime(beatCount, audioBpm),
-      length: beatCount * sampleResolution
-    })
+    const maxAudioBeat = timeToBeat(duration - audioStartTime, audioBpm)
 
-    const median = Math.ceil(height / 2.0)
-    const area = d3.area()
-      .x((peak, i) => {
-        const percent = i / peaks.length
-        const audioBeat = percent * beatCount
-        return audioBeat
-      })
-      .y0(([ ymin, ymax ]) => median + ymin * median)
-      .y1(([ ymin, ymax ]) => median + ymax * median)
+    return connectDragSource(<g className={classnames("SampleClip", { "is-selected": isSelected })}
+      transform={`translate(${startBeat})`}
+      onMouseUp={this.handleClick.bind(this)}>
+      <rect className="SampleClip-backdrop"
+        width={beatCount}
+        height={height}
+      />
 
-    return connectDragSource(<g transform={`translate(${startBeat})`}>
-      <rect width={beatCount} height={height} fill='transparent' />
-      <path fill={color} d={area(peaks)} opacity={isDragging ? 0.5 : 1} />
+      <Waveform
+        audioBuffer={audioBuffer}
+        startTime={audioStartTime}
+        endTime={audioStartTime + beatToTime(beatCount, audioBpm)}
+        length={beatCount * sampleResolution}
+        beatCount={beatCount}
+        height={height}
+        color={color}
+        opacity={isDragging ? 0.5 : 1}
+      />
+
+      {canResize && <g>
+        <ResizeHandle
+          id={clip.id}
+          height={height}
+          width={10 / scaleX}
+          scaleX={scaleX}
+          translateX={0}
+          startBeat={clip.startBeat}
+          beatCount={clip.beatCount}
+          audioBpm={audioBpm}
+          canDrag
+          onResizeArgs={{ audioBpm, audioBuffer, audioStartTime, maxAudioBeat }}
+        />
+        <ResizeHandle
+          id={clip.id}
+          height={height}
+          width={10 / scaleX}
+          scaleX={scaleX}
+          translateX={clip.beatCount}
+          startBeat={clip.startBeat}
+          beatCount={clip.beatCount}
+          audioBpm={audioBpm}
+          canDrag
+          onResizeArgs={{ audioBpm, audioBuffer, audioStartTime, maxAudioBeat }}
+        />
+      </g>}
 
       {this.props.showGridMarkers && <g transform={`translate(${-audioStartBeat})`}>
         {map(clip.gridMarkers || [], (marker) =>
@@ -75,6 +115,9 @@ SampleClip.defaultProps = {
   sampleResolution: 1,
   scaleX: 1,
   canDrag: false,
+  canResize: false,
+  canEdit: false,
+  isSelected: false,
   showGridMarkers: false
 }
 

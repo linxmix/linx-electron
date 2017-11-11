@@ -1,12 +1,10 @@
+/* Utils */
 
+body {
+  margin: 0;
+}
 
-.file-drop-dragging-over-frame {
-  position: fixed;
-  top: 0;
-  left: 0; 
-  z-index: 9999999999;               
-  width: 100%;
-  height: 100%;         
+.u-valid-file-drag-over {
   background-color: rgba(0,0,0,0);
 
   animation: glow .5s;
@@ -19,18 +17,81 @@
   }
 }
 
-
-
-
-
-
-.primary-track-table-drag-over {
-  background-color: rgba(0,0,0,0);
-
-  animation: glow .5s;
-  animation-fill-mode: forwards;
+.u-multiline-ellipsis-1 {
+  word-break: break-word;
+  text-overflow: ellipsis;
+  overflow-y: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
 }
 
+.u-multiline-ellipsis-2 {
+  word-break: break-word;
+  text-overflow: ellipsis;
+  overflow-y: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.u-scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.VerticalLayout {
+  display: flex;
+  flex-direction: column;
+}
+
+.VerticalLayout.VerticalLayout--fullHeight {
+  height: 100%;
+}
+
+.VerticalLayout.VerticalLayout--page {
+  height: 100vh;
+}
+
+.VerticalLayout-fixedSection {
+  flex: 0 0 auto;
+}
+
+.VerticalLayout-flexSection {
+  flex: 1;
+}
+
+/* SVG */
+
+.SampleClip {
+  fill: transparent;
+}
+
+.SampleClip:hover {
+  cursor: pointer;
+}
+
+.SampleClip:hover .SampleClip-backdrop {
+  fill: rgba(0, 255, 255, 0.2);
+}
+
+.SampleClip.is-selected .SampleClip-backdrop {
+  fill: rgba(0, 255, 0, 0.2);
+}
+
+.SampleClip-backdrop {
+  // stroke: gray;
+  // stroke-width: 1;
+  // stroke-dasharray: 5, 5;
+}
+
+/* TrackControl */
+
+.TrackControl:not(:last-child) {
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+/* PrimaryTrackRow */
 
 .primary-track-row .delete-button {
   cursor: pointer;
@@ -60,34 +121,3 @@
   cursor: pointer;
 }
 
-
-
-body {
-  margin: 0;
-}
-
-.u-scrollable {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.VerticalLayout {
-  display: flex;
-  flex-direction: column;
-}
-
-.VerticalLayout.VerticalLayout--fullHeight {
-  height: 100%;
-}
-
-.VerticalLayout.VerticalLayout--page {
-  height: 100vh;
-}
-
-.VerticalLayout-fixedSection {
-  flex: 0 0 auto;
-}
-
-.VerticalLayout-flexSection {
-  flex: 1;
-}

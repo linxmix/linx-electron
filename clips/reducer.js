@@ -14,11 +14,14 @@ const {
   updateClip,
   createClip,
   moveClip,
+  snipClip,
+  resizeSampleClip,
   moveControlPoint,
   createControlPoint,
   deleteControlPoint,
   updateControlPointValue,
   createAutomationClipWithControlPoint,
+  createSampleClip,
   calculateGridMarkers,
   clearGridMarkers,
   selectGridMarker
@@ -26,7 +29,8 @@ const {
 const { setClipsChannel } = require('../channels/actions')
 const { updateMeta } = require('../metas/actions')
 const { analyzeSample } = require('../samples/actions')
-const { CLIP_TYPES, CONTROL_TYPES, CLIP_TYPE_AUTOMATION, CLIP_TYPE_TEMPO } = require('./constants')
+const { CLIP_TYPES, CONTROL_TYPES, CLIP_TYPE_AUTOMATION,
+  CLIP_TYPE_TEMPO, CLIP_TYPE_SAMPLE } = require('./constants')
 const { quantizeBeat, clamp, beatToTime, timeToBeat, validNumberOrDefault,
   bpmToSpb, isValidNumber } = require('../lib/number-utils')
 
@@ -47,11 +51,11 @@ function createReducer (config) {
       }
     }),
     [unsetClips]: (state, action) => loop(state, Effects.batch(
-      map(action.payload, id => Effects.constant(unsetClip(id))))),
+      map(action.payload, id => Effects.constant(unsetClip({ id }))))),
     [unsetClip]: (state, action) => ({
       ...state,
-      dirty: without(state.dirty, action.payload),
-      records: omit(state.records, action.payload)
+      dirty: without(state.dirty, action.payload.id),
+      records: omit(state.records, action.payload.id)
     }),
     [undirtyClips]: (state, action) => loop(state, Effects.batch(
       map(action.payload, id => Effects.constant(undirtyClip(id))))),
@@ -96,6 +100,61 @@ function createReducer (config) {
         id,
         startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
       })))
+    },
+    [snipClip]: (state, action) => {
+      const { channel, clip, snipAtBeat } = action.payload
+      const newClipId = uuid()
+      const audioBpm = clip.sample.meta.bpm
+
+      return loop(state, Effects.batch([
+        Effects.constant(updateClip({
+          id: clip.id,
+          beatCount: snipAtBeat
+        })),
+        Effects.constant(createClip({
+          id: newClipId,
+          type: CLIP_TYPE_SAMPLE,
+          sampleId: clip.sampleId,
+          audioStartTime: beatToTime(timeToBeat(clip.audioStartTime, audioBpm) + snipAtBeat, audioBpm),
+          beatCount: clip.beatCount - snipAtBeat,
+          startBeat: clip.startBeat + snipAtBeat
+        })),
+        Effects.constant(setClipsChannel({
+          channelId: channel.id,
+          clipIds: [newClipId]
+        })),
+      ]))
+    },
+    [resizeSampleClip]: (state, action) => {
+      const { id, startBeat, beatCount, diffBeats, isResizeLeft, quantization,
+        audioStartTime, audioBpm, maxAudioBeat } = action.payload
+      const quantizedDiffBeats = quantizeBeat({ quantization, beat: diffBeats })
+
+      let updatePayload
+      if (isResizeLeft) {
+        let newAudioStartTime = audioStartTime + beatToTime(quantizedDiffBeats, audioBpm)
+        let newStartBeat = startBeat + quantizedDiffBeats
+        let newBeatCount = beatCount - quantizedDiffBeats
+
+        // TODO: let this snap to earliest audio start time? if quantization is off
+        if (newAudioStartTime < 0) {
+          return state
+        }
+
+        updatePayload = {
+          id,
+          startBeat: newStartBeat,
+          audioStartTime: newAudioStartTime,
+          beatCount: newBeatCount
+        }
+      } else {
+        updatePayload = {
+          id,
+          beatCount: Math.min(beatCount + quantizedDiffBeats, maxAudioBeat)
+        }
+      }
+
+      return loop(state, Effects.constant(updateClip(updatePayload)))
     },
     [moveControlPoint]: (state, action) => {
       const { sourceId, id, beat, value, diffBeats, diffValue,
@@ -206,6 +265,24 @@ function createReducer (config) {
         }))
       ]))
     },
+    [createSampleClip]: (state, action) => {
+      const { channelId, sampleId, clipOptions, quantization } = action.payload
+      const clipId = uuid()
+
+      assert(channelId && sampleId, 'Must have valid channelId and sampleId to createTrackSampleClip')
+
+      clipOptions.startBeat = quantizeBeat({ quantization, beat: clipOptions.startBeat })
+
+      return loop(state, Effects.batch([
+        Effects.constant(createClip(assign({
+          id: clipId, sampleId, type: CLIP_TYPE_SAMPLE
+        }, clipOptions))),
+        Effects.constant(setClipsChannel({
+          channelId: channelId,
+          clipIds: [clipId]
+        }))
+      ]))
+    },
     [calculateGridMarkers]: (state, action) => {
       const { id, bpm, startTime, endTime } = action.payload
       const clip = state.records[id]
@@ -245,7 +322,7 @@ function createReducer (config) {
       })))
     },
     [selectGridMarker]: (state, action) => {
-      const { channel, clip, marker } = action.payload
+      const { clip, marker } = action.payload
 
       const firstBarOffsetTime = _getFirstBarOffsetTime({
         time: marker.time,

@@ -7,12 +7,12 @@ const keymaster = require('keymaster')
 const DetectDragModifierKeys = require('../../lib/detect-drag-modifier-keys')
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
-const { updateMeta } = require('../../metas/actions')
 const { updateZoom } = require('../../svgs/actions')
-const { moveClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint,
+const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint, createSampleClip, snipClip,
   deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
-const { moveTransitionChannel, movePrimaryTrackChannel, resizeChannel } = require('../../channels/actions')
+const { moveTrackGroup, resizeChannel, removeClipsFromChannel, createSampleTrackFromFile,
+  updateChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph,
   updatePlayStateForTempoChange } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
@@ -33,16 +33,17 @@ class MixDetailContainer extends React.Component {
   }
 
   render () {
-    const { mix, audioContext, fromTrack, toTrack, error, zoom,
+    const { mix, audioContext, fromTrackGroup, toTrackGroup, error, zoom,
       sampleError, saveMix, playPause } = this.props
     if (!mix) { return null }
 
     const arrangementActions = mapValues(
       pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
-        'updateControlPointValue', 'moveClip', 'moveTransitionChannel', 'movePrimaryTrackChannel',
+        'updateControlPointValue', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip',   
         'resizeChannel', 'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
-        'updatePlayStateForTempoChange']),
+        'removeClipsFromChannel', 
+        'updatePlayStateForTempoChange', 'snipClip']),
       (fn) => (options) => fn({
         quantization: _getQuantization(this.props.dragModifierKeys),
         ...options
@@ -55,7 +56,7 @@ class MixDetailContainer extends React.Component {
     return <div className='VerticalLayout VerticalLayout--fullHeight'>
       <header className='VerticalLayout-fixedSection'>
         <h3>
-          {fromTrack && fromTrack.meta.title} - {toTrack && toTrack.meta.title}
+          {fromTrackGroup && fromTrackGroup.primaryTrack.sample.meta.title} - {toTrackGroup && toTrackGroup.primaryTrack.sample.meta.title}
         </h3>
         <Link to={`/mixes/${mix.id}`}>
           Back to Mix
@@ -77,8 +78,8 @@ class MixDetailContainer extends React.Component {
           audioContext={audioContext}
           scaleX={zoom.scaleX}
           translateX={zoom.translateX}
-          fromTrack={fromTrack}
-          toTrack={toTrack}
+          fromTrackGroup={fromTrackGroup}
+          toTrackGroup={toTrackGroup}
           {...arrangementActions}
         />
       </section>
@@ -93,33 +94,37 @@ module.exports = connect(
     const currentMixId = ownProps.params.mixId
     const mix = props.mixes[currentMixId]
 
-    const fromTrackId = ownProps.params.fromTrackId
-    const toTrackId = ownProps.params.toTrackId
-    const fromTrack = find(mix.tracks, { id: fromTrackId }) || {}
-    const toTrack = find(mix.tracks, { id: toTrackId }) || {}
+    const fromTrackGroupId = ownProps.params.fromTrackGroupId
+    const toTrackGroupId = ownProps.params.toTrackGroupId
+    const fromTrackGroup = find(mix.trackGroups, { id: fromTrackGroupId })
+    const toTrackGroup = find(mix.trackGroups, { id: toTrackGroupId })
 
     const zoom = props.zooms[currentMixId] || {}
 
-    return { ...props, mix, zoom, fromTrack, toTrack }
+    return { ...props, mix, zoom, fromTrackGroup, toTrackGroup }
   },
   {
     saveMix,
     loadMix,
-    updateMeta,
     playPause,
     seekToBeat,
     selectGridMarker,
     moveClip,
+    resizeSampleClip,
     moveControlPoint,
     createControlPoint,
     deleteControlPoint,
     updateControlPointValue,
     createAutomationClipWithControlPoint,
+    createSampleTrackFromFile,
+    createSampleClip,
+    snipClip,
+    removeClipsFromChannel,
     calculateGridMarkers,
     clearGridMarkers,
-    moveTransitionChannel,
-    movePrimaryTrackChannel,
+    moveTrackGroup,
     resizeChannel,
+    updateChannel,
     updateZoom,
     updateAudioGraph,
     updatePlayStateForTempoChange

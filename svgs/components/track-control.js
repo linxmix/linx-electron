@@ -2,15 +2,38 @@ const React = require('react')
 const { DragSource } = require('react-dnd')
 const uuid = require('uuid/v4')
 
+const { isValidNumber } = require('../../lib/number-utils')
+
 // TODO: does this really belong under svgs/? its not an svg
 class TrackControl extends React.Component {
-  render () {
-    const { title, bpm, height, width, isEditingBeatgrid, toggleEditBeatgrid } = this.props
-    const editBeatgridInputId = uuid()
+  handleChangePitchSemitones (e) {
+    const newValue = parseFloat(e.target.value)
 
-    return <div style={{ height, width, borderBottom: '1px solid gray' }}>
-      {title}
+    if (isValidNumber(newValue) && (newValue !== this.props.pitchSemitones)) {
+      this.props.updatePitchSemitones(newValue)
+    }
+  }
+
+  render () {
+    const { title, bpm, musicalKey, height, width, isEditingBeatgrid, pitchSemitones,
+      toggleEditBeatgrid } = this.props
+    const editBeatgridInputId = uuid()
+    const musicalKeyInputId = uuid()
+
+    return <div className="TrackControl" style={{ height, width }}>
+      <span className="u-multiline-ellipsis-2">{title}</span>
       <div>BPM: {bpm}</div>
+      <div>
+        <input id={musicalKeyInputId}
+          type='number'
+          value={pitchSemitones}
+          onChange={this.handleChangePitchSemitones.bind(this)}
+          min={-12}
+          max={12}
+          step={1}
+        />
+        <label htmlFor={musicalKeyInputId}>Key: {musicalKey} </label>
+      </div>
       <div>
         <input id={editBeatgridInputId}
           type='checkbox' checked={isEditingBeatgrid} onChange={toggleEditBeatgrid} />
