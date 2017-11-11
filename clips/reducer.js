@@ -266,10 +266,12 @@ function createReducer (config) {
       ]))
     },
     [createSampleClip]: (state, action) => {
-      const { channelId, sampleId, clipOptions } = action.payload
+      const { channelId, sampleId, clipOptions, quantization } = action.payload
       const clipId = uuid()
 
       assert(channelId && sampleId, 'Must have valid channelId and sampleId to createTrackSampleClip')
+
+      clipOptions.startBeat = quantizeBeat({ quantization, beat: clipOptions.startBeat })
 
       return loop(state, Effects.batch([
         Effects.constant(createClip(assign({

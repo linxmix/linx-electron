@@ -2,6 +2,7 @@ const React = require('react')
 const d3 = require('d3')
 const { map, isEqual, omit } = require('lodash')
 const { DragSource } = require('react-dnd')
+const classnames = require('classnames')
 
 const { beatToTime, timeToBeat } = require('../../lib/number-utils')
 const ResizeHandle = require('./resize-handle')
@@ -10,14 +11,18 @@ const { isRightClick } = require('../../lib/mouse-event-utils')
 
 class SampleClip extends React.Component {
   handleClick (e) {
-    if (isRightClick(e) && this.props.canEdit) {
+    if (this.props.canEdit) {
       e.preventDefault()
       e.stopPropagation()
 
-      if (e.shiftKey) {
-        this.props.deleteClip({ id: this.props.clip.id })
+      if (isRightClick(e)) {
+        if (e.shiftKey) {
+          this.props.snipClip({ e, clip: this.props.clip })
+        } else {
+          this.props.deleteClip({ id: this.props.clip.id })
+        }
       } else {
-        this.props.snipClip({ e, clip: this.props.clip })
+        this.props.selectClip({ clip: this.props.clip })
       }
     }
   }
@@ -30,7 +35,8 @@ class SampleClip extends React.Component {
   }
 
   render () {
-    const { clip, height, color, sampleResolution, scaleX, connectDragSource, isDragging, canResize } = this.props
+    const { clip, height, color, sampleResolution, scaleX, connectDragSource, isDragging, isSelected,
+      canResize } = this.props
     if (!clip || (clip.status !== 'loaded')) { return null }
 
     const { sample, startBeat, audioStartTime, beatCount } = clip
@@ -38,7 +44,7 @@ class SampleClip extends React.Component {
     const audioStartBeat = timeToBeat(audioStartTime, audioBpm)
     const maxAudioBeat = timeToBeat(duration - audioStartTime, audioBpm)
 
-    return connectDragSource(<g className="SampleClip"
+    return connectDragSource(<g className={classnames("SampleClip", { "is-selected": isSelected })}
       transform={`translate(${startBeat})`}
       onMouseUp={this.handleClick.bind(this)}>
       <rect className="SampleClip-backdrop"
@@ -111,6 +117,7 @@ SampleClip.defaultProps = {
   canDrag: false,
   canResize: false,
   canEdit: false,
+  isSelected: false,
   showGridMarkers: false
 }
 

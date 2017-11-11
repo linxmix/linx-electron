@@ -1,5 +1,5 @@
 const React = require('react')
-const { compact, concat, map, filter } = require('lodash')
+const { compact, concat, get, map, filter } = require('lodash')
 const { DragSource } = require('react-dnd')
 
 const TrackChannel = require('./track-channel')
@@ -30,6 +30,7 @@ class TrackGroup extends React.Component {
         canDragClips={canDragClips}
         canResizeClips={canResizeClips}
         canEditClips={canEditClips && !showAutomationControlType}
+        selectedClip={get(this, `props.selectedClips[${track.id}]`)}
         showAutomationControlType={showAutomationControlType}
         color={color}
         sampleResolution={sampleResolution}
@@ -43,6 +44,7 @@ TrackGroup.defaultProps = {
   channel: null,
   beatScale: null,
   trackChannelActions: {},
+  selectedClips: {},
   translateY: 0,
   scaleX: 1,
   mixBeatCount: 0,

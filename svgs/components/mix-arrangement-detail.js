@@ -1,6 +1,6 @@
 const React = require('react')
 const d3 = require('d3')
-const { find, forEach, pick, get, map, without, includes } = require('lodash')
+const { find, forEach, pick, get, map, without, includes, concat } = require('lodash')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
 const TrackGroup = require('./track-group')
@@ -21,6 +21,7 @@ class MixArrangementDetail extends React.Component {
     super(props)
     this.state = {
       editingBeatgrids: [],
+      selectedClips: {},
       selectedControlType: null
     }
   }
@@ -29,6 +30,29 @@ class MixArrangementDetail extends React.Component {
     this.setState({
       selectedControlType: controlType
     })
+  }
+
+  selectClip ({ clip, channel }) {
+    const selectedClips = this.state.selectedClips
+    const selectedClip = selectedClips[channel.id]
+
+    console.log('selectClip', { clip, channel, selectedClips, selectedClip })
+
+    if (!selectedClip || selectedClip.id !== clip.id) {
+      this.setState({
+        selectedClips: {
+          ...selectedClips,
+          [channel.id]: clip
+        }
+      })
+    } else {
+      this.setState({
+        selectedClips: {
+          ...selectedClips,
+          [channel.id]: null
+        }
+      })
+    }
   }
 
   handleFilesDrop ({ files }) {
@@ -136,6 +160,7 @@ class MixArrangementDetail extends React.Component {
     const trackChannelActions = {
       createControlPoint,
       deleteControlPoint,
+      selectClip: this.selectClip.bind(this),
 
       createAutomationClipWithControlPoint: ({ channelId, beat, value, minBeat, maxBeat }) => {
         this.props.createAutomationClipWithControlPoint({
@@ -246,6 +271,7 @@ class MixArrangementDetail extends React.Component {
         canResizeClips
         canDragClips
         canEditClips
+        selectedClips={this.state.selectedClips}
         showAutomationControlType={!includes(this.state.editingBeatgrids, fromTrackGroup.id) && selectedControlType}
         color={d3.interpolateCool(0.25)}
         sampleResolution={includes(this.state.editingBeatgrids, fromTrackGroup.id)

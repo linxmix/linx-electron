@@ -1,5 +1,5 @@
 const React = require('react')
-const { map, merge, filter } = require('lodash')
+const { get, map, assign, filter, includes } = require('lodash')
 
 const SampleClip = require('./sample-clip')
 const AutomationClip = require('./automation-clip')
@@ -25,16 +25,28 @@ class TrackChannel extends React.Component {
           value
         })
       } else if (this.props.canEditClips) {
+        const selectedClip = this.props.selectedClip
         let { beat } = getPosition({ e, scaleX: this.props.scaleX, height: this.props.height })
         beat -= channel.parentChannel.startBeat
 
-        this.props.createSampleClip({
-          channelId: channel.id,
-          sampleId: channel.sampleId,
-          clipOptions: {
+        let clipOptions
+        if (selectedClip) {
+          clipOptions = {
+            startBeat: beat,
+            beatCount: selectedClip.beatCount,
+            audioStartTime: selectedClip.audioStartTime
+          }
+        } else {
+          clipOptions = {
             startBeat: beat,
             beatCount: 8
           }
+        }
+
+        this.props.createSampleClip({
+          clipOptions,
+          channelId: channel.id,
+          sampleId: channel.sampleId,
         })
       }
     }
@@ -44,6 +56,8 @@ class TrackChannel extends React.Component {
     const { channel, color, beatScale, translateY, scaleX, sampleResolution, height, canEditClips, 
       canDragClips, canResizeClips, showAutomationControlType, showGridMarkers } = this.props
     if (!channel) { return null }
+
+    const selectedClipId = get(this.props.selectedClip, 'id')
 
     return <g className="TrackChannel" onMouseUp={this.handleClick.bind(this)}>
       <rect transform={`translate(${-channel.parentChannel.startBeat},${translateY})`}
@@ -65,12 +79,15 @@ class TrackChannel extends React.Component {
             canDrag={canDragClips}
             canResize={canResizeClips}
             canEdit={canEditClips}
+            isSelected={selectedClipId && selectedClipId === clip.id}
             snipClip={options =>
-              this.props.snipClip(merge({ channel }, options))}
+              this.props.snipClip(assign({ channel }, options))}
             deleteClip={this.props.deleteClip}
+            selectClip={options =>
+              this.props.selectClip(assign({ channel }, options))}
             showGridMarkers={showGridMarkers}
             selectGridMarker={options =>
-              this.props.selectGridMarker(merge({ channel }, options))}
+              this.props.selectGridMarker(assign({ channel }, options))}
           />
         )}
 
@@ -99,6 +116,7 @@ class TrackChannel extends React.Component {
 TrackChannel.defaultProps = {
   channel: null,
   beatScale: null,
+  selectedClip: null,
   translateY: 0,
   scaleX: 1,
   mixBeatCount: 0,
