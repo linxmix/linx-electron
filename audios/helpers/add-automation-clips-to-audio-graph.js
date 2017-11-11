@@ -1,6 +1,7 @@
 const d3 = require('d3')
 const { map, reduce, sortBy, find, reject, difference, merge, isNil } = require('lodash')
 
+const { bpmToSpb } = require('../../lib/number-utils')
 const valueScaleToAudioParameter = require('./value-scale-to-audio-parameter')
 const {
   CONTROL_TYPE_GAIN,
@@ -13,6 +14,7 @@ const {
   CONTROL_TYPE_FILTER_LOWPASS_Q,
   CONTROL_TYPE_DELAY_WET,
   CONTROL_TYPE_DELAY_CUTOFF,
+  CONTROL_TYPE_DELAY_TIME
 } = require('../../clips/constants')
 
 const FX_CHAIN_ORDER = [
@@ -60,6 +62,13 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
         previousOutput, clip, startBeat, currentBeat, beatScale, currentTime })),
       {}
     )
+
+    // add delayTime in quarter notes
+    const audioBpm = channel.sample.meta.bpm
+    console.log('channel', delayClips[0].channel)
+    audioProperties['delay.delayTime'] = ['setValueAtTime', bpmToSpb(128), 0]
+
+    // TODO: if no cutoff, default to 10000
 
     const audioGraphKey = `${channel.id}_delayNode`
     audioGraph[audioGraphKey] = ['delayNode', previousOutput, audioProperties]

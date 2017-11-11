@@ -188,8 +188,8 @@ class MixArrangementDetail extends React.Component {
         this._asyncUpdateAudioGraph()
       },
 
-      deleteClip: ({ id }) => {
-        this.props.unsetClip({ id })
+      deleteClip: ({ clipId, channel }) => {
+        this.props.removeClipsFromChannel({ clipIds: [clipId], channelId: channel.id })
         this._asyncUpdateAudioGraph()
       },
 
@@ -221,11 +221,11 @@ class MixArrangementDetail extends React.Component {
       },
       {
         trackGroup: toTrackGroup,
-        tracks: [toTrackGroup.primaryTrack]
+        tracks: [toTrackGroup && toTrackGroup.primaryTrack]
       }
     ]
     const trackControlsElement = map(trackGroups, ({ trackGroup, tracks }) =>
-      <div key={trackGroup.id} style={{ borderBottom: '1px solid grey' }}>
+      trackGroup && <div key={trackGroup.id} style={{ borderBottom: '1px solid grey' }}>
         {map(tracks, track => <TrackControl
           key={track.id + '_control'}
           title={track.sample.meta.title}
@@ -286,7 +286,7 @@ class MixArrangementDetail extends React.Component {
         y={rowHeight * trackGroups[0].tracks.length}
       />
 
-      <TrackGroup
+      {toTrackGroup && <TrackGroup
         key={toTrackGroup.id}
         channel={toTrackGroup}
         beatScale={beatScale}
@@ -301,7 +301,7 @@ class MixArrangementDetail extends React.Component {
         sampleResolution={includes(this.state.editingBeatgrids, toTrackGroup.id)
           ? ZOOM_RESOLUTION : NORMAL_RESOLUTION}
         trackChannelActions={trackChannelActions}
-      />
+      />}
 
     </MixArrangementLayout>
   }

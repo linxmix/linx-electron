@@ -17,6 +17,7 @@ const {
   moveTrackGroup,
   resizeChannel,
   setClipsChannel,
+  removeClipsFromChannel,
   setChannelsParent,
   createTrackGroupFromFile,
   createSampleTrackFromFile,
@@ -111,6 +112,19 @@ function createReducer (config) {
         id: channelId,
         clipIds: concat((channel.clipIds || []), clipIds)
       })))
+    },
+    [removeClipsFromChannel]: (state, action) => {
+      const { channelId, clipIds } = action.payload
+      assert(channelId && clipIds, 'Must have channelId and clipIds to removeClipsFromChannel')
+
+      const channel = state.records[channelId] || {}
+      return loop(state, Effects.batch([
+        Effects.constant(updateChannel({
+          id: channelId,
+          clipIds: without(channel.clipIds || [], ...clipIds)
+        })),
+        Effects.constant(unsetClips(clipIds))
+      ]))
     },
     [updateChannel]: (state, action) => {
       const { id } = action.payload

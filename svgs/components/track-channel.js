@@ -82,7 +82,8 @@ class TrackChannel extends React.Component {
             isSelected={selectedClipId && selectedClipId === clip.id}
             snipClip={options =>
               this.props.snipClip(assign({ channel }, options))}
-            deleteClip={this.props.deleteClip}
+            deleteClip={options =>
+              this.props.deleteClip(assign({ channel }, options))}
             selectClip={options =>
               this.props.selectClip(assign({ channel }, options))}
             showGridMarkers={showGridMarkers}

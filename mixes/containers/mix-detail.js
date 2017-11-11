@@ -8,10 +8,11 @@ const DetectDragModifierKeys = require('../../lib/detect-drag-modifier-keys')
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix } = require('../actions')
 const { updateZoom } = require('../../svgs/actions')
-const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint, createSampleClip, unsetClip, snipClip,
+const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint, createSampleClip, snipClip,
   deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
-const { moveTrackGroup, resizeChannel, createSampleTrackFromFile, updateChannel } = require('../../channels/actions')
+const { moveTrackGroup, resizeChannel, removeClipsFromChannel, createSampleTrackFromFile,
+  updateChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph,
   updatePlayStateForTempoChange } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
@@ -39,8 +40,9 @@ class MixDetailContainer extends React.Component {
     const arrangementActions = mapValues(
       pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
-        'updateControlPointValue', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'unsetClip',   
+        'updateControlPointValue', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip',   
         'resizeChannel', 'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
+        'removeClipsFromChannel', 
         'updatePlayStateForTempoChange', 'snipClip']),
       (fn) => (options) => fn({
         quantization: _getQuantization(this.props.dragModifierKeys),
@@ -94,8 +96,8 @@ module.exports = connect(
 
     const fromTrackGroupId = ownProps.params.fromTrackGroupId
     const toTrackGroupId = ownProps.params.toTrackGroupId
-    const fromTrackGroup = find(mix.trackGroups, { id: fromTrackGroupId }) || {}
-    const toTrackGroup = find(mix.trackGroups, { id: toTrackGroupId }) || {}
+    const fromTrackGroup = find(mix.trackGroups, { id: fromTrackGroupId })
+    const toTrackGroup = find(mix.trackGroups, { id: toTrackGroupId })
 
     const zoom = props.zooms[currentMixId] || {}
 
@@ -116,8 +118,8 @@ module.exports = connect(
     createAutomationClipWithControlPoint,
     createSampleTrackFromFile,
     createSampleClip,
-    unsetClip,
     snipClip,
+    removeClipsFromChannel,
     calculateGridMarkers,
     clearGridMarkers,
     moveTrackGroup,

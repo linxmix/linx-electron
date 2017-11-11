@@ -19,7 +19,7 @@ class SampleClip extends React.Component {
         if (e.shiftKey) {
           this.props.snipClip({ e, clip: this.props.clip })
         } else {
-          this.props.deleteClip({ id: this.props.clip.id })
+          this.props.deleteClip({ clipId: this.props.clip.id })
         }
       } else {
         this.props.selectClip({ clip: this.props.clip })
