@@ -42,7 +42,14 @@ class SampleClip extends React.Component {
     const { sample, startBeat, audioStartTime, beatCount } = clip
     const { audioBuffer, meta: { bpm: audioBpm, duration } } = sample
     const audioStartBeat = timeToBeat(audioStartTime, audioBpm)
-    const maxAudioBeat = timeToBeat(duration - audioStartTime, audioBpm)
+
+    const onResizeArgs = {
+      audioBpm,
+      audioBuffer,
+      audioStartTime,
+      minStartBeat: Math.max(0, clip.startBeat - audioStartBeat),
+      maxBeatCount: timeToBeat(duration - audioStartTime, audioBpm)
+    }
 
     return connectDragSource(<g className={classnames("SampleClip", { "is-selected": isSelected })}
       transform={`translate(${startBeat})`}
@@ -74,7 +81,7 @@ class SampleClip extends React.Component {
           beatCount={clip.beatCount}
           audioBpm={audioBpm}
           canDrag
-          onResizeArgs={{ audioBpm, audioBuffer, audioStartTime, maxAudioBeat }}
+          onResizeArgs={onResizeArgs}
         />
         <ResizeHandle
           id={clip.id}
@@ -86,7 +93,7 @@ class SampleClip extends React.Component {
           beatCount={clip.beatCount}
           audioBpm={audioBpm}
           canDrag
-          onResizeArgs={{ audioBpm, audioBuffer, audioStartTime, maxAudioBeat }}
+          onResizeArgs={onResizeArgs}
         />
       </g>}
 

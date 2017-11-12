@@ -126,31 +126,38 @@ function createReducer (config) {
       ]))
     },
     [resizeSampleClip]: (state, action) => {
-      const { id, startBeat, beatCount, diffBeats, isResizeLeft, quantization,
-        audioStartTime, audioBpm, maxAudioBeat } = action.payload
-      const quantizedDiffBeats = quantizeBeat({ quantization, beat: diffBeats })
+      const { id, startBeat, beatCount, isResizeLeft, quantization,
+        audioStartTime, audioBpm, minStartBeat, maxBeatCount } = action.payload
+      let { diffBeats } = action.payload
+      let quantizedDiffBeats = quantizeBeat({ quantization, beat: diffBeats })
 
       let updatePayload
       if (isResizeLeft) {
-        let newAudioStartTime = audioStartTime + beatToTime(quantizedDiffBeats, audioBpm)
-        let newStartBeat = startBeat + quantizedDiffBeats
-        let newBeatCount = beatCount - quantizedDiffBeats
 
-        // TODO: let this snap to earliest audio start time? if quantization is off
-        if (newAudioStartTime < 0) {
-          return state
+        // if resizing beyond audio start,
+        // clamp to smallest positive quantized beat
+        let newStartBeat = startBeat + quantizedDiffBeats
+        if (newStartBeat < minStartBeat) {
+          if (quantization === 'bar' || quantization === 'beat') {
+            while ((newStartBeat = startBeat + quantizedDiffBeats) < minStartBeat) {
+              diffBeats += 1
+              quantizedDiffBeats = quantizeBeat({ quantization, beat: diffBeats })
+            }
+          } else {
+            newStartBeat = minStartBeat
+          }
         }
 
         updatePayload = {
           id,
           startBeat: newStartBeat,
-          audioStartTime: newAudioStartTime,
-          beatCount: newBeatCount
+          audioStartTime: audioStartTime + beatToTime(newStartBeat - startBeat, audioBpm),
+          beatCount: beatCount - (newStartBeat - startBeat)
         }
       } else {
         updatePayload = {
           id,
-          beatCount: Math.min(beatCount + quantizedDiffBeats, maxAudioBeat)
+          beatCount: Math.min(beatCount + quantizedDiffBeats, maxBeatCount)
         }
       }
 
