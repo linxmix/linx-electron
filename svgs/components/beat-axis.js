@@ -2,23 +2,43 @@ const React = require('react')
 const { map, range } = require('lodash')
 
 const { clamp, roundToNearestPowerOfTwo } = require('../../lib/number-utils')
+const { isRightClick } = require('../../lib/mouse-event-utils')
 
 class BeatAxis extends React.Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      displayTimestamp: false
+    }
+  }
+
+  handleClick (e) {
+    if (isRightClick(e)) {
+      e.preventDefault()
+      e.stopPropagation()
+
+      this.setState({
+        displayTimestamp: !this.state.displayTimestamp
+      })
+    }
+  }
+
   render () {
     const { minStep, maxStep, phraseBeatCount, beatCount, height, strokeWidth, stroke,
-      showText, scaleX } = this.props
+      showText, scaleX, beatScale } = this.props
 
     const computedStep = (phraseBeatCount * 2) / scaleX
     const step = clamp(minStep, roundToNearestPowerOfTwo(computedStep), maxStep)
 
-    return <g>
+    return <g onMouseUp={this.handleClick.bind(this)} style={{ userSelect: 'none' }}>
       {map(range(0, beatCount, step), tick => <g key={tick} transform={`translate(${tick})`}>
         {showText && (computedStep < 256) && (tick % phraseBeatCount === 0) && <text
           x={2}
           y='50%'
           opacity={0.75}
           transform={`scale(${1.0 / scaleX}, 1)`}>
-            {tick / phraseBeatCount}
+            {this.state.displayTimestamp ?
+              _calculateHumanReadableTimestamp(beatScale(tick)) : (tick / phraseBeatCount)}
         </text>}
 
         <line
@@ -40,7 +60,19 @@ BeatAxis.defaultProps = {
   scaleX: 1,
   minStep: 4,
   maxStep: 128,
-  phraseBeatCount: 16
+  phraseBeatCount: 16,
+  beatScale: null
 }
 
 module.exports = BeatAxis
+
+function _calculateHumanReadableTimestamp(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = _keepTwoDigits(Math.round(totalSeconds % 60))
+
+  return `${minutes}:${seconds}`
+}
+
+function _keepTwoDigits(n) {
+  return (n).toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping:false })
+}

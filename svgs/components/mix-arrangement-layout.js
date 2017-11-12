@@ -166,7 +166,7 @@ class MixArrangementLayout extends React.Component {
 
         <div className='VerticalLayout VerticalLayout--fullHeight'
           onMouseUp={this.handleClick.bind(this)}
-          style={{ flex: 1 }}>
+          style={{ flex: 1, cursor: 'pointer' }}>
           <svg
             className='VerticalLayout-fixedSection'
             width='100%'
@@ -177,6 +177,7 @@ class MixArrangementLayout extends React.Component {
               <BeatAxis
                 scaleX={scaleX}
                 beatCount={mixBeatCount}
+                beatScale={beatScale}
                 height='100%'
                 strokeWidth={1 / scaleX}
                 showText
