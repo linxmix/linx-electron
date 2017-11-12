@@ -16,12 +16,13 @@ class TrackControl extends React.Component {
 
   render () {
     const { title, bpm, musicalKey, height, width, isEditingBeatgrid, pitchSemitones,
-      toggleEditBeatgrid } = this.props
+      toggleEditBeatgrid, toggleSoloTrack, isSoloTrack } = this.props
     const editBeatgridInputId = uuid()
     const musicalKeyInputId = uuid()
+    const soloInputId = uuid()
 
     return <div className="TrackControl" style={{ height, width }}>
-      <span className="u-multiline-ellipsis-2">{title}</span>
+      <span className="u-multiline-ellipsis-1" title={title}>{title}</span>
       <div>BPM: {bpm}</div>
       <div>
         <input id={musicalKeyInputId}
@@ -34,10 +35,15 @@ class TrackControl extends React.Component {
         />
         <label htmlFor={musicalKeyInputId}>Key: {musicalKey} </label>
       </div>
-      <div>
+      <div style={{ cursor: 'pointer' }}>
         <input id={editBeatgridInputId}
           type='checkbox' checked={isEditingBeatgrid} onChange={toggleEditBeatgrid} />
         <label htmlFor={editBeatgridInputId}>Edit Beatgrid</label>
+      </div>
+      <div style={{ cursor: 'pointer' }}>
+        <input id={soloInputId}
+          type='checkbox' checked={isSoloTrack} onChange={toggleSoloTrack} />
+        <label htmlFor={soloInputId}>Solo Track</label>
       </div>
     </div>
   }
@@ -45,7 +51,13 @@ class TrackControl extends React.Component {
 
 TrackControl.defaultProps = {
   height: 100,
-  width: '100%'
+  width: '100%',
+  isEditingBeatgrid: false,
+  isSoloTrack: false,
+  musicalKey: '',
+  pitchSemitones: 0,
+  title: '',
+  bpm: 0
 }
 
 module.exports = TrackControl

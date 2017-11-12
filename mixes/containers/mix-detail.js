@@ -13,7 +13,7 @@ const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithCo
 } = require('../../clips/actions')
 const { moveTrackGroup, resizeChannel, removeClipsFromChannel, createSampleTrackFromFile,
   updateChannel } = require('../../channels/actions')
-const { playPause, seekToBeat, updateAudioGraph,
+const { playPause, seekToBeat, updateAudioGraph, toggleSoloChannel,
   updatePlayStateForTempoChange } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
 const { PLAY_STATE_PLAYING } = require('../../audios/constants')
@@ -42,7 +42,7 @@ class MixDetailContainer extends React.Component {
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
         'updateControlPointValue', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip',   
         'resizeChannel', 'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
-        'removeClipsFromChannel', 
+        'removeClipsFromChannel', 'toggleSoloChannel',
         'updatePlayStateForTempoChange', 'snipClip']),
       (fn) => (options) => fn({
         quantization: _getQuantization(this.props.dragModifierKeys),
@@ -125,6 +125,7 @@ module.exports = connect(
     moveTrackGroup,
     resizeChannel,
     updateChannel,
+    toggleSoloChannel,
     updateZoom,
     updateAudioGraph,
     updatePlayStateForTempoChange

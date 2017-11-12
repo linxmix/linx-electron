@@ -26,16 +26,29 @@ function createAudioGraph ({
   bpmScale
 }) {
   startBeat = validNumberOrDefault(startBeat, 0)
-  const currentBeat = getCurrentBeat({ playState, audioContext, beatScale })
-  const currentTime = audioContext.currentTime
-  const { channels: nestedChannels = [] } = channel
-  const audioGraph = {}
 
   // hack to add custom node creation to audioContext
   audioContext.createSoundtouchSource = () => createSoundtouchSource(audioContext)
   audioContext.createDelayNode = () => (new (new Tuna(audioContext)).Delay())
 
+  // generate audio graphs for nested channels
+  const { channels: nestedChannels = [] } = channel
+  const nestedAudioGraphs = map(nestedChannels, (nestedChannel) =>
+    createAudioGraph({
+      channel: nestedChannel,
+      audioContext,
+      playState,
+      beatScale,
+      bpmScale,
+      startBeat: startBeat + validNumberOrDefault(nestedChannel.startBeat, 0),
+      outputs: channel.id
+    })
+  )
+
   // generate automation clip nodes
+  const audioGraph = {}
+  const currentBeat = getCurrentBeat({ playState, audioContext, beatScale })
+  const currentTime = audioContext.currentTime
   const channelOutput = addAutomationClipsToAudioGraph({
     clips: filter(channel.clips, clip =>
       ((clip.type === CLIP_TYPE_AUTOMATION) && clip.controlPoints.length)),
@@ -50,35 +63,23 @@ function createAudioGraph ({
   })
 
   // add channel node
-  // TODO: do we even need a merger node here? what's going on?
   audioGraph[channel.id] = ['gain', channelOutput]
 
-  // generate sample clip nodes
-  forEach(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip => addSampleClipToAudioGraph({
-    outputs: channel.id,
-    pitchSemitones: channel.pitchSemitones,
-    startBeat,
-    audioGraph,
-    clip,
-    playState,
-    bpmScale,
-    currentBeat,
-    currentTime,
-    beatScale,
-  }))
-
-  // generate audio graphs for nested channels
-  const nestedAudioGraphs = map(nestedChannels, (nestedChannel) =>
-    createAudioGraph({
-      channel: nestedChannel,
-      audioContext,
+  // generate sample clip nodes, unless another channel is being solo'd
+  if (!playState.soloChannelId || playState.soloChannelId === channel.id) {
+    forEach(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip => addSampleClipToAudioGraph({
+      outputs: channel.id,
+      pitchSemitones: channel.pitchSemitones,
+      startBeat,
+      audioGraph,
+      clip,
       playState,
-      beatScale,
       bpmScale,
-      startBeat: startBeat + validNumberOrDefault(nestedChannel.startBeat, 0),
-      outputs: channel.id
-    })
-  )
+      currentBeat,
+      currentTime,
+      beatScale,
+    }))
+  }
 
   return merge(audioGraph, ...nestedAudioGraphs)
 }

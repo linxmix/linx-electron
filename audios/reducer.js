@@ -13,6 +13,7 @@ const {
   pause,
   playPause,
   seekToBeat,
+  toggleSoloChannel,
   updatePlayState,
   updateAudioGraph,
   updateVirtualAudioGraph,
@@ -98,6 +99,23 @@ function createReducer (config) {
           channelId: channel.id,
           seekBeat: seekBeat,
           absSeekTime: state.audioContext.currentTime
+        })),
+        playState.status === PLAY_STATE_PLAYING ?
+          Effects.constant(updateAudioGraph({ channel })) :
+          Effects.none()
+      ]))
+    },
+    [toggleSoloChannel]: (state, action) => {
+      const { soloChannelId, channel } = action.payload
+      const playState = state.playStates[channel.id] || {}
+
+      const newSoloChannelId = playState.soloChannelId && (playState.soloChannelId === soloChannelId) ?
+        null : soloChannelId
+
+      return loop(state, Effects.batch([
+        Effects.constant(updatePlayState({
+          channelId: channel.id,
+          soloChannelId: newSoloChannelId
         })),
         playState.status === PLAY_STATE_PLAYING ?
           Effects.constant(updateAudioGraph({ channel })) :

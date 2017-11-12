@@ -233,7 +233,12 @@ class MixArrangementDetail extends React.Component {
           musicalKey={track.sample.meta.key}
           pitchSemitones={track.pitchSemitones}
           isEditingBeatgrid={includes(this.state.editingBeatgrids, track.id)}
+          isSoloTrack={mix.playState.soloChannelId === track.id}
           toggleEditBeatgrid={this.toggleEditBeatgrid.bind(this, track)}
+          toggleSoloTrack={() => this.props.toggleSoloChannel({
+            soloChannelId: track.id,
+            channel: mix.channel
+          })}
           updatePitchSemitones={pitchSemitones => {
             this.props.updateChannel({ id: track.id, pitchSemitones })
             this._asyncUpdateAudioGraph()
@@ -312,7 +317,8 @@ MixArrangementDetail.defaultProps = {
   rowHeight: 100,
   scaleX: 1,
   translateX: 1,
-  tempoAxisHeight: 25
+  tempoAxisHeight: 25,
+  soloTrackId: null
 }
 
 module.exports = MixArrangementDetail
