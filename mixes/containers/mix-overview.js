@@ -15,7 +15,10 @@ const { PLAY_STATE_PLAYING } = require('../../audios/constants')
 
 class MixOverviewContainer extends React.Component {
   componentDidMount () {
-    keymaster('space', () => this.props.playPause({ channel: this.props.mix.channel }))
+    keymaster('space', () => this.props.playPause({
+      channel: this.props.mix.channel,
+      updateSeek: true
+    }))
 
     const { loadMix, mix } = this.props
     if (mix && !get(mix, 'channel.type')) {

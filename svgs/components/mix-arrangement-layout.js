@@ -133,7 +133,7 @@ class MixArrangementLayout extends React.Component {
   render () {
     const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY,
       beatAxisHeight, tempoAxisHeight, showTempoAxis, selectedControlType,
-      selectControlType, isOverWithFiles, canDropFiles } = this.props
+      selectControlType, isOverWithFiles, canDropFiles, showLastPlayMarker } = this.props
     if (!(mix && mix.channel)) { return null }
 
     const transform = `translate(${translateX},${translateY}) scale(${scaleX}, 1)`
@@ -185,6 +185,8 @@ class MixArrangementLayout extends React.Component {
 
               <Playhead
                 playState={mix.playState}
+                seekBeat={mix.playState.seekBeat}
+                showLastPlayMarker={showLastPlayMarker}
                 beatScale={beatScale}
                 audioContext={audioContext}
                 height='100%'
@@ -211,6 +213,8 @@ class MixArrangementLayout extends React.Component {
 
               <Playhead
                 playState={mix.playState}
+                seekBeat={mix.playState.seekBeat}
+                showLastPlayMarker={showLastPlayMarker}
                 beatScale={beatScale}
                 audioContext={audioContext}
                 height={height}
@@ -228,6 +232,8 @@ class MixArrangementLayout extends React.Component {
             <g transform={transform}>
               <Playhead
                 playState={mix.playState}
+                seekBeat={mix.playState.seekBeat}
+                showLastPlayMarker={showLastPlayMarker}
                 beatScale={beatScale}
                 audioContext={audioContext}
                 height='100%'
@@ -252,7 +258,8 @@ MixArrangementLayout.defaultProps = {
   translateY: 0,
   trackControls: false,
   tempoClipElement: null,
-  canDropFiles: false
+  canDropFiles: false,
+  showLastPlayMarker: false
 }
 
 const dropTarget = {

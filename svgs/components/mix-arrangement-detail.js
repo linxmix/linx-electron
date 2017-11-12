@@ -9,6 +9,7 @@ const TempoClip = require('./tempo-clip')
 const getCurrentBeat = require('../../audios/helpers/get-current-beat')
 const { beatToTime } = require('../../lib/number-utils')
 const { getPosition } = require('../../lib/mouse-event-utils')
+const { PLAY_STATE_PLAYING } = require('../../audios/constants')
 
 const { CLIP_TYPE_SAMPLE } = require('../../clips/constants')
 const { CHANNEL_TYPE_SAMPLE_TRACK, CHANNEL_TYPE_PRIMARY_TRACK } = require('../../channels/constants')
@@ -261,6 +262,7 @@ class MixArrangementDetail extends React.Component {
       tempoAxisHeight={tempoAxisHeight}
       tempoClipElement={tempoClipElement}
       selectControlType={this.selectControlType.bind(this)}
+      showLastPlayMarker={mix.playState.status === PLAY_STATE_PLAYING}
       canDropFiles
       handleFilesDrop={this.handleFilesDrop.bind(this)}
       {...layoutActions}>

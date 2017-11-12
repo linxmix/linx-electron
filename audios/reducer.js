@@ -81,7 +81,7 @@ function createReducer (config) {
       ]))
     },
     [playPause]: (state, action) => {
-      const { channel } = action.payload
+      const { channel, updateSeek } = action.payload
       const playState = state.playStates[channel.id]
 
       if (!playState || playState.status === PLAY_STATE_PAUSED) {

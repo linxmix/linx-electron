@@ -7,7 +7,7 @@ class Playhead extends React.Component {
     super(props)
     this.state = {
       playheadAnimationId: null,
-      seekBeat: getCurrentBeat({
+      currentBeat: getCurrentBeat({
         playState: this.props.playState,
         audioContext: this.props.audioContext,
         beatScale: this.props.beatScale
@@ -16,15 +16,24 @@ class Playhead extends React.Component {
   }
 
   render () {
-    const { height, strokeWidth, stroke } = this.props
-    const { seekBeat } = this.state
+    const { height, strokeWidth, stroke, seekBeat, showLastPlayMarker } = this.props
+    const { currentBeat } = this.state
 
-    return <line
-      style={{ stroke, strokeWidth }}
-      y1={0}
-      y2={height}
-      transform={`translate(${seekBeat})`}
-    />
+    return <g>
+      {showLastPlayMarker && <line
+        style={{ stroke: 'blue', strokeWidth: strokeWidth }}
+        y1={0}
+        y2={height}
+        transform={`translate(${seekBeat})`}
+      />}
+
+      <line
+        style={{ stroke, strokeWidth }}
+        y1={0}
+        y2={height}
+        transform={`translate(${currentBeat})`}
+      />
+    </g>
   }
 
   animate () {
@@ -32,7 +41,7 @@ class Playhead extends React.Component {
 
     this.setState({
       playheadAnimationId,
-      seekBeat: getCurrentBeat({
+      currentBeat: getCurrentBeat({
         playState: this.props.playState,
         audioContext: this.props.audioContext,
         beatScale: this.props.beatScale
@@ -55,7 +64,8 @@ class Playhead extends React.Component {
 Playhead.defaultProps = {
   strokeWidth: 1.5,
   height: 100,
-  stroke: 'red'
+  stroke: 'red',
+  showLastPlayMarker: false
 }
 
 module.exports = Playhead

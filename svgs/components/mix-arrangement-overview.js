@@ -19,7 +19,8 @@ class MixArrangementOverview extends React.Component {
       updateZoom={updateZoom}
       scaleX={scaleX}
       translateX={translateX}
-      height={height}>
+      height={height}
+    >
 
       {map(mix.trackGroups, (trackGroup, i, trackGroups) => <TrackGroup
         key={trackGroup.id}
