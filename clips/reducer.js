@@ -102,22 +102,29 @@ function createReducer (config) {
       })))
     },
     [snipClip]: (state, action) => {
-      const { channel, clip, snipAtBeat } = action.payload
+      const { channel, clip, snipAtBeat, quantization } = action.payload
+      const quantizedSnipAtBeat = quantizeBeat({ quantization, beat: snipAtBeat })
       const newClipId = uuid()
       const audioBpm = clip.sample.meta.bpm
+
+      if (quantizedSnipAtBeat <= 0 || quantizedSnipAtBeat >= clip.beatCount) {
+        return state
+      }
 
       return loop(state, Effects.batch([
         Effects.constant(updateClip({
           id: clip.id,
-          beatCount: snipAtBeat
+          beatCount: quantizedSnipAtBeat
         })),
         Effects.constant(createClip({
           id: newClipId,
           type: CLIP_TYPE_SAMPLE,
           sampleId: clip.sampleId,
-          audioStartTime: beatToTime(timeToBeat(clip.audioStartTime, audioBpm) + snipAtBeat, audioBpm),
-          beatCount: clip.beatCount - snipAtBeat,
-          startBeat: clip.startBeat + snipAtBeat
+          audioStartTime: beatToTime(
+            timeToBeat(clip.audioStartTime, audioBpm) + quantizedSnipAtBeat, audioBpm
+          ),
+          beatCount: clip.beatCount - quantizedSnipAtBeat,
+          startBeat: clip.startBeat + quantizedSnipAtBeat
         })),
         Effects.constant(setClipsChannel({
           channelId: channel.id,
@@ -161,7 +168,11 @@ function createReducer (config) {
         }
       }
 
-      return loop(state, Effects.constant(updateClip(updatePayload)))
+      if (updatePayload.beatCount < 0) {
+        return state
+      } else {
+        return loop(state, Effects.constant(updateClip(updatePayload)))
+      }
     },
     [moveControlPoint]: (state, action) => {
       const { sourceId, id, beat, value, diffBeats, diffValue,
