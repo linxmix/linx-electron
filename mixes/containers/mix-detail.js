@@ -70,7 +70,7 @@ class MixDetailContainer extends React.Component {
         </button>
         <button
           disabled={masterChannelStatus !== 'loaded'}
-          onClick={() => playPause({ channel })}>
+          onClick={() => playPause({ channel, updateSeek: false })}>
           {playState.status === PLAY_STATE_PLAYING ? 'Pause Mix' : 'Play Mix'}
         </button>
       </header>

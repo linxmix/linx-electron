@@ -27,8 +27,8 @@ class TrackGroup extends React.Component {
         height={rowHeight}
         scaleX={scaleX}
         mixBeatCount={this.props.mixBeatCount}
-        canDragClips={canDragClips}
-        canResizeClips={canResizeClips}
+        canDragClips={canDragClips && !showAutomationControlType}
+        canResizeClips={canResizeClips && !showAutomationControlType}
         canEditClips={canEditClips && !showAutomationControlType}
         selectedClip={get(this, `props.selectedClips[${track.id}]`)}
         showAutomationControlType={showAutomationControlType}

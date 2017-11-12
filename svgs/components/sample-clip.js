@@ -12,15 +12,17 @@ const { isRightClick } = require('../../lib/mouse-event-utils')
 class SampleClip extends React.Component {
   handleClick (e) {
     if (this.props.canEdit) {
-      e.preventDefault()
-      e.stopPropagation()
-
       if (isRightClick(e)) {
+        e.preventDefault()
+        e.stopPropagation()
+
         if (e.shiftKey) {
           this.props.snipClip({ e, clip: this.props.clip })
         } else {
           this.props.deleteClip({ clipId: this.props.clip.id })
         }
+
+      // left click
       } else {
         this.props.selectClip({ clip: this.props.clip })
       }
