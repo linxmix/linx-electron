@@ -176,7 +176,7 @@ function createReducer (config) {
     },
     [moveControlPoint]: (state, action) => {
       const { sourceId, id, beat, value, diffBeats, diffValue,
-        quantization, minBeat = 0, maxBeat = 0 } = action.payload
+        quantization, minBeat, maxBeat } = action.payload
 
       const sourceClip = state.records[sourceId]
       assert(sourceClip, 'Cannot moveControlPoint for nonexistent sourceClip')
@@ -187,7 +187,7 @@ function createReducer (config) {
       const newBeat = quantizeBeat({ quantization, beat: diffBeats }) + beat
       const updatedControlPoint = {
         ...controlPoint,
-        beat: clamp(minBeat, newBeat, maxBeat),
+        beat: newBeat,
       }
       
       if (isValidNumber(diffValue) && isValidNumber(value)) {
@@ -231,7 +231,7 @@ function createReducer (config) {
 
       const newControlPoint = {
         id: uuid(),
-        beat: clamp(minBeat, quantizeBeat({ quantization, beat }), maxBeat),
+        beat: quantizeBeat({ quantization, beat }),
         value: clamp(0, value, 1)
       }
 
