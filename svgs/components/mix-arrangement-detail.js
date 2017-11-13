@@ -229,9 +229,9 @@ class MixArrangementDetail extends React.Component {
       trackGroup && <div key={trackGroup.id} style={{ borderBottom: '1px solid grey' }}>
         {map(tracks, track => <TrackControl
           key={track.id + '_control'}
-          title={track.sample.meta.title}
-          bpm={track.sample.meta.bpm}
-          musicalKey={track.sample.meta.key}
+          title={get(track, 'sample.meta.title')}
+          bpm={get(track, 'sample.meta.bpm')}
+          musicalKey={get(track, 'sample.meta.key')}
           pitchSemitones={track.pitchSemitones}
           isEditingBeatgrid={includes(this.state.editingBeatgrids, track.id)}
           isSoloTrack={mix.playState.soloChannelId === track.id}
