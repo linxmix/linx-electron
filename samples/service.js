@@ -82,7 +82,7 @@ function createService (config) {
           id,
           title: tags.title,
           artist: tags.artist,
-          bpm: validNumberOrDefault(bpm, 128),
+          bpm: bpm || 128,
           key: tags.comment && tags.comment.text,
           duration: audioBuffer.duration,
           barGridTime: peaks[0].time, // naively assume first peak is correct first beat
@@ -90,7 +90,14 @@ function createService (config) {
         }
 
         return omitBy(attrs, isNil)
-      })
+      }).catch(
+        () => calculateBeatGrid(audioBuffer, { id, startTime, endTime }).then(({ peaks, intervals }) => ({
+          id,
+          bpm: 128,
+          duration: audioBuffer.duration,
+          barGridTime: peaks[0].time,
+          peaks
+        })))
     })
   }
 }
