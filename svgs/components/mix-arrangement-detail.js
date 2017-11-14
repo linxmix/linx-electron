@@ -139,11 +139,8 @@ class MixArrangementDetail extends React.Component {
 
     const beatScale = get(mix, 'channel.beatScale')
 
-    const createControlPoint = ({ sourceId, e, minBeat, maxBeat }) => {
-      const { beat, value } = getPosition({ e, scaleX, height: rowHeight })
-      this.props.createControlPoint({
-        sourceId, beat, value, minBeat, maxBeat
-      })
+    const createControlPoint = (...args) => {
+      this.props.createControlPoint(...args)
       this._asyncUpdateAudioGraph()
     }
     const deleteControlPoint = (...args) => {
@@ -195,10 +192,8 @@ class MixArrangementDetail extends React.Component {
         this._asyncUpdateAudioGraph()
       },
 
-      snipClip: ({ e, clip, channel }) => {
-        const { beat: snipAtBeat } = getPosition({ e, scaleX, height: rowHeight })
-        const { audioStartTime } = clip
-        this.props.snipClip({ channel, clip, snipAtBeat })
+      snipClip: ({ clip, channel, beat }) => {
+        this.props.snipClip({ channel, clip, snipAtBeat: beat })
         // this._asyncUpdateAudioGraph()
       }
     }

@@ -7,7 +7,7 @@ const classnames = require('classnames')
 const { beatToTime, timeToBeat } = require('../../lib/number-utils')
 const ResizeHandle = require('./resize-handle')
 const Waveform = require('./waveform')
-const { isRightClick } = require('../../lib/mouse-event-utils')
+const { isRightClick, getPosition } = require('../../lib/mouse-event-utils')
 
 class SampleClip extends React.Component {
   handleClick (e) {
@@ -17,7 +17,8 @@ class SampleClip extends React.Component {
         e.stopPropagation()
 
         if (e.shiftKey) {
-          this.props.snipClip({ e, clip: this.props.clip })
+          const { beat, value } = getPosition({ e, scaleX: this.props.scaleX, height: this.props.height })
+          this.props.snipClip({ clip: this.props.clip, beat, value })
         } else {
           this.props.deleteClip({ clipId: this.props.clip.id })
         }

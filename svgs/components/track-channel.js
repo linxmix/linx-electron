@@ -1,5 +1,5 @@
 const React = require('react')
-const { get, map, assign, filter, includes } = require('lodash')
+const { get, map, find, assign, filter, includes } = require('lodash')
 
 const SampleClip = require('./sample-clip')
 const AutomationClip = require('./automation-clip')
@@ -9,25 +9,35 @@ const { isRightClick, getPosition } = require('../../lib/mouse-event-utils')
 class TrackChannel extends React.Component {
   handleClick (e) {
     if (isRightClick(e)) {
-      const { channel } = this.props
       e.preventDefault()
       e.stopPropagation()
 
-      if (this.props.showAutomationControlType) {
-        let { beat, value } = getPosition({ e, scaleX: this.props.scaleX, height: this.props.height })
-        beat -= channel.parentChannel.startBeat
+      const { channel, showAutomationControlType } = this.props
+      let { beat, value } = getPosition({ e, scaleX: this.props.scaleX, height: this.props.height })
+      beat -= channel.parentChannel.startBeat
 
-        this.props.createAutomationClipWithControlPoint({
-          channelId: channel.id,
-          minBeat: channel.startBeat,
-          maxBeat: channel.beatCount,
-          beat,
-          value
-        })
+      if (showAutomationControlType) {
+        const automationClip = find(channel.clips, { controlType: showAutomationControlType })
+
+        if (automationClip) {
+          this.props.createControlPoint({
+            sourceId: automationClip.id,
+            minBeat: channel.startBeat,
+            maxBeat: channel.beatCount,
+            beat,
+            value
+          })
+        } else {
+          this.props.createAutomationClipWithControlPoint({
+            channelId: channel.id,
+            minBeat: channel.startBeat,
+            maxBeat: channel.beatCount,
+            beat,
+            value
+          })
+        }
       } else if (this.props.canEditClips) {
         const selectedClip = this.props.selectedClip
-        let { beat } = getPosition({ e, scaleX: this.props.scaleX, height: this.props.height })
-        beat -= channel.parentChannel.startBeat
 
         let clipOptions
         if (selectedClip) {
@@ -104,7 +114,6 @@ class TrackChannel extends React.Component {
             scaleX={scaleX}
             minBeat={channel.startBeat}
             maxBeat={channel.beatCount}
-            createControlPoint={this.props.createControlPoint}
             deleteControlPoint={this.props.deleteControlPoint}
             beatScale={beatScale}
             height={height}

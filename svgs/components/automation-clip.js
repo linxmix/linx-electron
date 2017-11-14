@@ -3,7 +3,6 @@ const d3 = require('d3')
 const { map } = require('lodash')
 
 const ControlPoint = require('./automation-clip/control-point')
-const { isRightClick } = require('../../lib/mouse-event-utils')
 const {
   CONTROL_TYPE_GAIN,
   CONTROL_TYPE_LOW_BAND,
@@ -12,19 +11,6 @@ const {
 } = require('../../clips/constants')
 
 class AutomationClip extends React.Component {
-  handleClick (e) {
-    if (isRightClick(e)) {
-      e.preventDefault()
-      e.stopPropagation()
-      this.props.createControlPoint({
-        e,
-        sourceId: this.props.clip.id,
-        minBeat: this.props.minBeat,
-        maxBeat: this.props.maxBeat
-      })
-    }
-  }
-
   render () {
     const { clip, height, scaleX, canDrag, minBeat, maxBeat, deleteControlPoint } = this.props
     if (!clip) { return null }
@@ -44,9 +30,7 @@ class AutomationClip extends React.Component {
 
     return <g>
       <path strokeWidth={1 / scaleX} stroke={color} fill='transparent' d={line(controlPoints)} />
-
-      <rect width={maxBeat - minBeat} height={height} fill='transparent'
-        onMouseUp={this.handleClick.bind(this)} />
+      <rect width={maxBeat - minBeat} height={height} fill='transparent' />
 
       {map(controlPoints, controlPoint => <ControlPoint
         key={controlPoint.id}
