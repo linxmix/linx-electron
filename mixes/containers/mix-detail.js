@@ -53,18 +53,27 @@ class MixDetailContainer extends React.Component {
       })
     )
 
-    // on drag sample clip, drag parent channel if shift is held
+    // on drag sample clip:
+    // drag track group if alt is held
+    // drag track if shift is held
+    // else drag clip
     arrangementActions.onDragSampleClip = ({
       id: clipId,
       startBeat: clipStartBeat,
-      channelId,
-      channelStartBeat,
+      channel,
       ...options
     }) => {
-      if (this.props.dragModifierKeys.shiftKey) {
+      const modifierKeys = this.props.dragModifierKeys
+      if (modifierKeys.shiftKey) {
         arrangementActions.moveChannel(assign({
-          id: channelId,
-          startBeat: channelStartBeat
+          id: channel.id,
+          startBeat: channel.startBeat
+        }, options))
+      } else if (modifierKeys.altKey) {
+        const trackGroup = channel.parentChannel
+        arrangementActions.moveTrackGroup(assign({
+          trackGroup,
+          moveFollowingChannels: true
         }, options))
       } else {
         arrangementActions.moveClip(assign({

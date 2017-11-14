@@ -251,19 +251,21 @@ function createReducer (config) {
       return loop(state, Effects.constant(createSample({ file, effectCreator })))
     },
     [moveTrackGroup]: (state, action) => {
-      const { id, startBeat, diffBeats, quantization, mixChannels } = action.payload
+      const { trackGroup, diffBeats, quantization, moveFollowingChannels } = action.payload
+      const { id, startBeat } = trackGroup
+      const { channels: mixChannels } = trackGroup.parentChannel
 
-      // startBeat from payload is where drag started. we need to know how far we've already moved
-      const previousStartBeat = state.records[id].startBeat
-      const beatsToMove = quantizeBeat({ quantization, beat: diffBeats }) - (previousStartBeat - startBeat)
-      const nextStartBeat = previousStartBeat + beatsToMove
+      const beatsToMove = quantizeBeat({ quantization, beat: diffBeats })
+      const nextStartBeat = startBeat + beatsToMove
 
       // make sure following primary track channels also move
-      const channelsToMove = []
-      // const channelsToMove = filter(mixChannels, channel =>
-      //   (channel.id !== id) &&
-      //   (channel.startBeat >= nextStartBeat) &&
-      //   (channel.type === CHANNEL_TYPE_TRACK_GROUP))
+      let channelsToMove = []
+      if (moveFollowingChannels) {
+        channelsToMove = filter(mixChannels, channel =>
+          (channel.id !== id) &&
+          (channel.startBeat >= nextStartBeat) &&
+          (channel.type === CHANNEL_TYPE_TRACK_GROUP))
+      }
       const nextEffects = map(channelsToMove, channel => Effects.constant(updateChannel({
         id: channel.id,
         startBeat: channel.startBeat + beatsToMove
@@ -275,7 +277,15 @@ function createReducer (config) {
           startBeat: nextStartBeat
         }))
       ].concat(nextEffects)))
-    }
+    },
+    [moveChannel]: (state, action) => {
+      const { id, startBeat, diffBeats, quantization } = action.payload
+
+      return loop(state, Effects.constant(updateChannel({
+        id,
+        startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
+      })))
+    },
   }, {
     dirty: [],
     records: {}

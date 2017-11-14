@@ -89,6 +89,7 @@ class TrackChannel extends React.Component {
           <SampleClip
             key={clip.id}
             clip={clip}
+            channel={channel}
             scaleX={scaleX}
             beatScale={beatScale}
             color={color}
@@ -98,8 +99,6 @@ class TrackChannel extends React.Component {
             canResize={canResizeClips}
             canEdit={canEditClips}
             isSelected={selectedClipId && selectedClipId === clip.id}
-            channelId={channel.id}
-            channelStartBeat={channel.startBeat}
             snipClip={options =>
               this.props.snipClip(assign({ channel }, options))}
             deleteClip={options =>

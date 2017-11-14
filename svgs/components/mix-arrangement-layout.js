@@ -279,7 +279,6 @@ const dropTarget = {
     switch (monitor.getItemType()) {
       case 'track-group':
         action = props.moveTrackGroup
-        payload.mixChannels = props.mix.channel.channels // TODO: does this belong in reducer?
         break
       case 'sample-clip':
         action = props.onDragSampleClip

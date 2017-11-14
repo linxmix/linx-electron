@@ -148,8 +148,7 @@ const dragSource = {
       id: props.clip.id,
       type: props.clip.type,
       startBeat: props.clip.startBeat,
-      channelId: props.channelId,
-      channelStartBeat: props.channelStartBeat
+      channel: props.channel
     }
   },
   isDragging (props, monitor) {
