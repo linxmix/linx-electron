@@ -51,19 +51,12 @@ function valueScaleToAudioParameter ({
 }) {
   const clipStartBeat = startBeat + clip.startBeat
   const clipEndBeat = clipStartBeat + clip.beatCount
-  const fullDuration = beatScale(clipEndBeat) - beatScale(startBeat)
-  const endValue = validNumberOrDefault(valueScale(fullDuration), valueScale.range()[0])
 
-  // if seeking beyond clip, just report final value
-  if (currentBeat >= clipEndBeat) {
-    return ['setValueAtTime',
-      endValue,
-      Math.max(0, currentTime + beatScale(clipEndBeat) - beatScale(currentBeat))]
-  }
-
-  // if only one automation, just report final value
-  if (valueScale.range().length === 1) {
-    return ['setValueAtTime', endValue, 0]
+  // if seeking beyond clip, or only one automation, just report final value
+  if ((currentBeat >= clipEndBeat) || (valueScale.range().length === 1)) {
+    const fullDuration = beatScale(clipEndBeat) - beatScale(startBeat)
+    const endValue = validNumberOrDefault(valueScale(fullDuration), valueScale.range()[0])
+    return ['setValueAtTime', endValue, currentTime]
   }
 
   // if seek before clip, proceed as normal

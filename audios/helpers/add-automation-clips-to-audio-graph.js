@@ -1,7 +1,7 @@
 const d3 = require('d3')
 const { map, reduce, filter, sortBy, find, reject, difference, merge, isNil } = require('lodash')
 
-const { bpmToSpb } = require('../../lib/number-utils')
+const { bpmToSpb, validNumberOrDefault } = require('../../lib/number-utils')
 const { getValueCurve, valueScaleToAudioParameter } = require('./value-scale-to-audio-parameter')
 const {
   CONTROL_TYPE_GAIN,
@@ -137,153 +137,65 @@ function _getAutomationParameters({
     .domain(valueScaleDomain)
     .range(map(controlPoints, 'scaledValue'))
     .clamp(true)
+  const startValue = validNumberOrDefault(valueScale(0), valueScale.range()[0])
+  const audioParameters = [
+    valueScaleToAudioParameter({
+      clip,
+      startBeat,
+      currentBeat,
+      valueScale,
+      beatScale,
+      currentTime
+    }),
+    ['setValueAtTime', startValue, 0]
+  ]
 
   switch(clip.controlType) {
     case CONTROL_TYPE_GAIN:
       return ['gain', previousOutput, {
-        gain: [
-          ['setValueAtTime', 1, 0], // start all at 1
-          valueScaleToAudioParameter({
-            clip,
-            startBeat,
-            currentBeat,
-            valueScale,
-            beatScale,
-            currentTime
-          })
-        ]
+        gain: audioParameters
       }]
     case CONTROL_TYPE_LOW_BAND:
       return ['biquadFilter', previousOutput, {
         frequency: 70,
         type: 'lowshelf',
-        gain: [
-          ['setValueAtTime', 0, 0],
-          valueScaleToAudioParameter({
-            clip,
-            startBeat,
-            currentBeat,
-            valueScale,
-            beatScale,
-            currentTime
-          })
-        ]
+        gain: audioParameters
       }]
     case CONTROL_TYPE_MID_BAND:
       return ['biquadFilter', previousOutput, {
         frequency: 1000,
         type: 'peaking',
-        gain: [
-          ['setValueAtTime', 0, 0],
-          valueScaleToAudioParameter({
-            clip,
-            startBeat,
-            currentBeat,
-            valueScale,
-            beatScale,
-            currentTime
-          })
-        ]
+        gain: audioParameters
       }]
     case CONTROL_TYPE_HIGH_BAND:
       return ['biquadFilter', previousOutput, {
         frequency: 13000,
         type: 'highshelf',
-        gain: [
-          ['setValueAtTime', 0, 0],
-          valueScaleToAudioParameter({
-            clip,
-            startBeat,
-            currentBeat,
-            valueScale,
-            beatScale,
-            currentTime
-          })
-        ]
+        gain: audoParameters
       }]
     case CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF:
       return {
-        frequency: [
-          ['setValueAtTime', 0, 0],
-          valueScaleToAudioParameter({
-            clip,
-            startBeat,
-            currentBeat,
-            valueScale,
-            beatScale,
-            currentTime
-          })
-        ]
+        frequency: audioParameters
       }
     case CONTROL_TYPE_FILTER_HIGHPASS_Q:
       return {
-        Q: [
-          ['setValueAtTime', 1, 0],
-          valueScaleToAudioParameter({
-            clip,
-            startBeat,
-            currentBeat,
-            valueScale,
-            beatScale,
-            currentTime
-          })
-        ]
+        Q: audioParameters
       }
     case CONTROL_TYPE_FILTER_LOWPASS_CUTOFF:
       return {
-        frequency: [
-          ['setValueAtTime', 22050, 0],
-          valueScaleToAudioParameter({
-            clip,
-            startBeat,
-            currentBeat,
-            valueScale,
-            beatScale,
-            currentTime
-          })
-        ]
+        frequency: audioParameters
       }
     case CONTROL_TYPE_FILTER_LOWPASS_Q:
       return {
-        Q: [
-          ['setValueAtTime', 1, 0],
-          valueScaleToAudioParameter({
-            clip,
-            startBeat,
-            currentBeat,
-            valueScale,
-            beatScale,
-            currentTime
-          })
-        ]
+        Q: audioParameters
       }
     case CONTROL_TYPE_DELAY_WET:
       return {
-        'wet.gain': [
-          ['setValueAtTime', 0, 0],
-          valueScaleToAudioParameter({
-            clip,
-            startBeat,
-            currentBeat,
-            valueScale,
-            beatScale,
-            currentTime
-          })
-        ]
+        'wet.gain': audioParameters
       }
     case CONTROL_TYPE_DELAY_CUTOFF:
       return {
-        'filter.frequency': [
-          ['setValueAtTime', 0, 0],
-          valueScaleToAudioParameter({
-            clip,
-            startBeat,
-            currentBeat,
-            valueScale,
-            beatScale,
-            currentTime
-          })
-        ]
+        'filter.frequency': audioParameters
       }
     default:
       console.error('Unknown controlType while adding automations to audio graph', clip.controlType)

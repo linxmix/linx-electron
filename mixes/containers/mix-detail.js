@@ -54,7 +54,7 @@ class MixDetailContainer extends React.Component {
     )
 
     // on drag sample clip:
-    // drag track group if alt is held
+    // drag track group if ctrl is held
     // drag track if shift is held
     // else drag clip
     arrangementActions.onDragSampleClip = ({
@@ -64,16 +64,16 @@ class MixDetailContainer extends React.Component {
       ...options
     }) => {
       const modifierKeys = this.props.dragModifierKeys
-      if (modifierKeys.shiftKey) {
-        arrangementActions.moveChannel(assign({
-          id: channel.id,
-          startBeat: channel.startBeat
-        }, options))
-      } else if (modifierKeys.altKey) {
+      if (modifierKeys.ctrlKey) {
         const trackGroup = channel.parentChannel
         arrangementActions.moveTrackGroup(assign({
           trackGroup,
           moveFollowingChannels: true
+        }, options))
+      } else if (modifierKeys.shiftKey) {
+        arrangementActions.moveChannel(assign({
+          id: channel.id,
+          startBeat: channel.startBeat
         }, options))
       } else {
         arrangementActions.moveClip(assign({
@@ -168,7 +168,7 @@ module.exports = connect(
 
 // TODO use default quantization, provided by store state, unless modifier keys are present
 function _getQuantization (modifierKeys, defaultQuantization = 'bar') {
-  if (modifierKeys.ctrlKey || modifierKeys.metaKey) {
+  if (modifierKeys.metaKey) {
     return 'beat'
   } else if (modifierKeys.altKey) {
     return 'sample'

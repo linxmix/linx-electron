@@ -20,7 +20,7 @@ class TrackChannel extends React.Component {
         height: this.props.height
       })
 
-      // subtract this because the click target is offset this amount
+      // subtract this because the target is offset this amount
       beat -= channel.parentChannel.startBeat
 
       if (showAutomationControlType) {
