@@ -1,5 +1,4 @@
 const React = require('react')
-const d3 = require('d3')
 const { find, forEach, pick, get, map, without, includes, concat } = require('lodash')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
@@ -218,7 +217,7 @@ class MixArrangementDetail extends React.Component {
       },
       {
         trackGroup: toTrackGroup,
-        tracks: [toTrackGroup && toTrackGroup.primaryTrack]
+        tracks: toTrackGroup && toTrackGroup.channels
       }
     ]
     const trackControlsElement = map(trackGroups, ({ trackGroup, tracks }) =>
@@ -276,7 +275,6 @@ class MixArrangementDetail extends React.Component {
         canEditClips
         selectedClips={this.state.selectedClips}
         showAutomationControlType={!includes(this.state.editingBeatgrids, fromTrackGroup.id) && selectedControlType}
-        color={d3.interpolateCool(0.25)}
         sampleResolution={includes(this.state.editingBeatgrids, fromTrackGroup.id)
           ? ZOOM_RESOLUTION : NORMAL_RESOLUTION}
         trackChannelActions={trackChannelActions}
@@ -295,12 +293,12 @@ class MixArrangementDetail extends React.Component {
         beatScale={beatScale}
         translateY={rowHeight * trackGroups[0].tracks.length}
         scaleX={scaleX}
-        rowHeight={rowHeight}
         mixBeatCount={mix.channel.beatCount}
-        canDragGroup
-        showOnlyPrimaryTrack
+        rowHeight={rowHeight}
+        canResizeClips
+        canDragClips
+        canEditClips
         showAutomationControlType={!includes(this.state.editingBeatgrids, toTrackGroup.id) && selectedControlType}
-        color={d3.interpolateCool(0.5)}
         sampleResolution={includes(this.state.editingBeatgrids, toTrackGroup.id)
           ? ZOOM_RESOLUTION : NORMAL_RESOLUTION}
         trackChannelActions={trackChannelActions}

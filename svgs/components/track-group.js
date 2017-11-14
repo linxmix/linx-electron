@@ -1,4 +1,5 @@
 const React = require('react')
+const d3 = require('d3')
 const { compact, concat, get, map, filter } = require('lodash')
 const { DragSource } = require('react-dnd')
 
@@ -32,7 +33,7 @@ class TrackGroup extends React.Component {
         canEditClips={canEditClips && !showAutomationControlType}
         selectedClip={get(this, `props.selectedClips[${track.id}]`)}
         showAutomationControlType={showAutomationControlType}
-        color={color}
+        color={d3.interpolateCool(0.25 + (i / 10))}
         sampleResolution={sampleResolution}
         {...trackChannelActions}
       />)}
