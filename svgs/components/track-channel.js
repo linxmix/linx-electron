@@ -13,7 +13,14 @@ class TrackChannel extends React.Component {
       e.stopPropagation()
 
       const { channel, showAutomationControlType } = this.props
-      let { beat, value } = getPosition({ e, scaleX: this.props.scaleX, height: this.props.height })
+      let { beat, value } = getPosition({
+        e,
+        target: this.clipsGroupElement,
+        scaleX: this.props.scaleX,
+        height: this.props.height
+      })
+
+      // subtract this because the click target is offset this amount
       beat -= channel.parentChannel.startBeat
 
       if (showAutomationControlType) {
@@ -48,8 +55,7 @@ class TrackChannel extends React.Component {
           }
         } else {
           clipOptions = {
-            startBeat: beat,
-            beatCount: 8
+            startBeat: beat
           }
         }
 
@@ -69,11 +75,13 @@ class TrackChannel extends React.Component {
 
     const selectedClipId = get(this.props.selectedClip, 'id')
 
-    return <g className="TrackChannel" onMouseUp={this.handleClick.bind(this)}>
+    return <g className="TrackChannel"
+      onMouseUp={this.handleClick.bind(this)}>
       <rect transform={`translate(${-channel.parentChannel.startBeat},${translateY})`}
         height={height}
         width={this.props.mixBeatCount}
         fill="transparent"
+        ref={(element) => { this.clipsGroupElement = element }}
       />
 
       <g transform={`translate(${channel.startBeat},${translateY})`}>

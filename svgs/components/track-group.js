@@ -33,7 +33,8 @@ class TrackGroup extends React.Component {
         canEditClips={canEditClips && !showAutomationControlType}
         selectedClip={get(this, `props.selectedClips[${track.id}]`)}
         showAutomationControlType={showAutomationControlType}
-        color={d3.interpolateCool(0.25 + (i / 10))}
+        color={color ||
+          d3.interpolateCool((this.props.showSecondColorHalf ? 0 : 0.25) + (i / 10))}
         sampleResolution={sampleResolution}
         {...trackChannelActions}
       />)}
@@ -56,6 +57,7 @@ TrackGroup.defaultProps = {
   canEditClips: false,
   showOnlyPrimaryTrack: false,
   showAutomationControlType: undefined,
+  showSecondColorHalf: false,
 }
 
 function collectDrag (connect, monitor) {

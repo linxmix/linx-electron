@@ -39,7 +39,7 @@ class SampleClip extends React.Component {
 
   render () {
     const { clip, height, color, sampleResolution, scaleX, connectDragSource, isDragging, isSelected,
-      canResize } = this.props
+      canResize, canDrag, canEdit } = this.props
     if (!clip || (clip.status !== 'loaded')) { return null }
 
     const { sample, startBeat, audioStartTime, beatCount } = clip
@@ -50,11 +50,15 @@ class SampleClip extends React.Component {
       audioBpm,
       audioBuffer,
       audioStartTime,
-      minStartBeat: Math.max(0, clip.startBeat - audioStartBeat),
+      minStartBeat: clip.startBeat - audioStartBeat,
       maxBeatCount: timeToBeat(duration - audioStartTime, audioBpm)
     }
 
-    return connectDragSource(<g className={classnames("SampleClip", { "is-selected": isSelected })}
+    return connectDragSource(<g className={classnames("SampleClip", {
+      "is-selected": isSelected,
+      "is-draggable": canDrag,
+      "is-editable": canEdit
+    })}
       transform={`translate(${startBeat})`}
       onMouseUp={this.handleClick.bind(this)}>
       <rect className="SampleClip-backdrop"

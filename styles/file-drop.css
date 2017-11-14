@@ -71,11 +71,11 @@ body {
   cursor: pointer;
 }
 
-.SampleClip:hover .SampleClip-backdrop {
+.SampleClip.is-draggable:hover .SampleClip-backdrop {
   fill: rgba(0, 255, 255, 0.2);
 }
 
-.SampleClip.is-selected .SampleClip-backdrop {
+.SampleClip.is-selected.is-editable .SampleClip-backdrop {
   fill: rgba(0, 255, 0, 0.2);
 }
 

@@ -3,16 +3,20 @@ const d3 = require('d3')
 const { map } = require('lodash')
 
 const ControlPoint = require('./tempo-clip/control-point')
-const { isRightClick } = require('../../lib/mouse-event-utils')
+const { isRightClick, getPosition } = require('../../lib/mouse-event-utils')
 
 class TempoClip extends React.Component {
   handleClick (e) {
     if (isRightClick(e)) {
       e.preventDefault()
       e.stopPropagation()
+
+      const { beat, value } = getPosition({ e, scaleX: this.props.scaleX, height: this.props.height })
+      
       this.props.createControlPoint({
-        e,
         sourceId: this.props.clip.id,
+        beat,
+        value,
         minBeat: this.props.minBeat,
         maxBeat: this.props.maxBeat
       })
