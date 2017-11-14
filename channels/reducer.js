@@ -16,6 +16,7 @@ const {
   updateChannel,
   moveTrackGroup,
   resizeChannel,
+  moveChannel,
   setClipsChannel,
   removeClipsFromChannel,
   setChannelsParent,
@@ -157,6 +158,14 @@ function createReducer (config) {
       }
 
       return loop(state, Effects.constant(updateChannel(updatePayload)))
+    },
+    [moveChannel]: (state, action) => {
+      const { id, startBeat, diffBeats, quantization } = action.payload
+
+      return loop(state, Effects.constant(updateChannel({
+        id,
+        startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
+      })))
     },
     [swapChannels]: (state, action) => {
       const { sourceId, targetId } = action.payload

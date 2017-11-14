@@ -1,7 +1,7 @@
 const React = require('react')
 const { connect } = require('react-redux')
 const { Link } = require('react-router')
-const { find, pick, mapValues } = require('lodash')
+const { assign, clone, find, pick, mapValues } = require('lodash')
 const keymaster = require('keymaster')
 
 const DetectDragModifierKeys = require('../../lib/detect-drag-modifier-keys')
@@ -12,7 +12,7 @@ const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithCo
   deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
 const { moveTrackGroup, resizeChannel, removeClipsFromChannel, createSampleTrackFromFile,
-  updateChannel } = require('../../channels/actions')
+  updateChannel, moveChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph, toggleSoloChannel,
   updatePlayStateForTempoChange } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
@@ -43,7 +43,7 @@ class MixDetailContainer extends React.Component {
     const arrangementActions = mapValues(
       pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
-        'updateControlPointValue', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip',   
+        'updateControlPointValue', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'moveChannel',   
         'resizeChannel', 'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
         'removeClipsFromChannel', 'toggleSoloChannel',
         'updatePlayStateForTempoChange', 'snipClip']),
@@ -52,6 +52,27 @@ class MixDetailContainer extends React.Component {
         ...options
       })
     )
+
+    // on drag sample clip, drag parent channel if shift is held
+    arrangementActions.onDragSampleClip = ({
+      id: clipId,
+      startBeat: clipStartBeat,
+      channelId,
+      channelStartBeat,
+      ...options
+    }) => {
+      if (this.props.dragModifierKeys.shiftKey) {
+        arrangementActions.moveChannel(assign({
+          id: channelId,
+          startBeat: channelStartBeat
+        }, options))
+      } else {
+        arrangementActions.moveClip(assign({
+          id: clipId,
+          startBeat: clipStartBeat
+        }, options))
+      }
+    }
 
     const { playState, isSaving, isLoading, isDirty, channel } = mix
     const { status: masterChannelStatus } = channel
@@ -127,6 +148,7 @@ module.exports = connect(
     clearGridMarkers,
     moveTrackGroup,
     resizeChannel,
+    moveChannel,
     updateChannel,
     toggleSoloChannel,
     updateZoom,

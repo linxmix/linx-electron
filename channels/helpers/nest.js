@@ -118,7 +118,7 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
     isDirty: (includes(dirtyChannels, id) ||
       some(childChannels, { isDirty: true }) ||
       some(childClips, { isDirty: true })),
-    channels: sortBy(childChannels, ['startBeat', 'id']),
+    channels: childChannels,
     clips: sortBy(childClips, ['startBeat', 'id'])
   }, isNil))
 

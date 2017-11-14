@@ -282,7 +282,7 @@ const dropTarget = {
         payload.mixChannels = props.mix.channel.channels // TODO: does this belong in reducer?
         break
       case 'sample-clip':
-        action = props.moveClip
+        action = props.onDragSampleClip
         break
       case 'resize-handle':
         action = props.resizeSampleClip
@@ -301,7 +301,6 @@ const dropTarget = {
   drop (props, monitor, component) {
     const item = monitor.getItem()
     const diff = monitor.getDifferenceFromInitialOffset()
-    console.log('endDrag', item, diff)
 
     // handle files drop
     if (item && props.canDropFiles && (monitor.getItemType() === HTML5Backend.NativeTypes.FILE)) {
