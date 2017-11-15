@@ -139,6 +139,7 @@ function _getAutomationParameters({
     .clamp(true)
   const startValue = validNumberOrDefault(valueScale(0), valueScale.range()[0])
   const audioParameters = [
+    ['setValueAtTime', startValue, 0],
     valueScaleToAudioParameter({
       clip,
       startBeat,
@@ -146,8 +147,7 @@ function _getAutomationParameters({
       valueScale,
       beatScale,
       currentTime
-    }),
-    ['setValueAtTime', startValue, 0]
+    })
   ]
 
   switch(clip.controlType) {

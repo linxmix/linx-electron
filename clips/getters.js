@@ -113,7 +113,7 @@ function _getControlPointsValueScale(controlType) {
     case CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF:
     case CONTROL_TYPE_FILTER_LOWPASS_CUTOFF:
     case CONTROL_TYPE_DELAY_CUTOFF:
-      return d3.scalePow().exponent(3).domain([0, 1]).range([10, 22050])
+      return d3.scalePow().exponent(2.5).domain([0, 1]).range([10, 22050])
     default:
       return d3.scaleIdentity()
   }
