@@ -3,9 +3,11 @@ const { install: installReduxLoop } = require('redux-loop')
 const createLogger = require('redux-logger')
 const React = require('react')
 const ReactDOM = require('react-dom')
-const { Provider } = require('react-redux')
+const { Provider: ReduxProvider } = require('react-redux')
 const { Router, createMemoryHistory } = require('react-router')
 const { routerMiddleware, syncHistoryWithStore } = require('react-router-redux')
+const { createRenderer } = require('fela')
+const { Provider: FelaProvider } = require('react-fela')
 
 const insertCss = require('insert-css')
 insertCss(require('fs').readFileSync('styles/file-drop.css', 'utf-8'))
@@ -26,11 +28,15 @@ const enhancer = compose(
 const store = createStore(reducer, undefined, enhancer)
 const history = syncHistoryWithStore(memoryHistory, store)
 
+const renderer = createRenderer()
+
 ReactDOM.render(
-  <Provider store={store}>
-    <Router history={history}>
-      { routes }
-    </Router>
-  </Provider>,
+  <ReduxProvider store={store}>
+    <FelaProvider renderer={renderer}>
+      <Router history={history}>
+        { routes }
+      </Router>
+    </FelaProvider>
+  </ReduxProvider>,
   document.getElementById('main')
 )

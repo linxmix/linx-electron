@@ -2,6 +2,9 @@ const React = require('react')
 const classnames = require('classnames')
 const { DragSource, DropTarget } = require('react-dnd')
 const { get } = require('lodash')
+const { connect: connectFela } = require('react-fela')
+
+const styles = require('../styles/primary-track-row')
 
 class PrimaryTrackRow extends React.Component {
   componentWillReceiveProps (nextProps) {
@@ -23,6 +26,7 @@ class PrimaryTrackRow extends React.Component {
       canDrag,
       isOverCurrent,
       style,
+      styles,
       isDragging,
       onClick
     } = this.props
@@ -121,7 +125,7 @@ function createPrimaryTrackRowClass ({
 
   const DroppablePrimaryTrackRow = DropTarget('primary-track-row', dropTarget, collectDrop)(DraggablePrimaryTrackRow)
 
-  return DroppablePrimaryTrackRow
+  return connectFela(styles)(DroppablePrimaryTrackRow)
 }
 
 module.exports = {
