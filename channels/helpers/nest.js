@@ -41,7 +41,7 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
   // compute beatCount
   const beatCount = validNumberOrDefault(Math.max.apply(Math, map(
     concat(childChannels, childClips),
-    ({ startBeat, beatCount }) => startBeat + beatCount,
+    ({ startBeat, beatCount }) => Math.abs(startBeat + beatCount),
   )), 0)
 
   // track channels properties

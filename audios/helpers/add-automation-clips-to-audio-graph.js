@@ -108,6 +108,14 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
       currentTime
     })
 
+    // console.log('delayTime', {
+    //   audioProperty: audioProperties['delay.delayTime'],
+    //   startBeat,
+    //   currentBeat,
+    //   'channel.beatCount': channel.beatCount,
+    //   currentTime
+    // })
+
     const audioGraphKey = `${channel.id}_delayNode`
     audioGraph[audioGraphKey] = ['delayNode', previousOutput, audioProperties]
     previousOutput = audioGraphKey

@@ -44,18 +44,18 @@ module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
     offsetTime += beatToTime(currentBeat - clipStartBeat, audioBpm)
   }
 
-  console.log('addSampleClipToAudioGraph', {
-    name: clip.sample.meta.title,
-    clipStartBeat,
-    clipEndBeat,
-    currentBeat,
-    startTime,
-    stopTime,
-    offsetTime,
-    audioBpm: clip.sample.meta.bpm,
-    'tempoScale.domain': tempoScale.domain(),
-    'tempoScale.range': tempoScale.range(),
-  })
+  // console.log('addSampleClipToAudioGraph', {
+  //   name: clip.sample.meta.title,
+  //   clipStartBeat,
+  //   clipEndBeat,
+  //   currentBeat,
+  //   startTime,
+  //   stopTime,
+  //   offsetTime,
+  //   audioBpm: clip.sample.meta.bpm,
+  //   'tempoScale.domain': tempoScale.domain(),
+  //   'tempoScale.range': tempoScale.range(),
+  // })
 
   audioGraph[clip.id] = ['soundtouchSource', outputs, {
     buffer: clip.sample.audioBuffer,
