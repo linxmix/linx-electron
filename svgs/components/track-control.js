@@ -16,14 +16,19 @@ class TrackControl extends React.Component {
 
   render () {
     const { title, bpm, musicalKey, height, width, isEditingBeatgrid, pitchSemitones,
-      toggleEditBeatgrid, toggleSoloTrack, isSoloTrack } = this.props
+      toggleEditBeatgrid, toggleSoloTrack, isSoloTrack, canDeleteTrack } = this.props
     const editBeatgridInputId = uuid()
     const musicalKeyInputId = uuid()
     const soloInputId = uuid()
 
     return <div className="TrackControl" style={{ height, width }}>
       <span className="u-multiline-ellipsis-1" title={title}>{title}</span>
-      <div>BPM: {bpm}</div>
+      <div>
+        BPM: {bpm}
+        {canDeleteTrack && <button onClick={() => this.props.deleteTrack()}>
+          x
+        </button>}
+      </div>
       <div>
         <input id={musicalKeyInputId}
           type='number'
@@ -54,6 +59,7 @@ TrackControl.defaultProps = {
   width: '100%',
   isEditingBeatgrid: false,
   isSoloTrack: false,
+  canDeleteTrack: false,
   musicalKey: '',
   pitchSemitones: 0,
   title: '',

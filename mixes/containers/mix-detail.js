@@ -12,7 +12,7 @@ const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithCo
   deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
 const { moveTrackGroup, resizeChannel, removeClipsFromChannel, createSampleTrackFromFile,
-  updateChannel, moveChannel } = require('../../channels/actions')
+  updateChannel, moveChannel, unsetChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph, toggleSoloChannel,
   updatePlayStateForTempoChange } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
@@ -55,6 +55,9 @@ class MixDetailContainer extends React.Component {
         ...options
       })
     )
+
+    // actions which dont need quantization
+    arrangementActions.unsetChannel = this.props.unsetChannel
 
     // on drag sample clip:
     // drag track group if ctrl is held
@@ -164,6 +167,7 @@ module.exports = connect(
     updateChannel,
     toggleSoloChannel,
     updateZoom,
+    unsetChannel,
     updateAudioGraph,
     updatePlayStateForTempoChange
   }

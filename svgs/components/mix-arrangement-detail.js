@@ -233,6 +233,11 @@ class MixArrangementDetail extends React.Component {
           pitchSemitones={track.pitchSemitones}
           isEditingBeatgrid={includes(this.state.editingBeatgrids, track.id)}
           isSoloTrack={mix.playState.soloChannelId === track.id}
+          canDeleteTrack={track.type !== CHANNEL_TYPE_PRIMARY_TRACK}
+          deleteTrack={() => {
+            this.props.unsetChannel(track.id)
+            this._asyncUpdateAudioGraph()
+          }}
           toggleEditBeatgrid={this.toggleEditBeatgrid.bind(this, track)}
           toggleSoloTrack={() => this.props.toggleSoloChannel({
             soloChannelId: track.id,
