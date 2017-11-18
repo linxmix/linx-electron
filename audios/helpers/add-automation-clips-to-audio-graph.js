@@ -179,7 +179,7 @@ function _getAutomationParameters({
       return ['biquadFilter', previousOutput, {
         frequency: 13000,
         type: 'highshelf',
-        gain: audoParameters
+        gain: audioParameters
       }]
     case CONTROL_TYPE_FILTER_HIGHPASS_CUTOFF:
       return {

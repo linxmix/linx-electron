@@ -12,6 +12,7 @@ const { updateZoom } = require('../../svgs/actions')
 const PrimaryTrackTable = require('../components/primary-track-table')
 const MixArrangementOverview = require('../../svgs/components/mix-arrangement-overview')
 const { PLAY_STATE_PLAYING } = require('../../audios/constants')
+const { quantizeBeat } = require('../../lib/number-utils')
 
 class MixOverviewContainer extends React.Component {
   componentDidMount () {
@@ -39,7 +40,7 @@ class MixOverviewContainer extends React.Component {
       file,
       parentChannelId: mix.channel.id,
       attrs: {
-        startBeat: startBeat + i
+        startBeat: quantizeBeat({ beat: startBeat + i, quantization: 'bar' })
       }
     }))
   }
