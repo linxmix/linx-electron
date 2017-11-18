@@ -12,6 +12,18 @@ class TrackControl extends React.Component {
     if (isValidNumber(newValue) && (newValue !== this.props.pitchSemitones)) {
       this.props.updatePitchSemitones(newValue)
     }
+
+    this.pitchSemitonesInputElement.blur()
+  }
+
+  handleToggleEditBeatgrid (e) {
+    this.props.toggleEditBeatgrid()
+    this.editBeatgridInputElement.blur()
+  }
+
+  handleToggleSoloTrack (e) {
+    this.props.toggleSoloTrack()
+    this.soloTrackInputElement.blur()
   }
 
   render () {
@@ -37,17 +49,20 @@ class TrackControl extends React.Component {
           min={-12}
           max={12}
           step={1}
+          ref={(element) => { this.pitchSemitonesInputElement = element }}
         />
         <label htmlFor={musicalKeyInputId}>Key: {musicalKey} </label>
       </div>
       <div style={{ cursor: 'pointer' }}>
         <input id={editBeatgridInputId}
-          type='checkbox' checked={isEditingBeatgrid} onChange={toggleEditBeatgrid} />
+          ref={(element) => { this.editBeatgridInputElement = element }}
+          type='checkbox' checked={isEditingBeatgrid} onChange={this.handleToggleEditBeatgrid.bind(this)} />
         <label htmlFor={editBeatgridInputId}>Edit Beatgrid</label>
       </div>
       <div style={{ cursor: 'pointer' }}>
         <input id={soloInputId}
-          type='checkbox' checked={isSoloTrack} onChange={toggleSoloTrack} />
+          ref={(element) => { this.soloTrackInputElement = element }}
+          type='checkbox' checked={isSoloTrack} onChange={this.handleToggleSoloTrack.bind(this)} />
         <label htmlFor={soloInputId}>Solo Track</label>
       </div>
     </div>
