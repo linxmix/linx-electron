@@ -229,14 +229,14 @@ function createReducer (config) {
       const sourceClip = state.records[sourceId]
       assert(sourceClip, 'Cannot createControlPoint for nonexistent sourceClip')
 
+      const newValue = (sourceClip.type === CLIP_TYPE_TEMPO) ?
+        validNumberOrDefault(value, DEFAULT_TEMPO) :
+        clamp(0, value, 1)
+
       const newControlPoint = {
         id: uuid(),
         beat: quantizeBeat({ quantization, beat }),
-        value: clamp(0, value, 1)
-      }
-
-      if (sourceClip.type === CLIP_TYPE_TEMPO) {
-        newControlPoint.value = DEFAULT_TEMPO
+        value: newValue
       }
 
       const sourceClipControlPoints = get(sourceClip, 'controlPoints') || {}

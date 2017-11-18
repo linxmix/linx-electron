@@ -1,5 +1,5 @@
 const React = require('react')
-const { find, forEach, pick, get, map, without, includes, concat } = require('lodash')
+const { assign, find, forEach, pick, get, map, without, includes, concat } = require('lodash')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
 const TrackGroup = require('./track-group')
@@ -201,7 +201,10 @@ class MixArrangementDetail extends React.Component {
       clip={mix.tempoClip}
       beatScale={beatScale}
       scaleX={scaleX}
-      createControlPoint={this._wrapWithAsyncUpdatePlayState(createControlPoint)}
+      createControlPoint={this._wrapWithAsyncUpdatePlayState(options =>
+        createControlPoint(assign({}, options, {
+          value: get(fromTrackGroup, 'primaryTrack.sample.meta.bpm')
+        })))}
       deleteControlPoint={this._wrapWithAsyncUpdatePlayState(deleteControlPoint)}
       updateControlPointValue={this._wrapWithAsyncUpdatePlayState(updateControlPointValue)}
       height={tempoAxisHeight}
