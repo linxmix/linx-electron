@@ -18,17 +18,20 @@ class MixOverviewContainer extends React.Component {
   componentDidMount () {
     keymaster('space', () => this.props.playPause({
       channel: this.props.mix.channel,
-      updateSeek: true
+      updateSeek: false
     }))
 
+    keymaster('⌘+s, ctrl+s', () => this.props.mix.isDirty && this.props.saveMix(this.props.mix))
+
     const { loadMix, mix } = this.props
-    if (mix && !get(mix, 'channel.type')) {
+    if (mix && !mix.channel.type) {
       loadMix(mix.id)
     }
   }
 
   componentWillUnmount () {
     keymaster.unbind('space')
+    keymaster.unbind('⌘+s, ctrl+s')
   }
 
   handleFilesDrop ({ files }) {

@@ -25,6 +25,8 @@ class MixDetailContainer extends React.Component {
       updateSeek: false
     }))
 
+    keymaster('⌘+s, ctrl+s', () => this.props.mix.isDirty && this.props.saveMix(this.props.mix))
+
     const { loadMix, mix } = this.props
     if (mix && !mix.channel.type) {
       loadMix(mix.id)
@@ -33,6 +35,7 @@ class MixDetailContainer extends React.Component {
 
   componentWillUnmount () {
     keymaster.unbind('space')
+    keymaster.unbind('⌘+s, ctrl+s')
   }
 
   render () {
