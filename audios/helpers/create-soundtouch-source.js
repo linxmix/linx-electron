@@ -113,7 +113,7 @@ function onaudioprocess ({
     // i think this does not depend on tempo because the filter output is already scaled correctly
     const elapsedTime = Math.min(playbackTime, node.stopTime) - node.startTime
 
-    const expectedElapsedSamples = Math.max(0, elapsedTime * node.sampleRate - bufferSize)
+    const expectedElapsedSamples = Math.max(0, elapsedTime * node.sampleRate)
     const sampleDelta = ~~(expectedElapsedSamples - actualElapsedSamples)
 
     // if we've drifed past tolerance, adjust frames to extract
