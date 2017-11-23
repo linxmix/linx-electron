@@ -307,6 +307,7 @@ class MixArrangementDetail extends React.Component {
         canDragClips
         canEditClips
         showSecondColorHalf
+        selectedClips={this.state.selectedClips}
         showAutomationControlType={!includes(this.state.editingBeatgrids, toTrackGroup.id) && selectedControlType}
         sampleResolution={includes(this.state.editingBeatgrids, toTrackGroup.id)
           ? ZOOM_RESOLUTION : NORMAL_RESOLUTION}
