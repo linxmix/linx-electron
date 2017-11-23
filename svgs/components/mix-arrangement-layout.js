@@ -29,6 +29,15 @@ class MixArrangementLayout extends React.Component {
     }
   }
 
+  handleSelectControlType(e) {
+    const value = e.target.value
+
+    if (value) {
+      this.props.selectControlType(value)
+      this.selectControlTypeElement.blur()
+    }
+  }
+
   componentDidMount () {
     const mouseMoveHandler = this.handleMouseMove.bind(this)
     const mouseUpHandler = this.handleMouseUp.bind(this)
@@ -152,7 +161,8 @@ class MixArrangementLayout extends React.Component {
           <div style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray', height: beatAxisHeight, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
             <select
               value={selectedControlType || ""}
-              onChange={event => selectControlType(event.target.value)}
+              onChange={this.handleSelectControlType.bind(this)}
+              ref={(element) => { this.selectControlTypeElement = element }}
               style={{ width: '95%' }}>
               <option key="none" value="">none</option>)}
 
