@@ -208,8 +208,8 @@ class MixArrangementDetail extends React.Component {
       deleteControlPoint={this._wrapWithAsyncUpdatePlayState(deleteControlPoint)}
       updateControlPointValue={this._wrapWithAsyncUpdatePlayState(updateControlPointValue)}
       height={tempoAxisHeight}
-      minBeat={get(mix, 'channel.startBeat')}
-      maxBeat={get(mix, 'channel.beatCount')}
+      minBeat={get(mix, 'channel.minBeat')}
+      maxBeat={get(mix, 'channel.maxBeat')}
       canDrag
     />
 

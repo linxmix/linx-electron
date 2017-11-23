@@ -39,10 +39,10 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
   }
 
   // compute beatCount
-  const beatCount = validNumberOrDefault(Math.max.apply(Math, map(
-    concat(childChannels, childClips),
-    ({ startBeat, beatCount }) => Math.abs(startBeat + beatCount),
-  )), 0)
+  const minBeat = get(sortBy(concat(childChannels, childClips), 'startBeat'), '[0].startBeat')
+  const maxBeat = Math.max.apply(Math, map(concat(childChannels, childClips),
+    ({ startBeat, beatCount }) => startBeat + beatCount))
+  const beatCount = validNumberOrDefault(Math.max(0, maxBeat - minBeat), 0)
 
   // track channels properties
   const sampleId = channel.sampleId
@@ -115,6 +115,8 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
     sampleTracks,
     pitchSemitones,
     startBeat: validNumberOrDefault(startBeat, 0),
+    minBeat: validNumberOrDefault(minBeat, 0),
+    maxBeat: validNumberOrDefault(maxBeat, 0),
     isDirty: (includes(dirtyChannels, id) ||
       some(childChannels, { isDirty: true }) ||
       some(childClips, { isDirty: true })),

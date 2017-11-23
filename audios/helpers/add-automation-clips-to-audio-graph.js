@@ -93,17 +93,20 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
     audioProperties['feedbackNode.gain'] = ['setValueAtTime', 0.7, 0]
 
     // add delayTime in quarter notes
+    const delayTimeValueScale = _getDelayTimeValueScale({
+      quarterNoteFactor: 1,
+      beatScale,
+      bpmScale,
+
+      // account for full length of channel, in case there are clips before channel.startBeat
+      startBeat: (startBeat - channel.startBeat) + channel.minBeat,
+      endBeat: startBeat + channel.maxBeat
+    })
     audioProperties['delay.delayTime'] = valueScaleToAudioParameter({
-      clip: { startBeat: 0, beatCount: channel.beatCount, controlType: 'delayTime for logging' },
+      clip: { startBeat: channel.minBeat, beatCount: channel.beatCount, controlType: 'delayTime for logging' },
       startBeat,
       currentBeat,
-      valueScale: _getDelayTimeValueScale({
-        quarterNoteFactor: 1,
-        beatScale,
-        bpmScale,
-        startBeat,
-        endBeat: startBeat + channel.beatCount
-      }),
+      valueScale: delayTimeValueScale,
       beatScale,
       currentTime
     })
@@ -113,7 +116,12 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
     //   startBeat,
     //   currentBeat,
     //   'channel.beatCount': channel.beatCount,
-    //   currentTime
+    //   'channel.startBeat': channel.startBeat,
+    //   channel,
+    //   currentTime,
+    //   'name': channel.sample.meta.title,
+    //   'delayTimeValueScale.domain': delayTimeValueScale.domain(),
+    //   'delayTimeValueScale.range': delayTimeValueScale.range(),
     // })
 
     const audioGraphKey = `${channel.id}_delayNode`

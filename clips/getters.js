@@ -59,6 +59,7 @@ const getClips = Getter(
             beatCount = validNumberOrDefault(computedBeatCount, DEFAULT_SAMPLE_CLIP_BEAT_COUNT)
           }
         }
+        beatCount = Math.max(0, beatCount)
 
         // compute startBeat
         startBeat = validNumberOrDefault(clip.startBeat, 0)
