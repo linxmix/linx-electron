@@ -8,11 +8,12 @@ const { isRightClick, getPosition } = require('../../lib/mouse-event-utils')
 
 class TrackChannel extends React.Component {
   handleClick (e) {
-    if (isRightClick(e)) {
+    const { showAutomationControlType, canEditClips, channel } = this.props
+
+    if (isRightClick(e) && (showAutomationControlType || canEditClips)) {
       e.preventDefault()
       e.stopPropagation()
 
-      const { channel, showAutomationControlType } = this.props
       let { beat, value } = getPosition({
         e,
         target: this.clipsGroupElement,
@@ -21,7 +22,7 @@ class TrackChannel extends React.Component {
       })
 
       // subtract this because the clipsGroup target is offset this amount
-      beat -= channel.parentChannel.minBeat
+      beat += this.props.clickBoxTranslateX
 
       if (showAutomationControlType) {
         const automationClip = find(channel.clips, { controlType: showAutomationControlType })
@@ -43,7 +44,8 @@ class TrackChannel extends React.Component {
             value
           })
         }
-      } else if (this.props.canEditClips) {
+
+      } else if (canEditClips) {
         const selectedClip = this.props.selectedClip
 
         let clipOptions
@@ -77,12 +79,14 @@ class TrackChannel extends React.Component {
 
     return <g className="TrackChannel"
       onMouseUp={this.handleClick.bind(this)}>
-      <rect transform={`translate(${-channel.parentChannel.minBeat},${translateY})`}
-        height={height}
-        width={channel.parentChannel.beatCount}
-        fill="transparent"
-        ref={(element) => { this.clipsGroupElement = element }}
-      />
+      {(showAutomationControlType || canEditClips) &&
+        <rect transform={`translate(${this.props.clickBoxTranslateX},${translateY})`}
+          height={height}
+          width={this.props.clickBoxWidth}
+          fill="transparent"
+          ref={(element) => { this.clipsGroupElement = element }}
+        />
+      }
 
       <g transform={`translate(${channel.startBeat},${translateY})`}>
         {map(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip =>
@@ -136,9 +140,10 @@ TrackChannel.defaultProps = {
   channel: null,
   beatScale: null,
   selectedClip: null,
+  clickBoxTranslateX: 0,
+  clickBoxWidth: 0,
   translateY: 0,
   scaleX: 1,
-  mixBeatCount: 0,
   height: 100,
   color: 'green',
   canDragClips: false,

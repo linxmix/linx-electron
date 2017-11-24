@@ -280,6 +280,8 @@ class MixArrangementDetail extends React.Component {
         translateY={0}
         scaleX={scaleX}
         rowHeight={rowHeight}
+        mixMinBeat={mix.channel.minBeat}
+        mixBeatCount={mix.channel.beatCount}
         canResizeClips
         canDragClips
         canEditClips
@@ -305,6 +307,8 @@ class MixArrangementDetail extends React.Component {
         translateY={rowHeight * trackGroups[0].tracks.length}
         scaleX={scaleX}
         rowHeight={rowHeight}
+        mixMinBeat={mix.channel.minBeat}
+        mixBeatCount={mix.channel.beatCount}
         canResizeClips
         canDragClips
         canEditClips

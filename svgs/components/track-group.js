@@ -9,7 +9,7 @@ class TrackGroup extends React.Component {
   render () {
     const { channel, color, beatScale, translateY, scaleX, sampleResolution, rowHeight,
       showOnlyPrimaryTrack, canDragClips, canResizeClips, showAutomationControlType,
-      connectDragSource, trackChannelActions, canEditClips } = this.props
+      connectDragSource, trackChannelActions, canEditClips, mixMinBeat, mixBeatCount } = this.props
     if (!channel) { return null }
 
     const tracksToDisplay = filter(
@@ -24,6 +24,8 @@ class TrackGroup extends React.Component {
         key={track.id}
         channel={track}
         beatScale={beatScale}
+        clickBoxTranslateX={mixMinBeat - channel.startBeat}
+        clickBoxWidth={mixBeatCount}
         translateY={rowHeight * i}
         height={rowHeight}
         scaleX={scaleX}
@@ -49,6 +51,8 @@ TrackGroup.defaultProps = {
   translateY: 0,
   scaleX: 1,
   rowHeight: 100,
+  mixMinBeat: 0,
+  mixBeatCount: 0,
   canDragGroup: false,
   canDragClips: false,
   canResizeClips: false,
