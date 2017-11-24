@@ -27,7 +27,6 @@ class TrackGroup extends React.Component {
         translateY={rowHeight * i}
         height={rowHeight}
         scaleX={scaleX}
-        mixBeatCount={this.props.mixBeatCount}
         canDragClips={canDragClips && !showAutomationControlType}
         canResizeClips={canResizeClips && !showAutomationControlType}
         canEditClips={canEditClips && !showAutomationControlType}
@@ -49,7 +48,6 @@ TrackGroup.defaultProps = {
   selectedClips: {},
   translateY: 0,
   scaleX: 1,
-  mixBeatCount: 0,
   rowHeight: 100,
   canDragGroup: false,
   canDragClips: false,

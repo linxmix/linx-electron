@@ -147,7 +147,8 @@ class MixArrangementLayout extends React.Component {
 
     const transform = `translate(${translateX},${translateY}) scale(${scaleX}, 1)`
     const beatScale = mix.channel.beatScale
-    const mixBeatCount = validNumberOrDefault(mix.channel.beatCount, 0)
+    const minBeat = mix.channel.minBeat
+    const maxBeat = mix.channel.maxBeat
 
     const dropClassName = canDropFiles && isOverWithFiles ? 'u-valid-file-drag-over' : ''
 
@@ -186,7 +187,8 @@ class MixArrangementLayout extends React.Component {
             <g transform={transform}>
               <BeatAxis
                 scaleX={scaleX}
-                beatCount={mixBeatCount}
+                minBeat={minBeat}
+                maxBeat={maxBeat}
                 beatScale={beatScale}
                 height='100%'
                 strokeWidth={1 / scaleX}
@@ -214,7 +216,8 @@ class MixArrangementLayout extends React.Component {
             <g transform={transform}>
               <BeatAxis
                 scaleX={scaleX}
-                beatCount={mixBeatCount}
+                minBeat={minBeat}
+                maxBeat={maxBeat}
                 height={height}
                 strokeWidth={1 / scaleX}
               />

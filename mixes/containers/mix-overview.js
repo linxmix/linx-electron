@@ -36,8 +36,8 @@ class MixOverviewContainer extends React.Component {
 
   handleFilesDrop ({ files }) {
     const { mix, createTrackGroupFromFile } = this.props
-    const mixBeatCount = mix && mix.channel && mix.channel.beatCount
-    const startBeat = Math.ceil(mixBeatCount ? mixBeatCount + 1 : 0)
+    const maxBeat = mix && mix.channel && mix.channel.maxBeat
+    const startBeat = Math.ceil(maxBeat ? maxBeat + 1 : 0)
 
     forEach(files, (file, i) => createTrackGroupFromFile({
       file,

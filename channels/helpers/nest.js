@@ -39,10 +39,12 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
   }
 
   // compute beatCount
-  const minBeat = get(sortBy(concat(childChannels, childClips), 'startBeat'), '[0].startBeat')
-  const maxBeat = Math.max.apply(Math, map(concat(childChannels, childClips),
-    ({ startBeat, beatCount }) => startBeat + beatCount))
-  const beatCount = validNumberOrDefault(Math.max(0, maxBeat - minBeat), 0)
+  const _minBeats = concat(map(childChannels, 'minBeat'), map(childClips, 'startBeat'))
+  const _maxBeats = concat(map(childChannels, 'maxBeat'),
+    map(childClips, ({ startBeat, beatCount }) => startBeat + beatCount))
+  const minBeat = Math.min(0, _minBeats.sort()[0])
+  const maxBeat = Math.max(0, ..._maxBeats)
+  const beatCount = validNumberOrDefault(maxBeat - minBeat, 0)
 
   // track channels properties
   const sampleId = channel.sampleId

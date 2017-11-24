@@ -1,7 +1,7 @@
 const React = require('react')
 const { map, range } = require('lodash')
 
-const { clamp, roundToNearestPowerOfTwo } = require('../../lib/number-utils')
+const { clamp, roundTo, roundToNearestPowerOfTwo } = require('../../lib/number-utils')
 const { isRightClick } = require('../../lib/mouse-event-utils')
 
 class BeatAxis extends React.Component {
@@ -24,14 +24,17 @@ class BeatAxis extends React.Component {
   }
 
   render () {
-    const { minStep, maxStep, phraseBeatCount, beatCount, height, strokeWidth, stroke,
+    const { minStep, maxStep, phraseBeatCount, minBeat, maxBeat, height, strokeWidth, stroke,
       showText, scaleX, beatScale } = this.props
 
     const computedStep = (phraseBeatCount * 2) / scaleX
     const step = clamp(minStep, roundToNearestPowerOfTwo(computedStep), maxStep)
+    const ticks = range(roundTo(minBeat, phraseBeatCount), maxBeat, step)
+
+    console.log('beatAxis', { minBeat, maxBeat, step, computedStep })
 
     return <g onMouseUp={this.handleClick.bind(this)} style={{ userSelect: 'none' }}>
-      {map(range(0, beatCount, step), tick => <g key={tick} transform={`translate(${tick})`}>
+      {map(ticks, tick => <g key={tick} transform={`translate(${tick})`}>
         {showText && (computedStep < 256) && (tick % phraseBeatCount === 0) && <text
           x={2}
           y='50%'

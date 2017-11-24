@@ -21,7 +21,7 @@ class TrackChannel extends React.Component {
       })
 
       // subtract this because the target is offset this amount
-      beat -= channel.parentChannel.startBeat
+      beat -= channel.parentChannel.minBeat
 
       if (showAutomationControlType) {
         const automationClip = find(channel.clips, { controlType: showAutomationControlType })
@@ -29,16 +29,16 @@ class TrackChannel extends React.Component {
         if (automationClip) {
           this.props.createControlPoint({
             sourceId: automationClip.id,
-            minBeat: channel.startBeat,
-            maxBeat: channel.beatCount,
+            minBeat: channel.minBeat,
+            maxBeat: channel.maxBeat,
             beat,
             value
           })
         } else {
           this.props.createAutomationClipWithControlPoint({
             channelId: channel.id,
-            minBeat: channel.startBeat,
-            maxBeat: channel.beatCount,
+            minBeat: channel.minBeat,
+            maxBeat: channel.maxBeat,
             beat,
             value
           })
@@ -77,9 +77,9 @@ class TrackChannel extends React.Component {
 
     return <g className="TrackChannel"
       onMouseUp={this.handleClick.bind(this)}>
-      <rect transform={`translate(${-channel.parentChannel.startBeat},${translateY})`}
+      <rect transform={`translate(${-channel.parentChannel.minBeat},${translateY})`}
         height={height}
-        width={this.props.mixBeatCount}
+        width={channel.parentChannel.beatCount}
         fill="transparent"
         ref={(element) => { this.clipsGroupElement = element }}
       />
@@ -119,8 +119,8 @@ class TrackChannel extends React.Component {
             key={clip.id}
             clip={clip}
             scaleX={scaleX}
-            minBeat={channel.startBeat}
-            maxBeat={channel.beatCount}
+            minBeat={channel.minBeat}
+            maxBeat={channel.maxBeat}
             deleteControlPoint={this.props.deleteControlPoint}
             beatScale={beatScale}
             height={height}
