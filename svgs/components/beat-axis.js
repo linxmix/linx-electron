@@ -31,8 +31,6 @@ class BeatAxis extends React.Component {
     const step = clamp(minStep, roundToNearestPowerOfTwo(computedStep), maxStep)
     const ticks = range(roundTo(minBeat, phraseBeatCount), maxBeat, step)
 
-    console.log('beatAxis', { minBeat, maxBeat, step, computedStep })
-
     return <g onMouseUp={this.handleClick.bind(this)} style={{ userSelect: 'none' }}>
       {map(ticks, tick => <g key={tick} transform={`translate(${tick})`}>
         {showText && (computedStep < 256) && (tick % phraseBeatCount === 0) && <text

@@ -16,6 +16,18 @@ class TrackControl extends React.Component {
     this.pitchSemitonesInputElement.blur()
   }
 
+  handleChangeGain (e) {
+    const newValue = parseFloat(e.target.value)
+
+    if (isValidNumber(newValue) && (newValue !== this.props.gain)) {
+      this.props.updateGain(newValue)
+    }
+  }
+
+  onGainInputMouseUp (e) {
+    this.gainInputElement.blur()
+  }
+
   handleToggleEditBeatgrid (e) {
     this.props.toggleEditBeatgrid()
     this.editBeatgridInputElement.blur()
@@ -27,10 +39,11 @@ class TrackControl extends React.Component {
   }
 
   render () {
-    const { title, bpm, musicalKey, height, width, isEditingBeatgrid, pitchSemitones,
+    const { title, bpm, gain, musicalKey, height, width, isEditingBeatgrid, pitchSemitones,
       toggleEditBeatgrid, toggleSoloTrack, isSoloTrack, canDeleteTrack } = this.props
     const editBeatgridInputId = uuid()
     const musicalKeyInputId = uuid()
+    const gainInputId = uuid()
     const soloInputId = uuid()
 
     return <div className="TrackControl" style={{ height, width }}>
@@ -41,6 +54,7 @@ class TrackControl extends React.Component {
           x
         </button>}
       </div>
+
       <div>
         <input id={musicalKeyInputId}
           type='number'
@@ -53,17 +67,34 @@ class TrackControl extends React.Component {
         />
         <label htmlFor={musicalKeyInputId}>Key: {musicalKey} </label>
       </div>
-      <div style={{ cursor: 'pointer' }}>
-        <input id={editBeatgridInputId}
-          ref={(element) => { this.editBeatgridInputElement = element }}
-          type='checkbox' checked={isEditingBeatgrid} onChange={this.handleToggleEditBeatgrid.bind(this)} />
-        <label htmlFor={editBeatgridInputId}>Edit Beatgrid</label>
+
+      <div onMouseUp={this.onGainInputMouseUp.bind(this)}>
+        <input id={gainInputId}
+          type='number'
+          value={gain}
+          onChange={this.handleChangeGain.bind(this)}
+          min={0}
+          max={2}
+          step={0.01}
+          ref={(element) => { this.gainInputElement = element }}
+        />
+        <label htmlFor={gainInputId}>Gain</label>
       </div>
+
       <div style={{ cursor: 'pointer' }}>
-        <input id={soloInputId}
-          ref={(element) => { this.soloTrackInputElement = element }}
-          type='checkbox' checked={isSoloTrack} onChange={this.handleToggleSoloTrack.bind(this)} />
-        <label htmlFor={soloInputId}>Solo Track</label>
+        <span style={{ marginRight: '5px' }}>
+          <input id={editBeatgridInputId}
+            ref={(element) => { this.editBeatgridInputElement = element }}
+            type='checkbox' checked={isEditingBeatgrid} onChange={this.handleToggleEditBeatgrid.bind(this)} />
+          <label htmlFor={editBeatgridInputId}>Beatgrid</label>
+        </span>
+
+        <span>
+          <input id={soloInputId}
+            ref={(element) => { this.soloTrackInputElement = element }}
+            type='checkbox' checked={isSoloTrack} onChange={this.handleToggleSoloTrack.bind(this)} />
+          <label htmlFor={soloInputId}>Solo</label>
+        </span>
       </div>
     </div>
   }
@@ -78,7 +109,8 @@ TrackControl.defaultProps = {
   musicalKey: '',
   pitchSemitones: 0,
   title: '',
-  bpm: 0
+  bpm: 0,
+  gain: 1
 }
 
 module.exports = TrackControl

@@ -230,6 +230,7 @@ class MixArrangementDetail extends React.Component {
           title={get(track, 'sample.meta.title')}
           bpm={get(track, 'sample.meta.bpm')}
           musicalKey={get(track, 'sample.meta.key')}
+          gain={get(track, 'gain')}
           pitchSemitones={track.pitchSemitones}
           isEditingBeatgrid={includes(this.state.editingBeatgrids, track.id)}
           isSoloTrack={mix.playState.soloChannelId === track.id}
@@ -247,11 +248,15 @@ class MixArrangementDetail extends React.Component {
             this.props.updateChannel({ id: track.id, pitchSemitones })
             this._asyncUpdateAudioGraph()
           }}
+          updateGain={gain => {
+            this.props.updateChannel({ id: track.id, gain })
+            this._asyncUpdateAudioGraph()
+          }}
         />)}
       </div>
     )
 
-    console.log('mix-arrangement-detail', { fromTrackGroup, toTrackGroup })
+    console.log('mix-arrangement-detail', { mix, fromTrackGroup, toTrackGroup })
 
     return <MixArrangementLayout
       mix={mix}

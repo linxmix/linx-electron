@@ -63,7 +63,7 @@ function createAudioGraph ({
   })
 
   // add channel node
-  audioGraph[channel.id] = ['gain', channelOutput]
+  audioGraph[channel.id] = ['gain', channelOutput, { gain: channel.gain }]
 
   // generate sample clip nodes, unless another channel is being solo'd
   if (!playState.soloChannelId || playState.soloChannelId === channel.id) {

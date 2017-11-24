@@ -116,6 +116,7 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
     primaryTrack,
     sampleTracks,
     pitchSemitones,
+    gain: validNumberOrDefault(channel.gain, 1),
     startBeat: validNumberOrDefault(startBeat, 0),
     minBeat: validNumberOrDefault(minBeat, 0),
     maxBeat: validNumberOrDefault(maxBeat, 0),
