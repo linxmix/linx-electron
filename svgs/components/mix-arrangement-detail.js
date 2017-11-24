@@ -36,8 +36,6 @@ class MixArrangementDetail extends React.Component {
     const selectedClips = this.state.selectedClips
     const selectedClip = selectedClips[channel.id]
 
-    console.log('selectClip', { clip, channel, selectedClips, selectedClip })
-
     if (!selectedClip || selectedClip.id !== clip.id) {
       this.setState({
         selectedClips: {

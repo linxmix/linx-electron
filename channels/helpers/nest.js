@@ -65,9 +65,9 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
   // }
 
   // mix channel properties
-  let beatScale, bpmScale
+  let beatScale, bpmScale, tempoClip
   if (type === CHANNEL_TYPE_MIX) {
-    const tempoClip = find(childClips, { type: CLIP_TYPE_TEMPO }) || {}
+    tempoClip = find(childClips, { type: CLIP_TYPE_TEMPO }) || {}
     const controlPoints = get(tempoClip, 'controlPoints') || []
 
     if (controlPoints.length) {
@@ -116,6 +116,7 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
     primaryTrack,
     sampleTracks,
     pitchSemitones,
+    tempoClip,
     gain: validNumberOrDefault(channel.gain, 1),
     startBeat: validNumberOrDefault(startBeat, 0),
     minBeat: validNumberOrDefault(minBeat, 0),

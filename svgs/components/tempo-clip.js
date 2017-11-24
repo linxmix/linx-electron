@@ -11,8 +11,11 @@ class TempoClip extends React.Component {
       e.preventDefault()
       e.stopPropagation()
 
-      const { beat, value } = getPosition({ e, scaleX: this.props.scaleX, height: this.props.height })
+      let { beat, value } = getPosition({ e, scaleX: this.props.scaleX, height: this.props.height })
       
+      // subtract this because the rect target is offset this amount
+      beat += this.props.minBeat
+
       this.props.createControlPoint({
         sourceId: this.props.clip.id,
         beat,
@@ -31,8 +34,13 @@ class TempoClip extends React.Component {
     const { id, controlPoints } = clip
 
     return <g>
-      <rect width={maxBeat - minBeat} height={height} fill='transparent'
-        onMouseUp={this.handleClick.bind(this)} />
+      <rect
+        x={minBeat}
+        width={maxBeat - minBeat}
+        height={height}
+        fill='transparent'
+        onMouseUp={this.handleClick.bind(this)}
+      />
 
       {map(controlPoints, controlPoint => <ControlPoint
         key={controlPoint.id}

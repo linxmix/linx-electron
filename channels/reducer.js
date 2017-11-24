@@ -24,7 +24,7 @@ const {
   createSampleTrackFromFile,
   swapChannels
 } = require('./actions')
-const { unsetClips, createClip } = require('../clips/actions')
+const { unsetClips, createClip, updateControlPointPosition } = require('../clips/actions')
 const {
   createSample
 } = require('../samples/actions')
@@ -253,12 +253,12 @@ function createReducer (config) {
     [moveTrackGroup]: (state, action) => {
       const { trackGroup, diffBeats, quantization, moveFollowingChannels } = action.payload
       const { id, startBeat } = trackGroup
-      const { channels: mixChannels } = trackGroup.parentChannel
+      const { channels: mixChannels, tempoClip: mixTempoClip } = trackGroup.parentChannel
 
       const beatsToMove = quantizeBeat({ quantization, beat: diffBeats })
       const nextStartBeat = startBeat + beatsToMove
 
-      // make sure following primary track channels also move
+      // make sure following track groups and tempo control points also move
       let channelsToMove = []
       if (moveFollowingChannels) {
         channelsToMove = filter(mixChannels, channel =>
@@ -266,10 +266,23 @@ function createReducer (config) {
           (channel.startBeat >= nextStartBeat) &&
           (channel.type === CHANNEL_TYPE_TRACK_GROUP))
       }
-      const nextEffects = map(channelsToMove, channel => Effects.constant(updateChannel({
-        id: channel.id,
-        startBeat: channel.startBeat + beatsToMove
-      })))
+      let tempoControlPointsToMove = []
+      if (moveFollowingChannels && mixTempoClip && mixTempoClip.controlPoints) {
+        tempoControlPointsToMove = filter(mixTempoClip.controlPoints,
+          ({ beat }) => beat >= nextStartBeat)
+      }
+
+      const nextEffects = concat(
+        map(channelsToMove, channel => Effects.constant(updateChannel({
+          id: channel.id,
+          startBeat: channel.startBeat + beatsToMove
+        }))),
+        map(tempoControlPointsToMove, ({ id, beat }) => Effects.constant(updateControlPointPosition({
+          sourceId: mixTempoClip.id,
+          id,
+          beat: beat + beatsToMove
+        })))
+      )
 
       return loop(state, Effects.batch([
         Effects.constant(updateChannel({

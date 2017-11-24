@@ -20,6 +20,7 @@ const {
   createControlPoint,
   deleteControlPoint,
   updateControlPointValue,
+  updateControlPointPosition,
   createAutomationClipWithControlPoint,
   createSampleClip,
   calculateGridMarkers,
@@ -219,6 +220,27 @@ function createReducer (config) {
           [id]: {
             ...controlPoint,
             value
+          }
+        }
+      })))
+    },
+    [updateControlPointPosition]: (state, action) => {
+      const { sourceId, id, beat } = action.payload
+      assert(isValidNumber(beat), 'Cannot updateControlPointBeat for invalid beat')
+
+      const sourceClip = state.records[sourceId]
+      assert(sourceClip, 'Cannot updateControlPointValue for nonexistent sourceClip')
+
+      const controlPoint = sourceClip.controlPoints[id]
+      assert(controlPoint, 'Cannot updateControlPointValue for nonexistent controlPoint')
+
+      return loop(state, Effects.constant(updateClip({
+        id: sourceId,
+        controlPoints: {
+          ...sourceClip.controlPoints,
+          [id]: {
+            ...controlPoint,
+            beat
           }
         }
       })))
