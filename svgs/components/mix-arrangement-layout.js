@@ -32,10 +32,8 @@ class MixArrangementLayout extends React.Component {
   handleSelectControlType(e) {
     const value = e.target.value
 
-    if (value) {
-      this.props.selectControlType(value)
-      this.selectControlTypeElement.blur()
-    }
+    this.props.selectControlType(value)
+    this.selectControlTypeElement.blur()
   }
 
   componentDidMount () {
