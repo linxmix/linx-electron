@@ -6,19 +6,18 @@ const keymaster = require('keymaster')
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix, deleteMix, unsetTrackGroupFromMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
-const { playPause, seekToBeat } = require('../../audios/actions')
+const { playPause, seekToBeat, startRecording, stopRecording } = require('../../audios/actions')
 const { createTrackGroupFromFile, swapChannels } = require('../../channels/actions')
 const { updateZoom } = require('../../svgs/actions')
 const PrimaryTrackTable = require('../components/primary-track-table')
 const MixArrangementOverview = require('../../svgs/components/mix-arrangement-overview')
-const { PLAY_STATE_PLAYING } = require('../../audios/constants')
 const { quantizeBeat } = require('../../lib/number-utils')
 
 class MixOverviewContainer extends React.Component {
   componentDidMount () {
     keymaster('space', () => this.props.playPause({
       channel: this.props.mix.channel,
-      updateSeek: false
+      updateSeek: true
     }))
 
     keymaster('⌘+s, ctrl+s', () => this.props.mix.isDirty && this.props.saveMix(this.props.mix))
@@ -52,6 +51,26 @@ class MixOverviewContainer extends React.Component {
     const newTitle = e && e.target && e.target.value
     const { mix, updateMeta } = this.props
     updateMeta({ id: mix.id, title: newTitle })
+  }
+
+  handleToggleRecording () {
+    const { mix, playPause, startRecording, stopRecording } = this.props
+    const { playState, channel } = mix
+    const channelId = channel.id
+
+    if (playState.isRecording) {
+      stopRecording({ channelId })
+
+      if (playState.isPlaying) {
+        window.setTimeout(() => playPause({ channel, updateSeek: true }))
+      }
+    } else {
+      startRecording({ channelId })
+
+      if (playState.isPaused) {
+        window.setTimeout(() => playPause({ channel, updateSeek: true }))
+      }
+    }
   }
 
   render () {
@@ -88,7 +107,12 @@ class MixOverviewContainer extends React.Component {
         <button
           disabled={masterChannelStatus !== 'loaded'}
           onClick={() => playPause({ channel, updateSeek: true })}>
-          {playState.status === PLAY_STATE_PLAYING ? 'Pause Mix' : 'Play Mix'}
+          {playState.isPlaying ? 'Pause Mix' : 'Play Mix'}
+        </button>
+        <button
+          disabled={masterChannelStatus !== 'loaded'}
+          onClick={this.handleToggleRecording.bind(this)}>
+          {playState.isRecording ? 'Stop Recording' : 'Start Recording'}
         </button>
       </header>
 
@@ -150,6 +174,8 @@ module.exports = connect(
     unsetTrackGroupFromMix,
     seekToBeat,
     updateZoom,
+    startRecording,
+    stopRecording,
     playPause
   }
 )(MixOverviewContainer)

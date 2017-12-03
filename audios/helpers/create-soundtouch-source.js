@@ -120,8 +120,8 @@ function onaudioprocess ({
     if (Math.abs(sampleDelta) >= SAMPLE_DRIFT_TOLERANCE) {
       // console.log('actualElapsedSamples', actualElapsedSamples);
       // console.log('expectedElapsedSamples', expectedElapsedSamples);
-      console.log("DRIFT", sampleDelta, elapsedTime)
-      console.log({ playbackTime, 'startSample': node.filter.startSample, tempo, elapsedTime, 'startTime': node.startTime, actualElapsedSamples, expectedElapsedSamples });
+      // console.log("DRIFT", sampleDelta, elapsedTime)
+      // console.log({ playbackTime, 'startSample': node.filter.startSample, tempo, elapsedTime, 'startTime': node.startTime, actualElapsedSamples, expectedElapsedSamples });
 
       // if we're behind where we should be, extract dummy frames to catch up
       if (sampleDelta > 0) {

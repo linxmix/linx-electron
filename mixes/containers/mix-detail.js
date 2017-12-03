@@ -14,9 +14,8 @@ const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithCo
 const { moveTrackGroup, resizeChannel, removeClipsFromChannel, createSampleTrackFromFile,
   updateChannel, moveChannel, unsetChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph, toggleSoloChannel,
-  updatePlayStateForTempoChange } = require('../../audios/actions')
+  updatePlayStateForTempoChange, startRecording, stopRecording } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
-const { PLAY_STATE_PLAYING } = require('../../audios/constants')
 
 class MixDetailContainer extends React.Component {
   componentDidMount () {
@@ -38,9 +37,36 @@ class MixDetailContainer extends React.Component {
     keymaster.unbind('⌘+s, ctrl+s')
   }
 
+  handleToggleRecording () {
+    const { mix, playPause, startRecording, stopRecording } = this.props
+    const { playState, channel } = mix
+    const channelId = channel.id
+
+    if (playState.isRecording) {
+      stopRecording({ channelId })
+
+      if (playState.isPlaying) {
+        window.setTimeout(() => playPause({ channel, updateSeek: false }))
+      }
+    } else {
+      startRecording({ channelId })
+
+      if (!playState.isPlaying) {
+        window.setTimeout(() => playPause({ channel, updateSeek: false }))
+      }
+
+      const duration = mix.channel.beatScale(mix.channel.maxBeat)
+      console.log('MIX DURATION', duration)
+      window.setTimeout(() => {
+        console.log('END OF MIX')
+        this.handleToggleRecording()
+      }, duration * 1000)
+    }
+  }
+
   render () {
     const { mix, audioContext, fromTrackGroup, toTrackGroup, error, zoom,
-      sampleError, saveMix, playPause } = this.props
+      sampleError, saveMix, playPause, startRecording, stopRecording } = this.props
     if (!mix) { return null }
 
     const arrangementActions = mapValues(
@@ -107,7 +133,12 @@ class MixDetailContainer extends React.Component {
         <button
           disabled={masterChannelStatus !== 'loaded'}
           onClick={() => playPause({ channel, updateSeek: false })}>
-          {playState.status === PLAY_STATE_PLAYING ? 'Pause Mix' : 'Play Mix'}
+          {playState.isPlaying ? 'Pause Mix' : 'Play Mix'}
+        </button>
+        <button
+          disabled={masterChannelStatus !== 'loaded'}
+          onClick={this.handleToggleRecording.bind(this)}>
+          {playState.isRecording ? 'Stop Recording' : 'Start Recording'}
         </button>
       </header>
 
@@ -167,6 +198,8 @@ module.exports = connect(
     updateChannel,
     toggleSoloChannel,
     updateZoom,
+    startRecording,
+    stopRecording,
     unsetChannel,
     updateAudioGraph,
     updatePlayStateForTempoChange

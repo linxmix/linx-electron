@@ -3,6 +3,7 @@ const { handleActions } = require('redux-actions')
 const createVirtualAudioGraph = require('virtual-audio-graph')
 const assert = require('assert')
 const { merge } = require('lodash')
+const Recorder = require('recorderjs')
 
 const { isValidNumber } = require('../lib/number-utils')
 const { PLAY_STATE_PLAYING, PLAY_STATE_PAUSED } = require('./constants')
@@ -12,6 +13,11 @@ const {
   play,
   pause,
   playPause,
+  startRecording,
+  stopRecording,
+  exportWav,
+  exportWavSuccess,
+  exportWavFailure,
   seekToBeat,
   toggleSoloChannel,
   updatePlayState,
@@ -19,11 +25,14 @@ const {
   updateVirtualAudioGraph,
   updatePlayStateForTempoChange
 } = require('./actions')
+const createService = require('./service')
 const createAudioGraph = require('./helpers/create-audio-graph')
 
 module.exports = createReducer
 
 function createReducer (config) {
+  const service = createService(config)
+
   return handleActions({
     [play]: (state, action) => {
       const { channel } = action.payload
@@ -139,12 +148,59 @@ function createReducer (config) {
         ...state,
         playStates: {
           ...state.playStates,
-          [channelId]: merge({ status: PLAY_STATE_PAUSED }, state.playStates[channelId],
-            playState)
+          [channelId]: merge({
+            status: PLAY_STATE_PAUSED,
+            isRecording: false,
+            recorderNode: null
+          }, state.playStates[channelId], playState)
         }
       }
     },
+    [startRecording]: (state, action) => {
+      const { channelId } = action.payload
+      const virtualAudioGraph = state.virtualAudioGraphs[channelId]
+      const playState = state.playStates[channelId]
+      assert(virtualAudioGraph && playState, 'Requires virtualAudioGraph and playState to startRecording')
 
+      console.log({ virtualAudioGraph, node: virtualAudioGraph.getAudioNodeById(channelId) })
+      const recorderNode = new Recorder(virtualAudioGraph.getAudioNodeById(channelId))
+      recorderNode.record()
+
+      return loop(state, Effects.constant(updatePlayState({
+        channelId,
+        recorderNode,
+        isRecording: true
+      })))
+    },
+    [stopRecording]: (state, action) => {
+      const { channelId } = action.payload
+      const playState = state.playStates[channelId]
+      const recorderNode = playState && playState.recorderNode
+      assert(playState && recorderNode, 'Requires playState and recorderNode to stopRecording')
+
+      recorderNode.stop()
+
+      return loop(state, Effects.batch([
+        Effects.constant(updatePlayState({
+          channelId,
+          isRecording: false,
+          recorderNode: null
+        })),
+        Effects.constant(exportWav({ recorderNode }))
+      ]))
+    },
+    [exportWav]: (state, action) => {
+      const { fileName, recorderNode } = action.payload
+      assert(recorderNode, 'Requires recorderNode to exportWav')
+
+      return loop(state, Effects.promise(runExportWav, { fileName, recorderNode }))
+    },
+    [exportWavSuccess]: (state, action) => {
+      return state
+    },
+    [exportWavFailure]: (state, action) => {
+      return state
+    },
     // TODO: should this all be in channels reducer? so we dont have to pass full channel
     [updateAudioGraph]: (state, action) => {
       const { channel } = action.payload
@@ -195,4 +251,10 @@ function createReducer (config) {
     playStates: {},
     audioContext: config.audioContext
   })
+
+  function runExportWav ({ fileName, recorderNode }) {
+    return service.exportWav({ fileName, recorderNode })
+      .then(exportWavSuccess)
+      .catch(exportWavFailure)
+  }
 }
