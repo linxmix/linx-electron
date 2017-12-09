@@ -1,6 +1,6 @@
 const React = require('react')
 const { connect } = require('react-redux')
-const { forEach, get, map } = require('lodash')
+const { assign, forEach, get, map } = require('lodash')
 const keymaster = require('keymaster')
 
 const { getMixProps } = require('../getters')
@@ -122,7 +122,9 @@ class MixOverviewContainer extends React.Component {
           trackGroups={mix.trackGroups}
           isLoading={isLoading}
           handleFilesDrop={this.handleFilesDrop.bind(this)}
-          swapTrackGroups={swapChannels}
+          swapTrackGroups={props => swapChannels(assign({}, props, {
+            parentId: mix.channel.id
+          }))}
           removeTrackGroup={trackGroupId => unsetTrackGroupFromMix({
             trackGroupId,
             id: mix.id

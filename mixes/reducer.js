@@ -49,7 +49,6 @@ const {
   deleteMixEnd,
   setMix,
   createMix,
-  reorderTrackGroup,
   unsetTrackGroupFromMix,
   navigateToMix,
   navigateToMixList
@@ -197,7 +196,10 @@ function createReducer (config) {
       const { id, trackGroupId } = action.payload
       assert(id && trackGroupId, 'Must provide id && trackGroupId')
 
-      return loop(state, Effects.constant(unsetChannel(trackGroupId)))
+      return loop({
+        ...state,
+        dirty: [...state.dirty, id]
+      }, Effects.constant(unsetChannel(trackGroupId)))
     },
     [navigateToMix]: (state, action) => loop(state,
       Effects.constant(push(`/mixes/${action.payload}`))),

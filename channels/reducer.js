@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { keyBy, map, defaults, without, includes, findIndex, concat,
-  clone, filter, values, omit, assign } = require('lodash')
+  filter, values, omit, assign, indexOf } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -168,23 +168,34 @@ function createReducer (config) {
       })))
     },
     [swapChannels]: (state, action) => {
-      const { sourceId, targetId } = action.payload
+      const { sourceId, targetId, parentId } = action.payload
       if (sourceId === targetId) { return state }
 
-      const source = clone(state.records[sourceId])
-      const target = clone(state.records[targetId])
+      const source = state.records[sourceId]
+      const target = state.records[targetId]
+      const parent = state.records[parentId]
+      const parentChannelIds = parent.channelIds.slice()
+      const sourceIndex = indexOf(parentChannelIds, sourceId)
+      const targetIndex = indexOf(parentChannelIds, targetId)
+
+      parentChannelIds[targetIndex] = sourceId
+      parentChannelIds[sourceIndex] = targetId
 
       return {
         ...state,
-        dirty: [...state.dirty, sourceId, targetId],
+        dirty: [...state.dirty, sourceId, targetId, parentId],
         records: {
           ...state.records,
-          [sourceId]: assign({}, state.records[sourceId], {
-            startBeat: target.startBeat
+          [parentId]: assign({}, parent, {
+            channelIds: parentChannelIds
           }),
-          [targetId]: assign({}, state.records[targetId], {
-            startBeat: source.startBeat
-          })
+          // TODO: should reordering tracks in primary track table cause anything in the arrangement to move?
+          // [sourceId]: assign({}, source, {
+          //   startBeat: target.startBeat
+          // }),
+          // [targetId]: assign({}, target, {
+          //   startBeat: source.startBeat
+          // })
         }
       }
     },
