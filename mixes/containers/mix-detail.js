@@ -90,7 +90,7 @@ class MixDetailContainer extends React.Component {
     // move track group if ctrl is held
     // move track if shift is held
     // else move clip
-    arrangementActions.onDropSampleClip = ({
+    arrangementActions.onDragSampleClip = ({
       id: clipId,
       startBeat: clipStartBeat,
       channel,
@@ -99,9 +99,12 @@ class MixDetailContainer extends React.Component {
       const modifierKeys = this.props.dragModifierKeys
       if (modifierKeys.ctrlKey) {
         const trackGroup = channel.parentChannel
+        const absoluteClipStartBeat = mix.channel.startBeat + trackGroup.startBeat +
+          channel.startBeat + clipStartBeat
+
         arrangementActions.moveTrackGroup(assign({
           trackGroup,
-          moveFollowingChannels: true
+          moveTempoControlsFromBeat: absoluteClipStartBeat
         }, options))
       } else if (modifierKeys.shiftKey) {
         arrangementActions.moveChannel(assign({

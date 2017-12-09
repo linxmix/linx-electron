@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { map, defaults, without, includes, findIndex, concat,
+const { keyBy, map, defaults, without, includes, findIndex, concat,
   clone, filter, values, omit, assign } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
@@ -24,7 +24,7 @@ const {
   createSampleTrackFromFile,
   swapChannels
 } = require('./actions')
-const { unsetClips, createClip, updateControlPointPosition } = require('../clips/actions')
+const { unsetClips, createClip, updateClip } = require('../clips/actions')
 const {
   createSample
 } = require('../samples/actions')
@@ -251,43 +251,38 @@ function createReducer (config) {
       return loop(state, Effects.constant(createSample({ file, effectCreator })))
     },
     [moveTrackGroup]: (state, action) => {
-      const { trackGroup, diffBeats, quantization, moveFollowingChannels } = action.payload
-      const { id, startBeat } = trackGroup
-      const { channels: mixChannels, tempoClip: mixTempoClip } = trackGroup.parentChannel
-
+      const { trackGroup, diffBeats, quantization, moveTempoControlsFromBeat } = action.payload
       const beatsToMove = quantizeBeat({ quantization, beat: diffBeats })
-      const nextStartBeat = startBeat + beatsToMove
+      if (beatsToMove === 0) { return state }
 
-      // make sure following track groups and tempo control points also move
-      let channelsToMove = []
-      if (moveFollowingChannels) {
-        channelsToMove = filter(mixChannels, channel =>
-          (channel.id !== id) &&
-          (channel.startBeat >= nextStartBeat) &&
-          (channel.type === CHANNEL_TYPE_TRACK_GROUP))
-      }
-      let tempoControlPointsToMove = []
-      if (moveFollowingChannels && mixTempoClip && mixTempoClip.controlPoints) {
-        tempoControlPointsToMove = filter(mixTempoClip.controlPoints,
-          ({ beat }) => beat >= nextStartBeat)
-      }
+      const { id, startBeat } = trackGroup
+      const { index: trackGroupIndex, channels: mixChannels, tempoClip: mixTempoClip } =
+        trackGroup.parentChannel
+
+      // move following track groups and tempo control points
+      const channelsToMove = filter(mixChannels, ({ index }) => index > trackGroupIndex)
+      const tempoControlPoints = mixTempoClip && mixTempoClip.controlPoints
 
       const nextEffects = concat(
         map(channelsToMove, channel => Effects.constant(updateChannel({
           id: channel.id,
           startBeat: channel.startBeat + beatsToMove
         }))),
-        map(tempoControlPointsToMove, ({ id, beat }) => Effects.constant(updateControlPointPosition({
-          sourceId: mixTempoClip.id,
-          id,
-          beat: beat + beatsToMove
-        })))
+        !tempoControlPoints ? Effects.none() : Effects.constant(updateClip({
+          id: mixTempoClip.id,
+          controlPoints: keyBy(map(tempoControlPoints, controlPoint => ({
+            ...controlPoint,
+            beat: controlPoint.beat >= moveTempoControlsFromBeat ?
+              controlPoint.beat + beatsToMove :
+              controlPoint.beat
+          })), 'id')
+        }))
       )
 
       return loop(state, Effects.batch([
         Effects.constant(updateChannel({
           id,
-          startBeat: nextStartBeat
+          startBeat: startBeat + beatsToMove
         }))
       ].concat(nextEffects)))
     },

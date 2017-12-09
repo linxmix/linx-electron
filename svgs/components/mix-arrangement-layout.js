@@ -335,7 +335,7 @@ function _executeDragAction({ props, item, diff, itemType }) {
 
   switch (itemType) {
     case 'sample-clip':
-      action = props.onDropSampleClip
+      action = props.onDragSampleClip
       break
     case 'resize-handle':
       action = props.resizeSampleClip

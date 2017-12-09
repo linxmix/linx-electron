@@ -13,7 +13,15 @@ const { CLIP_TYPE_SAMPLE, CLIP_TYPE_TEMPO } = require('../../clips/constants')
 
 module.exports = nestChannels
 
-function nestChannels ({ channelId, parentChannel, channels, clips, samples, dirtyChannels = [] }) {
+function nestChannels ({
+  index = 0,
+  channelId,
+  parentChannel,
+  channels,
+  clips,
+  samples,
+  dirtyChannels = []
+}) {
   const channel = channels[channelId] || {}
   const { id, type, channelIds: childChannelIds = [], clipIds = [] } = channel
   const startBeat = validNumberOrDefault(channel.startBeat, 0)
@@ -21,7 +29,8 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
   const currentChannel = { id: channelId, parentChannel }
 
   // compute children
-  const childChannels = childChannelIds.map(childChannelId => nestChannels({
+  const childChannels = childChannelIds.map((childChannelId, index) => nestChannels({
+    index,
     channelId: childChannelId,
     parentChannel: currentChannel,
     channels,
@@ -99,6 +108,7 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
 
   assign(currentChannel, omitBy({
     id,
+    index,
     type,
     status,
     beatCount,
