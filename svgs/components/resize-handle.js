@@ -1,12 +1,24 @@
 const React = require('react')
 const { DragSource } = require('react-dnd')
 
+const { validNumberOrDefault } = require('../../lib/number-utils')
+
 class ResizeHandle extends React.Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      dragX: null,
+      dragY: null
+    }
+  }
+
   render () {
     const { height, width, connectDragSource, translateX, translateY, scaleX } = this.props
+    const dragX = validNumberOrDefault(this.state.dragX, 0)
+    const adjustedTranslateX = (translateX === 0) ? 0 : translateX - width
 
     return connectDragSource(<rect
-      transform={`translate(${translateX === 0 ? 0 : translateX - width}, ${translateY})`}
+      transform={`translate(${adjustedTranslateX + dragX}, ${translateY})`}
       width={width}
       height={height}
       visibility={scaleX > 0.5 ? 'visible' : 'hidden'}
@@ -36,6 +48,7 @@ function collectDrag (connect, monitor) {
 const dragSource = {
   beginDrag (props, monitor, component) {
     return {
+      component,
       id: props.id,
       startBeat: props.startBeat,
       beatCount: props.beatCount,

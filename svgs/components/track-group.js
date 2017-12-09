@@ -1,15 +1,14 @@
 const React = require('react')
 const d3 = require('d3')
 const { compact, concat, get, map, filter } = require('lodash')
-const { DragSource } = require('react-dnd')
 
 const TrackChannel = require('./track-channel')
 
 class TrackGroup extends React.Component {
   render () {
     const { channel, color, beatScale, translateY, scaleX, sampleResolution, rowHeight,
-      showOnlyPrimaryTrack, canDragClips, canResizeClips, showAutomationControlType,
-      connectDragSource, trackChannelActions, canEditClips, mixMinBeat, mixBeatCount } = this.props
+      showOnlyPrimaryTrack, canDragClips, canResizeClips, showAutomationControlType, trackChannelActions,
+      canEditClips, mixMinBeat, mixBeatCount } = this.props
     if (!channel) { return null }
 
     const tracksToDisplay = filter(
@@ -17,7 +16,7 @@ class TrackGroup extends React.Component {
       track => track.id
     )
 
-    return connectDragSource(<g
+    return <g
       className="TrackGroup"
       transform={`translate(${channel.startBeat},${translateY})`}>
       {map(tracksToDisplay, (track, i) => <TrackChannel
@@ -39,7 +38,7 @@ class TrackGroup extends React.Component {
         sampleResolution={sampleResolution}
         {...trackChannelActions}
       />)}
-    </g>)      
+    </g>  
   }
 }
 
@@ -53,7 +52,6 @@ TrackGroup.defaultProps = {
   rowHeight: 100,
   mixMinBeat: 0,
   mixBeatCount: 0,
-  canDragGroup: false,
   canDragClips: false,
   canResizeClips: false,
   canEditClips: false,
@@ -62,27 +60,4 @@ TrackGroup.defaultProps = {
   showSecondColorHalf: false,
 }
 
-function collectDrag (connect, monitor) {
-  return {
-    connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging()
-  }
-}
-
-const dragSource = {
-  beginDrag (props, monitor, component) {
-    return {
-      id: props.channel.id,
-      startBeat: props.channel.startBeat
-    }
-  },
-  isDragging (props, monitor) {
-    const item = monitor.getItem()
-    return item && item.id && (item.id === props.channel.id)
-  },
-  canDrag (props) {
-    return props.canDragGroup
-  }
-}
-
-module.exports = DragSource('track-group', dragSource, collectDrag)(TrackGroup)
+module.exports = TrackGroup

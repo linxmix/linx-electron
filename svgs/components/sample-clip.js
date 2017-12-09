@@ -4,12 +4,20 @@ const { map, isEqual, omit } = require('lodash')
 const { DragSource } = require('react-dnd')
 const classnames = require('classnames')
 
-const { beatToTime, timeToBeat } = require('../../lib/number-utils')
+const { beatToTime, timeToBeat, validNumberOrDefault } = require('../../lib/number-utils')
 const ResizeHandle = require('./resize-handle')
 const Waveform = require('./waveform')
 const { isRightClick, getPosition } = require('../../lib/mouse-event-utils')
 
 class SampleClip extends React.Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      dragX: null,
+      dragY: null
+    }
+  }
+
   handleClick (e) {
     if (this.props.canEdit) {
       if (isRightClick(e)) {
@@ -53,13 +61,14 @@ class SampleClip extends React.Component {
       minStartBeat: clip.startBeat - audioStartBeat,
       maxBeatCount: timeToBeat(duration - audioStartTime, audioBpm)
     }
+    const dragX = validNumberOrDefault(this.state.dragX, 0)
 
     return connectDragSource(<g className={classnames("SampleClip", {
       "is-selected": isSelected,
       "is-draggable": canDrag,
       "is-editable": canEdit
     })}
-      transform={`translate(${startBeat})`}
+      transform={`translate(${startBeat + dragX})`}
       onMouseUp={this.handleClick.bind(this)}>
       <rect className="SampleClip-backdrop"
         width={beatCount}
@@ -145,6 +154,7 @@ function collectDrag (connect, monitor) {
 const dragSource = {
   beginDrag (props, monitor, component) {
     return {
+      component,
       id: props.clip.id,
       type: props.clip.type,
       startBeat: props.clip.startBeat,

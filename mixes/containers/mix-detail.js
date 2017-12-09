@@ -84,12 +84,13 @@ class MixDetailContainer extends React.Component {
 
     // actions which dont need quantization
     arrangementActions.unsetChannel = this.props.unsetChannel
+    arrangementActions.getQuantization = () => _getQuantization(this.props.dragModifierKeys)
 
-    // on drag sample clip:
-    // drag track group if ctrl is held
-    // drag track if shift is held
-    // else drag clip
-    arrangementActions.onDragSampleClip = ({
+    // on drop sample clip:
+    // move track group if ctrl is held
+    // move track if shift is held
+    // else move clip
+    arrangementActions.onDropSampleClip = ({
       id: clipId,
       startBeat: clipStartBeat,
       channel,

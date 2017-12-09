@@ -48,19 +48,6 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
   const maxBeat = startBeat + Math.max(0, ..._maxBeats)
   const beatCount = validNumberOrDefault(maxBeat - minBeat, 0)
 
-  if (channel.type === 'sample-track-channel') {
-    console.log('sampleTrack', {
-      _minBeats,
-      _maxBeats,
-      minBeat,
-      maxBeat,
-      beatCount,
-      childChannels,
-      childClips,
-      'childClips[0]': childClips[0]
-    })
-  }
-
   // track channels properties
   const sampleId = channel.sampleId
   const sample = samples[sampleId] || {}
@@ -69,15 +56,6 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
   // track group channel properties
   const primaryTrack = find(childChannels, { type: CHANNEL_TYPE_PRIMARY_TRACK }) || {}
   const sampleTracks = filter(childChannels, { type: CHANNEL_TYPE_SAMPLE_TRACK }) || []
-
-  // if (channel.type === CHANNEL_TYPE_TRACK_GROUP) {
-  //   console.log('track group', {
-  //     sampleId,
-  //     primarySample,
-  //     primaryTrack,
-  //     sampleTracks
-  //   })
-  // }
 
   // mix channel properties
   let beatScale, bpmScale, tempoClip

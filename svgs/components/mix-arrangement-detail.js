@@ -150,7 +150,7 @@ class MixArrangementDetail extends React.Component {
 
     const layoutActions = pick(this.props, ['updateZoom', 'moveClip', 'resizeSampleClip',
       'moveTrackGroup', 'resizeChannel', 'updateAudioGraph', 'seekToBeat', 'moveControlPoint',
-      'onDragSampleClip'])
+      'onDropSampleClip', 'getQuantization'])
 
     const trackChannelActions = {
       createControlPoint,

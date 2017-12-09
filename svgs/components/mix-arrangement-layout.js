@@ -7,7 +7,7 @@ const classnames = require('classnames')
 
 const BeatAxis = require('./beat-axis')
 const Playhead = require('./playhead')
-const { validNumberOrDefault } = require('../../lib/number-utils')
+const { validNumberOrDefault, quantizeBeat } = require('../../lib/number-utils')
 const { CONTROL_TYPES } = require('../../clips/constants')
 
 const ZOOM_STEP = 0.5
@@ -282,31 +282,15 @@ const dropTarget = {
     // if there is an item dragging, say something is dragging but not us
     component.setState({ dragCoords: null, isDragging: true })
 
-    let action
-    const payload = {
-      diffBeats: (diff.x / props.scaleX),
-      ...item
-    }
-    switch (monitor.getItemType()) {
-      case 'track-group':
-        action = props.moveTrackGroup
-        break
-      case 'sample-clip':
-        action = props.onDragSampleClip
-        break
-      case 'resize-handle':
-        action = props.resizeSampleClip
-        break
-      case 'automation-clip/control-point':
-        action = props.moveControlPoint
-        payload.diffValue = (diff.y / item.height)
-        break
-      case 'tempo-clip/control-point':
-        action = props.moveControlPoint
-        break
-    }
+    const quantizedDiffX = quantizeBeat({
+      quantization: props.getQuantization(),
+      beat: (diff.x / props.scaleX)
+    })
 
-    action(payload)
+    item.component.setState({
+      dragX: quantizedDiffX,
+      dragY: (diff.y / item.height)
+    })
   }, 10),
   drop (props, monitor, component) {
     const item = monitor.getItem()
@@ -315,10 +299,38 @@ const dropTarget = {
     // handle files drop
     if (item && props.canDropFiles && (monitor.getItemType() === HTML5Backend.NativeTypes.FILE)) {
       props.handleFilesDrop(item)
+    
+    // handle arrangement updates
+    } else {
+      let action
+      const payload = {
+        diffBeats: (diff.x / props.scaleX),
+        diffValue: (diff.y / item.height),
+        ...item
+      }
 
-    // report if clip moved
-    } else if (item && item.id && diff && (diff.x !== 0)) {
-      props.updateAudioGraph({ channel: props.mix.channel })
+      switch (monitor.getItemType()) {
+        case 'sample-clip':
+          action = props.onDropSampleClip
+          break
+        case 'resize-handle':
+          action = props.resizeSampleClip
+          break
+        case 'automation-clip/control-point':
+          action = props.moveControlPoint
+          break
+        case 'tempo-clip/control-point':
+          action = props.moveControlPoint
+          delete payload.diffValue
+          break
+      }
+
+      action(payload)
+      item.component.setState({
+        dragX: null,
+        dragY: null,
+      })
+      window.setTimeout(() => props.updateAudioGraph({ channel: props.mix.channel }))
     }
   }
 }
@@ -332,6 +344,6 @@ function collectDrop (connect, monitor) {
 }
 
 module.exports = DropTarget(
-  [HTML5Backend.NativeTypes.FILE, 'track-group', 'sample-clip', 'resize-handle',
+  [HTML5Backend.NativeTypes.FILE, 'sample-clip', 'resize-handle',
     'automation-clip/control-point', 'tempo-clip/control-point'],
   dropTarget, collectDrop)(MixArrangementLayout)
