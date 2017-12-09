@@ -17,12 +17,15 @@ const routes = require('./routes')
 const reducer = require('./reducer')(config)
 
 const memoryHistory = createMemoryHistory()
+let middleware = [routerMiddleware(memoryHistory)]
+
+if (process.env.NODE_ENV === 'development') {
+  middleware = [...middleware, createLogger()]
+}
+
 const enhancer = compose(
   installReduxLoop(),
-  applyMiddleware(
-    createLogger(),
-    routerMiddleware(memoryHistory)
-  )
+  applyMiddleware(...middleware)
 )
 
 const store = createStore(reducer, undefined, enhancer)
