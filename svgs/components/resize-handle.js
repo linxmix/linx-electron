@@ -3,12 +3,13 @@ const { DragSource } = require('react-dnd')
 
 class ResizeHandle extends React.Component {
   render () {
-    const { height, width, connectDragSource, translateX, translateY } = this.props
+    const { height, width, connectDragSource, translateX, translateY, scaleX } = this.props
 
     return connectDragSource(<rect
       transform={`translate(${translateX === 0 ? 0 : translateX - width}, ${translateY})`}
       width={width}
       height={height}
+      visibility={scaleX > 0.5 ? 'visible' : 'hidden'}
       cursor="col-resize"
       style={{ fill: 'rgba(0,0,0,0.2' }}
     />)
