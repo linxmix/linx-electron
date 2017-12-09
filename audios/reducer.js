@@ -162,7 +162,6 @@ function createReducer (config) {
       const playState = state.playStates[channelId]
       assert(virtualAudioGraph && playState, 'Requires virtualAudioGraph and playState to startRecording')
 
-      console.log({ virtualAudioGraph, node: virtualAudioGraph.getAudioNodeById(channelId) })
       const recorderNode = new Recorder(virtualAudioGraph.getAudioNodeById(channelId))
       recorderNode.record()
 

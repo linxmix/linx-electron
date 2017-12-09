@@ -67,9 +67,14 @@ class MixOverviewContainer extends React.Component {
     } else {
       startRecording({ channelId })
 
-      if (playState.isPaused) {
+      if (!playState.isPlaying) {
         window.setTimeout(() => playPause({ channel, updateSeek: true }))
       }
+
+      const duration = mix.channel.beatScale(mix.channel.maxBeat)
+      window.setTimeout(() => {
+        this.handleToggleRecording()
+      }, duration * 1000)
     }
   }
 

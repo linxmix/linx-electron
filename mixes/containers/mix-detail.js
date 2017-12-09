@@ -56,9 +56,7 @@ class MixDetailContainer extends React.Component {
       }
 
       const duration = mix.channel.beatScale(mix.channel.maxBeat)
-      console.log('MIX DURATION', duration)
       window.setTimeout(() => {
-        console.log('END OF MIX')
         this.handleToggleRecording()
       }, duration * 1000)
     }
