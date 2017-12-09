@@ -15,7 +15,9 @@ module.exports = nestChannels
 
 function nestChannels ({ channelId, parentChannel, channels, clips, samples, dirtyChannels = [] }) {
   const channel = channels[channelId] || {}
-  const { id, type, startBeat, channelIds: childChannelIds = [], clipIds = [] } = channel
+  const { id, type, channelIds: childChannelIds = [], clipIds = [] } = channel
+  const startBeat = validNumberOrDefault(channel.startBeat, 0)
+
   const currentChannel = { id: channelId, parentChannel }
 
   // compute children
@@ -42,9 +44,22 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
   const _minBeats = concat(map(childChannels, 'minBeat'), map(childClips, 'startBeat'))
   const _maxBeats = concat(map(childChannels, 'maxBeat'),
     map(childClips, ({ startBeat, beatCount }) => startBeat + beatCount))
-  const minBeat = channel.startBeat + Math.min(0, ..._minBeats)
-  const maxBeat = channel.startBeat + Math.max(0, ..._maxBeats)
+  const minBeat = startBeat + Math.min(0, ..._minBeats)
+  const maxBeat = startBeat + Math.max(0, ..._maxBeats)
   const beatCount = validNumberOrDefault(maxBeat - minBeat, 0)
+
+  if (channel.type === 'sample-track-channel') {
+    console.log('sampleTrack', {
+      _minBeats,
+      _maxBeats,
+      minBeat,
+      maxBeat,
+      beatCount,
+      childChannels,
+      childClips,
+      'childClips[0]': childClips[0]
+    })
+  }
 
   // track channels properties
   const sampleId = channel.sampleId
@@ -117,8 +132,8 @@ function nestChannels ({ channelId, parentChannel, channels, clips, samples, dir
     sampleTracks,
     pitchSemitones,
     tempoClip,
+    startBeat,
     gain: validNumberOrDefault(channel.gain, 1),
-    startBeat: validNumberOrDefault(startBeat, 0),
     minBeat: validNumberOrDefault(minBeat, 0),
     maxBeat: validNumberOrDefault(maxBeat, 0),
     isDirty: (includes(dirtyChannels, id) ||
