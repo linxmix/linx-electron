@@ -167,6 +167,12 @@ const dragSource = {
   },
   canDrag (props) {
     return props.canDrag
+  },
+  endDrag(props, monitor, component) {
+    component.setState({
+      dragX: null,
+      dragY: null,
+    })
   }
 }
 

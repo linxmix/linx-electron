@@ -282,57 +282,74 @@ const dropTarget = {
     // if there is an item dragging, say something is dragging but not us
     component.setState({ dragCoords: null, isDragging: true })
 
-    const quantizedDiffX = quantizeBeat({
-      quantization: props.getQuantization(),
-      beat: (diff.x / props.scaleX)
-    })
+    // if component is provided, perform drag there
+    if (item.component) {
+      const quantizedDiffX = quantizeBeat({
+        quantization: props.getQuantization(),
+        beat: (diff.x / props.scaleX)
+      })
 
-    item.component.setState({
-      dragX: quantizedDiffX,
-      dragY: (diff.y / item.height)
-    })
+      item.component.setState({
+        dragX: quantizedDiffX,
+        dragY: (diff.y / item.height)
+      })
+
+    // otherwise execute real action
+    } else {
+      _executeDragAction({
+        props,
+        item,
+        diff,
+        itemType: monitor.getItemType()
+      })
+    }
   }, 10),
   drop (props, monitor, component) {
     const item = monitor.getItem()
-    const diff = monitor.getDifferenceFromInitialOffset()
+    const itemType = monitor.getItemType()
 
     // handle files drop
-    if (item && props.canDropFiles && (monitor.getItemType() === HTML5Backend.NativeTypes.FILE)) {
+    if (item && props.canDropFiles && (itemType === HTML5Backend.NativeTypes.FILE)) {
       props.handleFilesDrop(item)
     
     // handle arrangement updates
     } else {
-      let action
-      const payload = {
-        diffBeats: (diff.x / props.scaleX),
-        diffValue: (diff.y / item.height),
-        ...item
-      }
-
-      switch (monitor.getItemType()) {
-        case 'sample-clip':
-          action = props.onDropSampleClip
-          break
-        case 'resize-handle':
-          action = props.resizeSampleClip
-          break
-        case 'automation-clip/control-point':
-          action = props.moveControlPoint
-          break
-        case 'tempo-clip/control-point':
-          action = props.moveControlPoint
-          delete payload.diffValue
-          break
-      }
-
-      action(payload)
-      item.component.setState({
-        dragX: null,
-        dragY: null,
+      _executeDragAction({
+        props,
+        item,
+        itemType,
+        diff: monitor.getDifferenceFromInitialOffset()
       })
       window.setTimeout(() => props.updateAudioGraph({ channel: props.mix.channel }))
     }
   }
+}
+
+function _executeDragAction({ props, item, diff, itemType }) {
+  let action
+  const payload = {
+    diffBeats: (diff.x / props.scaleX),
+    diffValue: (diff.y / item.height),
+    ...item
+  }
+
+  switch (itemType) {
+    case 'sample-clip':
+      action = props.onDropSampleClip
+      break
+    case 'resize-handle':
+      action = props.resizeSampleClip
+      break
+    case 'automation-clip/control-point':
+      action = props.moveControlPoint
+      break
+    case 'tempo-clip/control-point':
+      action = props.moveControlPoint
+      delete payload.diffValue
+      break
+  }
+
+  action(payload)
 }
 
 function collectDrop (connect, monitor) {
