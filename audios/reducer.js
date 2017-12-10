@@ -22,7 +22,6 @@ const {
   toggleSoloChannel,
   updatePlayState,
   updateAudioGraph,
-  updateVirtualAudioGraph,
   updatePlayStateForTempoChange
 } = require('./actions')
 const createService = require('./service')
@@ -151,29 +150,37 @@ function createReducer (config) {
           [channelId]: merge({
             status: PLAY_STATE_PAUSED,
             isRecording: false,
-            recorderNode: null
+            recorderNode: null,
+            seekBeat: 0,
+            absSeekTime: 0
           }, state.playStates[channelId], playState)
         }
       }
     },
     [startRecording]: (state, action) => {
-      const { channelId } = action.payload
-      const virtualAudioGraph = state.virtualAudioGraphs[channelId]
-      const playState = state.playStates[channelId]
-      assert(virtualAudioGraph && playState, 'Requires virtualAudioGraph and playState to startRecording')
+      const { channel } = action.payload
+      const { id } = channel.id
+      const virtualAudioGraph = state.virtualAudioGraphs[channel.id]
 
-      const recorderNode = new Recorder(virtualAudioGraph.getAudioNodeById(channelId))
-      recorderNode.record()
+      if (!virtualAudioGraph) {
+        return loop(state, Effects.batch([
+          Effects.constant(updateAudioGraph({ channel })),
+          Effects.constant(startRecording({ channel }))
+        ]))
+      } else {
+        const recorderNode = new Recorder(virtualAudioGraph.getAudioNodeById(channel.id))
+        recorderNode.record()
 
-      return loop(state, Effects.constant(updatePlayState({
-        channelId,
-        recorderNode,
-        isRecording: true
-      })))
+        return loop(state, Effects.constant(updatePlayState({
+          channelId: channel.id,
+          isRecording: true,
+          recorderNode,
+        })))
+      }
     },
     [stopRecording]: (state, action) => {
-      const { channelId } = action.payload
-      const playState = state.playStates[channelId]
+      const { channel } = action.payload
+      const playState = state.playStates[channel.id]
       const recorderNode = playState && playState.recorderNode
       assert(playState && recorderNode, 'Requires playState and recorderNode to stopRecording')
 
@@ -181,7 +188,7 @@ function createReducer (config) {
 
       return loop(state, Effects.batch([
         Effects.constant(updatePlayState({
-          channelId,
+          channelId: channel.id,
           isRecording: false,
           recorderNode: null
         })),
@@ -203,47 +210,34 @@ function createReducer (config) {
     // TODO: should this all be in channels reducer? so we dont have to pass full channel
     [updateAudioGraph]: (state, action) => {
       const { channel } = action.payload
-      const playState = state.playStates[channel.id]
       assert(channel.status === 'loaded', 'Requires loaded channel to updateAudioGraph')
-
-      if (!playState) { return }
 
       const audioGraph = createAudioGraph({
         channel,
-        playState,
+        playState: _getPlayStateOrDefault(state, channel.id),
         beatScale: channel.beatScale,
         bpmScale: channel.bpmScale,
         audioContext: state.audioContext
       })
 
-      return loop({
-        ...state,
-        audioGraphs: {
-          ...state.audioGraphs,
-          [channel.id]: audioGraph
-        }
-      }, Effects.constant(updateVirtualAudioGraph(channel.id)))
-    },
-    [updateVirtualAudioGraph]: (state, action) => {
-      const channelId = action.payload
-      const audioGraph = state.audioGraphs[channelId]
-      assert(!!audioGraph, 'Requires audioGraph to updateVirtualAudioGraph')
-
-      const virtualAudioGraph = state.virtualAudioGraphs[channelId] || createVirtualAudioGraph({
+      const virtualAudioGraph = state.virtualAudioGraphs[channel.id] || createVirtualAudioGraph({
         audioContext: state.audioContext,
         output: state.audioContext.destination
       })
-
       virtualAudioGraph.update(audioGraph)
 
       return {
         ...state,
+        audioGraphs: {
+          ...state.audioGraphs,
+          [channel.id]: audioGraph
+        },
         virtualAudioGraphs: {
           ...state.virtualAudioGraphs,
-          [channelId]: virtualAudioGraph
+          [channel.id]: virtualAudioGraph
         }
       }
-    }
+    },
   }, {
     audioGraphs: {},
     virtualAudioGraphs: {},
@@ -255,5 +249,15 @@ function createReducer (config) {
     return service.exportWav({ fileName, recorderNode })
       .then(exportWavSuccess)
       .catch(exportWavFailure)
+  }
+}
+
+function _getPlayStateOrDefault(state, channelId) {
+  return state.playStates[channelId] || {
+    status: PLAY_STATE_PAUSED,
+    isRecording: false,
+    recorderNode: null,
+    seekBeat: 0,
+    absSeekTime: 0
   }
 }

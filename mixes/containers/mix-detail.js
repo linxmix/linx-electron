@@ -40,18 +40,17 @@ class MixDetailContainer extends React.Component {
   handleToggleRecording () {
     const { mix, playPause, startRecording, stopRecording } = this.props
     const { playState, channel } = mix
-    const channelId = channel.id
 
-    if (playState.isRecording) {
-      stopRecording({ channelId })
+    if (playState && playState.isRecording) {
+      stopRecording({ channel })
 
       if (playState.isPlaying) {
         window.setTimeout(() => playPause({ channel, updateSeek: false }))
       }
     } else {
-      startRecording({ channelId })
+      startRecording({ channel })
 
-      if (!playState.isPlaying) {
+      if (!(playState && playState.isPlaying)) {
         window.setTimeout(() => playPause({ channel, updateSeek: false }))
       }
 
