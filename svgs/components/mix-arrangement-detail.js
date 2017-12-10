@@ -1,5 +1,6 @@
 const React = require('react')
 const { assign, find, forEach, pick, get, map, without, includes, concat } = require('lodash')
+const keymaster = require('keymaster')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
 const TrackGroup = require('./track-group')
@@ -23,6 +24,14 @@ class MixArrangementDetail extends React.Component {
       selectedClips: {},
       selectedControlType: null
     }
+  }
+
+  componentDidMount () {
+    keymaster('esc', () => this.selectControlType(''))
+  }
+
+  componentWillUnmount () {
+    keymaster.unbind('esc')
   }
 
   selectControlType (controlType) {
