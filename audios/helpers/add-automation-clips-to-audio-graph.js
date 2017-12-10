@@ -94,7 +94,7 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
 
     // add delayTime in quarter notes
     const delayTimeValueScale = _getDelayTimeValueScale({
-      quarterNoteFactor: 1,
+      delayTime: channel.delayTime,
       beatScale,
       bpmScale,
 
@@ -219,7 +219,7 @@ function _getAutomationParameters({
 }
 
 // convert from beat=>bpm scale, in mix frame of reference, to time=>delayTime scale, in clip frame of reference
-function _getDelayTimeValueScale ({ beatScale, bpmScale, startBeat, endBeat, quarterNoteFactor = 1 }) {
+function _getDelayTimeValueScale ({ beatScale, bpmScale, startBeat, endBeat, delayTime = 0.25 }) {
   const beatScaleDomainWithinRange = filter(beatScale.domain(),
     beat => (beat > startBeat && beat < endBeat))
   const startTime = beatScale(startBeat)
@@ -229,7 +229,7 @@ function _getDelayTimeValueScale ({ beatScale, bpmScale, startBeat, endBeat, qua
     .concat(beatScale(endBeat) - startTime)
 
   const delayTimeRange = map(delayTimeDomain, time => {
-    return bpmToSpb(bpmScale(beatScale.invert(time + startTime))) * quarterNoteFactor
+    return bpmToSpb(bpmScale(beatScale.invert(time + startTime))) * (4 * delayTime)
   })
 
   return d3.scaleLinear()

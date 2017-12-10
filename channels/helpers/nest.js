@@ -11,6 +11,9 @@ const {
 } = require('../constants')
 const { CLIP_TYPE_SAMPLE, CLIP_TYPE_TEMPO } = require('../../clips/constants')
 
+const DEFAULT_GAIN = 1
+const DEFAULT_DELAY_TIME = 0.25
+
 module.exports = nestChannels
 
 function nestChannels ({
@@ -121,7 +124,8 @@ function nestChannels ({
     pitchSemitones,
     tempoClip,
     startBeat,
-    gain: validNumberOrDefault(channel.gain, 1),
+    gain: validNumberOrDefault(channel.gain, DEFAULT_GAIN),
+    delayTime: validNumberOrDefault(channel.delayTime, DEFAULT_DELAY_TIME),
     minBeat: validNumberOrDefault(minBeat, 0),
     maxBeat: validNumberOrDefault(maxBeat, 0),
     isDirty: (includes(dirtyChannels, id) ||

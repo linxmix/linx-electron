@@ -1,8 +1,40 @@
 const React = require('react')
 const { DragSource } = require('react-dnd')
 const uuid = require('uuid/v4')
+const { map } = require('lodash')
 
 const { isValidNumber } = require('../../lib/number-utils')
+
+const DELAY_TIMES = [
+  {
+    label: '4 / 4',
+    value: 1
+  },
+  {
+    label: '3 / 8',
+    value: 3.0 / 8.0
+  },
+  {
+    label: '1 / 4',
+    value: 1.0 / 4.0
+  },
+  {
+    label: '3 / 16',
+    value: 3.0 / 16.0
+  },
+  {
+    label: '1 / 8',
+    value: 1.0 / 8.0
+  },
+  {
+    label: '1 / 16',
+    value: 1.0 / 16.0
+  },
+  {
+    label: '1 / 32',
+    value: 1.0 / 32.0
+  },
+]
 
 // TODO: does this really belong under svgs/? its not an svg
 class TrackControl extends React.Component {
@@ -38,8 +70,18 @@ class TrackControl extends React.Component {
     this.soloTrackInputElement.blur()
   }
 
+  handleSelectDelayTime(e) {
+    const newValue = parseFloat(e.target.value)
+
+    if (isValidNumber(newValue) && (newValue !== this.props.delayTime)) {
+      this.props.selectDelayTime(newValue)
+    }
+
+    this.selectDelayTimeElement.blur()
+  }
+
   render () {
-    const { title, bpm, gain, musicalKey, height, width, isEditingBeatgrid, pitchSemitones,
+    const { title, bpm, gain, musicalKey, delayTime, height, width, isEditingBeatgrid, pitchSemitones,
       toggleEditBeatgrid, toggleSoloTrack, isSoloTrack, canDeleteTrack } = this.props
     const editBeatgridInputId = uuid()
     const musicalKeyInputId = uuid()
@@ -68,17 +110,30 @@ class TrackControl extends React.Component {
         <label htmlFor={musicalKeyInputId}>Key: {musicalKey} </label>
       </div>
 
-      <div onMouseUp={this.onGainInputMouseUp.bind(this)}>
-        <input id={gainInputId}
-          type='number'
-          value={gain}
-          onChange={this.handleChangeGain.bind(this)}
-          min={0}
-          max={2}
-          step={0.01}
-          ref={(element) => { this.gainInputElement = element }}
-        />
-        <label htmlFor={gainInputId}>Gain</label>
+      <div>
+        <span onMouseUp={this.onGainInputMouseUp.bind(this)} style={{ marginRight: '5px' }}>
+          <input id={gainInputId}
+            type='number'
+            value={gain}
+            onChange={this.handleChangeGain.bind(this)}
+            min={0}
+            max={2}
+            step={0.01}
+            ref={(element) => { this.gainInputElement = element }}
+          />
+          <label htmlFor={gainInputId}>Gain</label>
+        </span>
+
+        <span>
+          <select
+            value={delayTime}
+            onChange={this.handleSelectDelayTime.bind(this)}
+            ref={(element) => { this.selectDelayTimeElement = element }}>
+            {map(DELAY_TIMES, ({ label, value }) =>
+              <option key={label} value={value}>{label}</option>)}
+          </select>
+          Delay
+        </span>
       </div>
 
       <div style={{ cursor: 'pointer' }}>

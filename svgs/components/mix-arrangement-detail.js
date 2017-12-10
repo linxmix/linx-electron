@@ -227,6 +227,7 @@ class MixArrangementDetail extends React.Component {
           title={get(track, 'sample.meta.title')}
           bpm={get(track, 'sample.meta.bpm')}
           musicalKey={get(track, 'sample.meta.key')}
+          delayTime={get(track, 'delayTime')}
           gain={get(track, 'gain')}
           pitchSemitones={track.pitchSemitones}
           isEditingBeatgrid={includes(this.state.editingBeatgrids, track.id)}
@@ -247,6 +248,10 @@ class MixArrangementDetail extends React.Component {
           }}
           updateGain={gain => {
             this.props.updateChannel({ id: track.id, gain })
+            this._asyncUpdateAudioGraph()
+          }}
+          selectDelayTime={delayTime => {
+            this.props.updateChannel({ id: track.id, delayTime })
             this._asyncUpdateAudioGraph()
           }}
         />)}
