@@ -266,9 +266,8 @@ function createReducer (config) {
       const beatsToMove = quantizeBeat({ quantization, beat: diffBeats })
       if (beatsToMove === 0) { return state }
 
-      const { id, startBeat } = trackGroup
-      const { index: trackGroupIndex, channels: mixChannels, tempoClip: mixTempoClip } =
-        trackGroup.parentChannel
+      const { id, startBeat, index: trackGroupIndex } = trackGroup
+      const { channels: mixChannels, tempoClip: mixTempoClip } = trackGroup.parentChannel
 
       // move following track groups and tempo control points
       const channelsToMove = filter(mixChannels, ({ index }) => index > trackGroupIndex)

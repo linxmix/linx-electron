@@ -117,8 +117,8 @@ class TrackControl extends React.Component {
             value={gain}
             onChange={this.handleChangeGain.bind(this)}
             min={0}
-            max={2}
-            step={0.01}
+            max={3}
+            step={0.1}
             ref={(element) => { this.gainInputElement = element }}
           />
           <label htmlFor={gainInputId}>Gain</label>
