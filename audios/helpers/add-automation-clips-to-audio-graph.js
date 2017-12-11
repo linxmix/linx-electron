@@ -130,7 +130,7 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
   }
 
 
-  // connect levels automations in order, returning final output
+  // connect levels automations in order, returning previousOutput to connect to the source node
   return reduce(sortedLevelsClips, (previousOutput, clip) => {
     const audioGraphKey = `${channel.id}_${clip.controlType}_${clip.id}`
     audioGraph[audioGraphKey] = _getAutomationParameters({
