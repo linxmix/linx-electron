@@ -104,7 +104,14 @@ function createReducer (config) {
     },
     [snipClip]: (state, action) => {
       const { channel, clip, snipAtBeat, quantization } = action.payload
-      const quantizedSnipAtBeat = quantizeBeat({ quantization, beat: snipAtBeat })
+
+      const trackGroup = channel.parentChannel
+      const mixChannel = trackGroup.parentChannel
+      const quantizedSnipAtBeat = quantizeBeat({
+        quantization,
+        beat: snipAtBeat,
+        offset: mixChannel.startBeat + trackGroup.startBeat + channel.startBeat + clip.startBeat
+      })
       const newClipId = uuid()
       const audioBpm = clip.sample.meta.bpm
 
