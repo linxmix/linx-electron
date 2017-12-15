@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { pick, without, map, omit, values, filter, forEach, cloneDeep } = require('lodash')
+const { uniq, pick, without, map, omit, values, filter, forEach, cloneDeep } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -87,8 +87,8 @@ function createReducer (config) {
       const mix = { id, channelId }
 
       const loadSampleEffects = map(
-        filter(values(clips), { type: CLIP_TYPE_SAMPLE }),
-        clip => Effects.constant(loadSample(clip.sampleId))
+        uniq(map(filter(values(clips), { type: CLIP_TYPE_SAMPLE }), 'sampleId')),
+        sampleId => Effects.constant(loadSample(sampleId))
       )
 
       return loop({

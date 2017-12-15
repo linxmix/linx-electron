@@ -57,7 +57,7 @@ function createReducer (config) {
       const id = action.payload
       const sample = state.records[id]
       if (sample && sample.audioBuffer) {
-        return state
+        return loop(state, Effects.constant(loadSampleEnd(id)))
       } else {
         return loop({
           ...state,
