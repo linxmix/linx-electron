@@ -160,12 +160,12 @@ module.exports = connect(
     const zoom = props.zooms[currentMixId] || {}
 
     if (mix) {
-      router.setRouteLeaveHook(
-        route,
-        // TODO: do i need to back out all changes if confirm? how to do that cleanly - LOAD_MIX? ROLLBACK_MIX?
-        () => !mix.isDirty ||
-          window.confirm('You have unsaved changes that will be lost if you leave this page.')
-      )
+      // router.setRouteLeaveHook(
+      //   route,
+      //   // TODO: do i need to back out all changes if confirm? how to do that cleanly - LOAD_MIX? ROLLBACK_MIX?
+      //   () => !mix.isDirty ||
+      //     window.confirm('You have unsaved changes that will be lost if you leave this page.')
+      // )
     }
 
     return { ...props, mix, zoom }
