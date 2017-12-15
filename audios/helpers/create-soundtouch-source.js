@@ -113,7 +113,7 @@ function onaudioprocess ({
     // i think this does not depend on tempo because the filter output is already scaled correctly
     const elapsedTime = Math.min(playbackTime, node.stopTime) - node.startTime
 
-    const expectedElapsedSamples = Math.max(0, elapsedTime * node.sampleRate)
+    const expectedElapsedSamples = Math.max(0, (elapsedTime * node.sampleRate) - (BUFFER_SIZE / 2.0))
     const sampleDelta = ~~(expectedElapsedSamples - actualElapsedSamples)
 
     // if we've drifed past tolerance, adjust frames to extract
@@ -207,7 +207,7 @@ module.exports = function (audioContext) {
       offsetTime = validNumberOrDefault(offsetTime, 0)
 
       const sampleRate = this.sampleRate = audioContext.sampleRate || 44100
-      this.startSample = ~~(offsetTime * sampleRate)
+      this.startSample = ~~(offsetTime * sampleRate) - BUFFER_SIZE
 
       this.isPlaying.setValueAtTime(1, startTime)
 
