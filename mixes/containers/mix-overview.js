@@ -20,7 +20,7 @@ class MixOverviewContainer extends React.Component {
       updateSeek: true
     }))
 
-    keymaster('⌘+s, ctrl+s', () => this.props.mix.isDirty && this.props.saveMix(this.props.mix))
+    // keymaster('⌘+s, ctrl+s', () => this.props.mix.isDirty && this.props.saveMix(this.props.mix))
 
     const { loadMix, mix } = this.props
     if (mix && !mix.channel.type) {
@@ -30,7 +30,7 @@ class MixOverviewContainer extends React.Component {
 
   componentWillUnmount () {
     keymaster.unbind('space')
-    keymaster.unbind('⌘+s, ctrl+s')
+    // keymaster.unbind('⌘+s, ctrl+s')
   }
 
   handleFilesDrop ({ files }) {

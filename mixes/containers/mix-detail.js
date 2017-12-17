@@ -24,7 +24,7 @@ class MixDetailContainer extends React.Component {
       updateSeek: false
     }))
 
-    keymaster('⌘+s, ctrl+s', () => this.props.mix.isDirty && this.props.saveMix(this.props.mix))
+    // keymaster('⌘+s, ctrl+s', () => this.props.mix.isDirty && this.props.saveMix(this.props.mix))
 
     const { loadMix, mix } = this.props
     if (mix && !mix.channel.type) {
@@ -34,7 +34,7 @@ class MixDetailContainer extends React.Component {
 
   componentWillUnmount () {
     keymaster.unbind('space')
-    keymaster.unbind('⌘+s, ctrl+s')
+    // keymaster.unbind('⌘+s, ctrl+s')
   }
 
   handleToggleRecording () {
