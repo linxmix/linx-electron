@@ -209,7 +209,7 @@ class MixArrangementLayout extends React.Component {
             className='VerticalLayout-flexSection'
             width='100%'
             height={height}
-            ref='svg'>
+            ref={(element) => { this.svgElement = element }}>
 
             <g transform={transform}>
               <BeatAxis
@@ -310,7 +310,17 @@ const dropTarget = {
 
     // handle files drop
     if (item && props.canDropFiles && (itemType === HTML5Backend.NativeTypes.FILE)) {
-      props.handleFilesDrop(item)
+      const clientOffset = monitor.getClientOffset()
+      const svgOffset = component.svgElement.getBoundingClientRect()
+      const { translateX, scaleX } = props
+
+      props.handleFilesDrop({
+        files: item.files,
+        beat: quantizeBeat({
+          quantization: props.getQuantization(),
+          beat: ((clientOffset.x - svgOffset.left - translateX) / props.scaleX)
+        })
+      })
     
     // handle arrangement updates
     } else {

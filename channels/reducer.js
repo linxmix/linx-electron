@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { keyBy, map, defaults, without, includes, findIndex, concat,
-  filter, values, omit, assign, indexOf } = require('lodash')
+const { assign, keyBy, map, defaults, without, includes, findIndex, concat,
+  filter, values, omit, indexOf } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -235,19 +235,23 @@ function createReducer (config) {
       return loop(state, Effects.constant(createSample({ file, effectCreator })))
     },
     [createSampleTrackFromFile]: (state, action) => {
-      const { file, parentChannelId, attrs = {} } = action.payload
+      const { file, parentChannelId, clipAttrs = {}, channelAttrs = {} } = action.payload
 
       const effectCreator = (sampleId) => {
         const clipId = uuid()
         const sampleTrackId = uuid()
 
         return Effects.batch([
-          Effects.constant(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
-          Effects.constant(createChannel({
+          Effects.constant(createClip(assign({}, clipAttrs, {
+            sampleId,
+            id: clipId,
+            type: CLIP_TYPE_SAMPLE
+          }))),
+          Effects.constant(createChannel(assign({}, channelAttrs, {
             id: sampleTrackId,
             type: CHANNEL_TYPE_SAMPLE_TRACK,
             sampleId
-          })),
+          }))),
           Effects.constant(setClipsChannel({
             channelId: sampleTrackId,
             clipIds: [clipId]

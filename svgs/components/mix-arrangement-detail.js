@@ -61,14 +61,17 @@ class MixArrangementDetail extends React.Component {
     }
   }
 
-  handleFilesDrop ({ files }) {
+  handleFilesDrop ({ files, beat, quantization }) {
     const { fromTrackGroup, createSampleTrackFromFile } = this.props
 
-    forEach(files, (file, i) => createSampleTrackFromFile({
+    forEach(files, file => createSampleTrackFromFile({
       file,
       parentChannelId: fromTrackGroup.id,
-      attrs: {
-        startBeat: i
+      channelAttrs: {
+        startBeat: fromTrackGroup.startBeat,
+      },
+      clipAttrs: {
+        startBeat: beat - fromTrackGroup.startBeat
       }
     }))
   }
