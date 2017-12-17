@@ -12,7 +12,7 @@ const {
 
 class AutomationClip extends React.Component {
   render () {
-    const { clip, height, scaleX, canDrag, minBeat, maxBeat, deleteControlPoint } = this.props
+    const { clip, height, scaleX, canEdit, minBeat, maxBeat, deleteControlPoint } = this.props
     if (!clip) { return null }
 
     const { id, controlPoints } = clip
@@ -43,7 +43,7 @@ class AutomationClip extends React.Component {
         minBeat={minBeat}
         maxBeat={maxBeat}
         height={height}
-        canDrag={canDrag}
+        canEdit={canEdit}
       />)}
     </g>
   }
@@ -52,7 +52,7 @@ class AutomationClip extends React.Component {
 AutomationClip.defaultProps = {
   height: 100,
   scaleX: 1,
-  canDrag: false,
+  canEdit: false
 }
 
 module.exports = AutomationClip

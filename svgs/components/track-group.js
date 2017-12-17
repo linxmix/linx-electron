@@ -6,7 +6,7 @@ const TrackChannel = require('./track-channel')
 
 class TrackGroup extends React.Component {
   render () {
-    const { channel, color, beatScale, translateY, scaleX, sampleResolution, rowHeight,
+    const { channel, color, beatScale, translateY, scaleX, sampleResolution, rowHeight, isEditingAutomations,
       showOnlyPrimaryTrack, canDragClips, canResizeClips, showAutomationControlType, trackChannelActions,
       canEditClips, mixMinBeat, mixBeatCount } = this.props
     if (!channel) { return null }
@@ -28,11 +28,12 @@ class TrackGroup extends React.Component {
         translateY={rowHeight * i}
         height={rowHeight}
         scaleX={scaleX}
-        canDragClips={canDragClips && !showAutomationControlType}
-        canResizeClips={canResizeClips && !showAutomationControlType}
-        canEditClips={canEditClips && !showAutomationControlType}
+        canDragClips={canDragClips && !isEditingAutomations}
+        canResizeClips={canResizeClips && !isEditingAutomations}
+        canEditClips={canEditClips && !isEditingAutomations}
         selectedClip={get(this, `props.selectedClips[${track.id}]`)}
         showAutomationControlType={showAutomationControlType}
+        canEditAutomations={isEditingAutomations && showAutomationControlType}
         color={color ||
           d3.interpolateCool((this.props.showSecondColorHalf ? 0 : 0.25) + (i / 10))}
         sampleResolution={sampleResolution}
@@ -58,6 +59,7 @@ TrackGroup.defaultProps = {
   showOnlyPrimaryTrack: false,
   showAutomationControlType: undefined,
   showSecondColorHalf: false,
+  isEditingAutomations: false
 }
 
 module.exports = TrackGroup

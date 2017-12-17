@@ -8,9 +8,9 @@ const { isRightClick, getPosition } = require('../../lib/mouse-event-utils')
 
 class TrackChannel extends React.Component {
   handleClick (e) {
-    const { showAutomationControlType, canEditClips, channel } = this.props
+    const { canEditAutomations, showAutomationControlType, canEditClips, channel } = this.props
 
-    if (isRightClick(e) && (showAutomationControlType || canEditClips)) {
+    if (isRightClick(e) && (canEditAutomations || canEditClips)) {
       e.preventDefault()
       e.stopPropagation()
 
@@ -24,7 +24,7 @@ class TrackChannel extends React.Component {
       // subtract this because the clipsGroup target is offset this amount
       beat += this.props.clickBoxTranslateX
 
-      if (showAutomationControlType) {
+      if (canEditAutomations) {
         const automationClip = find(channel.clips, { controlType: showAutomationControlType })
 
         if (automationClip) {
@@ -71,8 +71,9 @@ class TrackChannel extends React.Component {
   }
 
   render () {
-    const { channel, color, beatScale, translateY, scaleX, sampleResolution, height, canEditClips, 
-      canDragClips, canResizeClips, showAutomationControlType, showGridMarkers } = this.props
+    const { channel, color, beatScale, translateY, scaleX, sampleResolution, height, canEditAutomations,
+      canEditClips, canDragClips, canResizeClips, showAutomationControlType, showGridMarkers
+    } = this.props
     if (!channel) { return null }
 
     const selectedClipId = get(this.props.selectedClip, 'id')
@@ -129,7 +130,7 @@ class TrackChannel extends React.Component {
             deleteControlPoint={this.props.deleteControlPoint}
             beatScale={beatScale}
             height={height}
-            canDrag
+            canEdit={canEditAutomations}
           />
         )}
       </g>
@@ -151,6 +152,7 @@ TrackChannel.defaultProps = {
   canResizeClips: false,
   canEditClips: false,
   showAutomationControlType: undefined,
+  canEditAutomations: false,
   showGridMarkers: true
 }
 

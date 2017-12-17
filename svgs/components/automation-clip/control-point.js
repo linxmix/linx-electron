@@ -14,7 +14,7 @@ class ControlPoint extends React.Component {
   }
 
   handleClick (e) {
-    if (isRightClick(e)) {
+    if (isRightClick(e) && this.props.canEdit) {
       e.preventDefault()
       e.stopPropagation()
       this.props.deleteControlPoint({ id: this.props.id, sourceId: this.props.sourceId })
@@ -42,7 +42,7 @@ ControlPoint.defaultProps = {
   height: 100,
   scaleX: 1,
   radius: 10,
-  canDrag: false
+  canEdit: false
 }
 
 function collectDrag (connect, monitor) {
@@ -70,7 +70,7 @@ const dragSource = {
     return item && item.id && (item.id === props.id)
   },
   canDrag (props) {
-    return props.canDrag
+    return props.canEdit
   },
   endDrag(props, monitor, component) {
     component.setState({

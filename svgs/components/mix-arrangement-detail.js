@@ -10,7 +10,7 @@ const getCurrentBeat = require('../../audios/helpers/get-current-beat')
 const { beatToTime } = require('../../lib/number-utils')
 const { getPosition } = require('../../lib/mouse-event-utils')
 
-const { CLIP_TYPE_SAMPLE } = require('../../clips/constants')
+const { CLIP_TYPE_SAMPLE, CONTROL_TYPE_GAIN } = require('../../clips/constants')
 const { CHANNEL_TYPE_SAMPLE_TRACK, CHANNEL_TYPE_PRIMARY_TRACK } = require('../../channels/constants')
 
 const ZOOM_RESOLUTION = 15
@@ -22,12 +22,13 @@ class MixArrangementDetail extends React.Component {
     this.state = {
       editingBeatgrids: [],
       selectedClips: {},
-      selectedControlType: null
+      selectedControlType: CONTROL_TYPE_GAIN,
+      isEditingAutomations: false
     }
   }
 
   componentDidMount () {
-    keymaster('esc', () => this.selectControlType(''))
+    keymaster('esc', () => this.toggleIsEditingAutomations())
   }
 
   componentWillUnmount () {
@@ -37,6 +38,12 @@ class MixArrangementDetail extends React.Component {
   selectControlType (controlType) {
     this.setState({
       selectedControlType: controlType
+    })
+  }
+
+  toggleIsEditingAutomations () {
+    this.setState({
+      isEditingAutomations: !(this.state.isEditingAutomations)
     })
   }
 
@@ -142,7 +149,7 @@ class MixArrangementDetail extends React.Component {
   render () {
     const { mix, audioContext, height, rowHeight, fromTrackGroup, toTrackGroup,
       scaleX, translateX, tempoAxisHeight } = this.props
-    const { selectedControlType } = this.state
+    const { selectedControlType, isEditingAutomations } = this.state
     if (!(mix && mix.channel)) { return null }
 
     const beatScale = get(mix, 'channel.beatScale')
@@ -219,7 +226,7 @@ class MixArrangementDetail extends React.Component {
       height={tempoAxisHeight}
       minBeat={get(mix, 'channel.minBeat')}
       maxBeat={get(mix, 'channel.maxBeat')}
-      canDrag
+      canEdit
     />
 
     const trackGroups = [
@@ -280,6 +287,7 @@ class MixArrangementDetail extends React.Component {
       height={height}
       trackControls={trackControlsElement}
       showTempoAxis
+      isEditingAutomations={isEditingAutomations}
       selectedControlType={selectedControlType}
       tempoAxisHeight={tempoAxisHeight}
       tempoClipElement={tempoClipElement}
@@ -287,6 +295,7 @@ class MixArrangementDetail extends React.Component {
       showLastPlayMarker={mix.playState.isPlaying}
       canDropFiles
       handleFilesDrop={this.handleFilesDrop.bind(this)}
+      toggleIsEditingAutomations={this.toggleIsEditingAutomations.bind(this)}
       {...layoutActions}>
 
       <TrackGroup
@@ -303,6 +312,7 @@ class MixArrangementDetail extends React.Component {
         canEditClips
         selectedClips={this.state.selectedClips}
         showAutomationControlType={!includes(this.state.editingBeatgrids, fromTrackGroup.id) && selectedControlType}
+        isEditingAutomations={isEditingAutomations}
         sampleResolution={includes(this.state.editingBeatgrids, fromTrackGroup.id)
           ? ZOOM_RESOLUTION : NORMAL_RESOLUTION}
         trackChannelActions={trackChannelActions}
@@ -331,6 +341,7 @@ class MixArrangementDetail extends React.Component {
         showSecondColorHalf
         selectedClips={this.state.selectedClips}
         showAutomationControlType={!includes(this.state.editingBeatgrids, toTrackGroup.id) && selectedControlType}
+        isEditingAutomations={isEditingAutomations}
         sampleResolution={includes(this.state.editingBeatgrids, toTrackGroup.id)
           ? ZOOM_RESOLUTION : NORMAL_RESOLUTION}
         trackChannelActions={trackChannelActions}

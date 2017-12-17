@@ -7,7 +7,7 @@ const { isRightClick, getPosition } = require('../../lib/mouse-event-utils')
 
 class TempoClip extends React.Component {
   handleClick (e) {
-    if (isRightClick(e)) {
+    if (isRightClick(e) && this.props.canEdit) {
       e.preventDefault()
       e.stopPropagation()
 
@@ -28,7 +28,7 @@ class TempoClip extends React.Component {
 
   render () {
     const { clip, height, scaleX, deleteControlPoint, updateControlPointValue,
-      canDrag, minBeat, maxBeat } = this.props
+      canEdit, minBeat, maxBeat } = this.props
     if (!clip) { return null }
 
     const { id, controlPoints } = clip
@@ -54,7 +54,7 @@ class TempoClip extends React.Component {
         minBeat={minBeat}
         maxBeat={maxBeat}
         height={height}
-        canDrag={canDrag}
+        canEdit={canEdit}
       />)}
     </g>
   }
@@ -63,7 +63,7 @@ class TempoClip extends React.Component {
 TempoClip.defaultProps = {
   height: 100,
   scaleX: 1,
-  canDrag: false,
+  canEdit: false,
   minBeat: 0,
   maxBeat: 0
 }
