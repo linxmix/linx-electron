@@ -56,8 +56,20 @@ class TrackControl extends React.Component {
     }
   }
 
-  onGainInputMouseUp (e) {
+  onGainInputMouseLeave (e) {
     this.gainInputElement.blur()
+  }
+
+  handleChangeBpm (e) {
+    const newValue = parseFloat(e.target.value)
+
+    if (isValidNumber(newValue) && (newValue !== this.props.bpm)) {
+      this.props.updateBpm(newValue)
+    }
+  }
+
+  onBpmInputMouseLeave (e) {
+    this.bpmInputElement.blur()
   }
 
   handleToggleEditBeatgrid (e) {
@@ -83,6 +95,7 @@ class TrackControl extends React.Component {
   render () {
     const { title, bpm, gain, musicalKey, delayTime, height, width, isEditingBeatgrid, pitchSemitones,
       toggleEditBeatgrid, toggleSoloTrack, isSoloTrack, canDeleteTrack } = this.props
+    const bpmInputId = uuid()
     const editBeatgridInputId = uuid()
     const musicalKeyInputId = uuid()
     const gainInputId = uuid()
@@ -90,8 +103,21 @@ class TrackControl extends React.Component {
 
     return <div className="TrackControl" style={{ height, width }}>
       <span className="u-multiline-ellipsis-1" title={title}>{title}</span>
+
       <div>
-        BPM: {bpm}
+        <span onMouseLeave={this.onBpmInputMouseLeave.bind(this)}>
+          <input id={bpmInputId}
+            type='number'
+            value={bpm}
+            onChange={this.handleChangeBpm.bind(this)}
+            min={0}
+            max={200}
+            step={1}
+            ref={(element) => { this.bpmInputElement = element }}
+          />
+          <label htmlFor={bpmInputId}>BPM</label>
+        </span>
+
         {canDeleteTrack && <button onClick={() => this.props.deleteTrack()}>
           x
         </button>}
@@ -111,7 +137,7 @@ class TrackControl extends React.Component {
       </div>
 
       <div>
-        <span onMouseUp={this.onGainInputMouseUp.bind(this)} style={{ marginRight: '5px' }}>
+        <span onMouseLeave={this.onGainInputMouseLeave.bind(this)} style={{ marginRight: '5px' }}>
           <input id={gainInputId}
             type='number'
             value={gain}
