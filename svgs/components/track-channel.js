@@ -99,6 +99,7 @@ class TrackChannel extends React.Component {
             color={color}
             sampleResolution={sampleResolution}
             height={height}
+            gain={channel.gain}
             canDrag={canDragClips}
             canResize={canResizeClips}
             canEdit={canEditClips}

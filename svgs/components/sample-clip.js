@@ -46,7 +46,7 @@ class SampleClip extends React.Component {
   }
 
   render () {
-    const { clip, height, color, sampleResolution, scaleX, connectDragSource, isDragging, isSelected,
+    const { clip, gain, height, color, sampleResolution, scaleX, connectDragSource, isDragging, isSelected,
       canResize, canDrag, canEdit } = this.props
     if (!clip || (clip.status !== 'loaded')) { return null }
 
@@ -81,6 +81,7 @@ class SampleClip extends React.Component {
         endTime={audioStartTime + beatToTime(beatCount, audioBpm)}
         length={beatCount * sampleResolution}
         beatCount={beatCount}
+        gain={gain}
         height={height}
         color={color}
         opacity={isDragging ? 0.5 : 1}
@@ -137,6 +138,7 @@ SampleClip.defaultProps = {
   color: 'green',
   sampleResolution: 1,
   scaleX: 1,
+  gain: 1,
   canDrag: false,
   canResize: false,
   canEdit: false,

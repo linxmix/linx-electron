@@ -11,7 +11,7 @@ class Waveform extends React.Component {
   }
 
   render () {
-    const { audioBuffer, startTime, endTime, length, height, beatCount, color, opacity } = this.props
+    const { audioBuffer, startTime, endTime, length, height, beatCount, gain, color, opacity } = this.props
 
     const peaks = getPeaks({
       audioBuffer,
@@ -27,8 +27,8 @@ class Waveform extends React.Component {
         const audioBeat = percent * beatCount
         return audioBeat
       })
-      .y0(([ ymin, ymax ]) => median + ymin * median)
-      .y1(([ ymin, ymax ]) => median + ymax * median)
+      .y0(([ ymin, ymax ]) => median + ymin * median * gain)
+      .y1(([ ymin, ymax ]) => median + ymax * median * gain)
 
     return <path fill={color} d={area(peaks)} opacity={opacity} />
   }
@@ -42,7 +42,8 @@ Waveform.defaultProps = {
   beatCount: 0,
   height: 100,
   color: 'green',
-  opacity: 1
+  opacity: 1,
+  gain: 1
 }
 
 module.exports = Waveform
