@@ -5,7 +5,6 @@ const { isEqual } = require('lodash')
 const getPeaks = require('../../samples/helpers/get-peaks')
 
 class Waveform extends React.Component {
-  
   shouldComponentUpdate(nextProps) {
     return !isEqual(nextProps, this.props)
   }

@@ -1,11 +1,24 @@
 const d3 = require('d3')
 
 const { isValidNumber, validNumberOrDefault } = require('../../lib/number-utils')
+const { reduce } = require('lodash')
 
 const TICKS_PER_SECOND = 500
 
+// TODO: caching here or in store?
+const _valuesCache = {}
+
 function getValueCurve ({ startTime, duration, valueScale }) {
   if (!(valueScale && (duration > 0))) { return new Float32Array(0) }
+
+  const valueScaleRange = valueScale.range()
+  const cacheKey = reduce(valueScale.domain(), (cacheKey, x, i) => {
+    const y = valueScaleRange[i]
+    return `${cacheKey},${x}:${y}`
+  }, `startTime:${startTime},duration:${duration}`)
+  const cached = _valuesCache[cacheKey]
+
+  if (cached) { return cached }
 
   // console.log('getValueCurve', {
   //   startValue: valueScale(startTime),
@@ -35,6 +48,8 @@ function getValueCurve ({ startTime, duration, valueScale }) {
 
     values[i] = value
   }
+
+  _valuesCache[cacheKey] = values
 
   return values
 }

@@ -1,5 +1,5 @@
 const React = require('react')
-const { get, map, find, assign, filter, includes } = require('lodash')
+const { get, map, find, assign, filter, includes, omit, isEqual } = require('lodash')
 
 const SampleClip = require('./sample-clip')
 const AutomationClip = require('./automation-clip')
@@ -7,6 +7,11 @@ const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../../clips/constant
 const { isRightClick, getPosition } = require('../../lib/mouse-event-utils')
 
 class TrackChannel extends React.Component {
+  shouldComponentUpdate(nextProps) {
+    const ignoreKeys = ['channel.parentChannel.channels', 'channel.parentChannels.primaryTrack']
+    return !isEqual(omit(nextProps, ...ignoreKeys), omit(this.props, ...ignoreKeys))
+  }
+
   handleClick (e) {
     const { canEditAutomations, showAutomationControlType, canEditClips, channel } = this.props
 

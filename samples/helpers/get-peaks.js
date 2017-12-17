@@ -4,7 +4,7 @@ const { isValidNumber, validNumberOrDefault } = require('../../lib/number-utils'
 
 module.exports = getPeaks
 
-// TODO: add caching? here or in store?
+// TODO: caching here or in store?
 const peaksCache = {}
 
 // returns an array of arrays of [ymin, ymax] values of the waveform

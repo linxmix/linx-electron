@@ -347,7 +347,9 @@ const dropTarget = {
         itemType,
         diff: monitor.getDifferenceFromInitialOffset()
       })
-      window.setTimeout(() => props.updateAudioGraph({ channel: props.mix.channel }))
+      window.setTimeout(() => {
+        props.updateAudioGraph({ channel: props.mix.channel })
+      })
     }
   }
 }
