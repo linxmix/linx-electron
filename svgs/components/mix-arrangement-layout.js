@@ -143,6 +143,12 @@ class MixArrangementLayout extends React.Component {
     this.editAutomationsInputElement.blur()
   }
 
+  _asyncUpdateAudioGraph (e) {
+    // TODO: remove this hack
+    // Make sure this.props.mix is updated from previous action
+    window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
+  }
+
   render () {
     const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY,
       beatAxisHeight, tempoAxisHeight, showTempoAxis, selectedControlType,
@@ -347,9 +353,7 @@ const dropTarget = {
         itemType,
         diff: monitor.getDifferenceFromInitialOffset()
       })
-      window.setTimeout(() => {
-        props.updateAudioGraph({ channel: props.mix.channel })
-      })
+      component._asyncUpdateAudioGraph()
     }
   }
 }
