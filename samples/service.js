@@ -6,7 +6,7 @@ const crypto = require('crypto')
 const { omitBy, isNil } = require('lodash')
 const JsMediaTags = require('jsmediatags')
 
-const { validNumberOrDefault } = require('../lib/number-utils')
+const { validNumberOrDefault, getFirstBarOffsetTime } = require('../lib/number-utils')
 const calculateBeatGrid = require('./helpers/calculate-beat-grid')
 
 module.exports = createService
@@ -85,7 +85,7 @@ function createService (config) {
           bpm: bpm || 128,
           key: tags.comment && tags.comment.text,
           duration: audioBuffer.duration,
-          barGridTime: peaks[0].time, // naively assume first peak is correct first beat
+          firstPeakTime: peaks[0].time, // naively assume first peak is correct first beat
           peaks
         }
 
@@ -95,9 +95,17 @@ function createService (config) {
           id,
           bpm: 128,
           duration: audioBuffer.duration,
-          barGridTime: peaks[0].time,
+          firstPeakTime: peaks[0].time,
           peaks
-        })))
+        }))
+      ).then((attrs) => {
+        attrs.barGridTime = validNumberOrDefault(getFirstBarOffsetTime({
+          time: attrs.firstPeakTime,
+          bpm: attrs.bpm
+        }), 0)
+
+        return attrs
+      })
     })
   }
 }

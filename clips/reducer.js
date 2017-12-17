@@ -33,7 +33,7 @@ const { analyzeSample } = require('../samples/actions')
 const { CLIP_TYPES, CONTROL_TYPES, CLIP_TYPE_AUTOMATION,
   CLIP_TYPE_TEMPO, CLIP_TYPE_SAMPLE } = require('./constants')
 const { quantizeBeat, clamp, beatToTime, timeToBeat, validNumberOrDefault,
-  bpmToSpb, isValidNumber } = require('../lib/number-utils')
+  bpmToSpb, isValidNumber, getFirstBarOffsetTime } = require('../lib/number-utils')
 
 const DEFAULT_TEMPO = 128
 
@@ -374,7 +374,7 @@ function createReducer (config) {
       const previousAudioStartTime = get(clip, 'audioStartTime')
       const previousOffsetTime = get(clip, 'sample.meta.barGridTime')
 
-      const firstBarOffsetTime = _getFirstBarOffsetTime({
+      const firstBarOffsetTime = getFirstBarOffsetTime({
         time: marker.time,
         bpm: get(clip, 'sample.meta.bpm')
       })
@@ -395,22 +395,4 @@ function createReducer (config) {
     dirty: [],
     records: {}
   })
-}
-
-function _getFirstBarOffsetTime ({ time, bpm, timeSignature = 4 }) {
-  const secondsPerBeat = bpmToSpb(bpm)
-  const secondsPerBar = secondsPerBeat * timeSignature
-
-  let firstBarOffsetTime = time
-  if (isValidNumber(bpm)
-    && isValidNumber(timeSignature)
-    && isValidNumber(firstBarOffsetTime)) {
-    while ((firstBarOffsetTime - secondsPerBar) >= 0) {
-      firstBarOffsetTime -= secondsPerBar
-    }
-
-    return firstBarOffsetTime
-  } else {
-    return 0
-  }
 }
