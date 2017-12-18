@@ -10,6 +10,7 @@ const BeatAxis = require('./beat-axis')
 const Playhead = require('./playhead')
 const { validNumberOrDefault, quantizeBeat } = require('../../lib/number-utils')
 const { CONTROL_TYPES } = require('../../clips/constants')
+const getCurrentBeat = require('../../audios/helpers/get-current-beat')
 
 const ZOOM_STEP = 0.5
 const MIN_SCALE_X = 0.1
@@ -122,12 +123,35 @@ class MixArrangementLayout extends React.Component {
   handleClick (e) {
     if (this.state.isDragging) { return }
 
-    const { mix, seekToBeat, translateX, scaleX } = this.props
+    const { mix, seekToBeat, translateX, scaleX, getQuantization } = this.props
     const mouseX = e.nativeEvent.offsetX
+    const beat = (mouseX - translateX) / scaleX
+    let seekBeat = beat
+
+    // quantize to same distance as current position
+    if (getQuantization) {
+      const quantization = getQuantization()
+      const currentBeat = getCurrentBeat({
+        playState: mix.playState,
+        beatScale: mix.channel.beatScale,
+        audioContext: this.props.audioContext
+      })
+
+      const quantizedCurrentBeat = quantizeBeat({
+        quantization,
+        beat: currentBeat,
+      })
+      const quantizedBeat = quantizeBeat({
+        beat,
+        quantization
+      })
+
+      seekBeat = quantizedBeat + (currentBeat - quantizedCurrentBeat)
+    }
 
     seekToBeat({
-      channel: mix.channel,
-      seekBeat: (mouseX - translateX) / scaleX
+      seekBeat,
+      channel: mix.channel
     })
   }
 
