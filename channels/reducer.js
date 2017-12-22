@@ -286,7 +286,7 @@ function createReducer (config) {
           id: mixTempoClip.id,
           controlPoints: keyBy(map(tempoControlPoints, controlPoint => ({
             ...controlPoint,
-            beat: controlPoint.beat >= moveTempoControlsFromBeat ?
+            beat: controlPoint.beat >= (moveTempoControlsFromBeat + diffBeats) ?
               controlPoint.beat + beatsToMove :
               controlPoint.beat
           })), 'id')
