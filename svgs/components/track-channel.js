@@ -1,5 +1,6 @@
 const React = require('react')
 const { get, map, find, assign, filter, includes, omit, isEqual } = require('lodash')
+const classnames = require('classnames')
 
 const SampleClip = require('./sample-clip')
 const AutomationClip = require('./automation-clip')
@@ -122,22 +123,26 @@ class TrackChannel extends React.Component {
           />
         )}
 
-        {showAutomationControlType && map(filter(channel.clips, {
-          type: CLIP_TYPE_AUTOMATION,
-          controlType: showAutomationControlType
-        }), clip =>
-          <AutomationClip
-            key={clip.id}
-            clip={clip}
-            scaleX={scaleX}
-            minBeat={channel.minBeat}
-            maxBeat={channel.maxBeat}
-            deleteControlPoint={this.props.deleteControlPoint}
-            beatScale={beatScale}
-            height={height}
-            canEdit={canEditAutomations}
-          />
-        )}
+        <g className={classnames('AutomationClipGroup', {
+          'is-editable': canEditAutomations
+          })}>
+          {map(filter(channel.clips, {
+            type: CLIP_TYPE_AUTOMATION,
+            controlType: showAutomationControlType
+          }), clip =>
+            <AutomationClip
+              key={clip.id}
+              clip={clip}
+              scaleX={scaleX}
+              minBeat={channel.minBeat}
+              maxBeat={channel.maxBeat}
+              deleteControlPoint={this.props.deleteControlPoint}
+              beatScale={beatScale}
+              height={height}
+              canEdit={canEditAutomations}
+            />
+          )}
+        </g>
       </g>
     </g>
   }

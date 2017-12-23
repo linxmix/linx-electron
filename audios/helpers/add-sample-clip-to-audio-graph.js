@@ -55,6 +55,8 @@ module.exports = function ({ outputs, startBeat, audioGraph, clip, playState,
   //   audioBpm: clip.sample.meta.bpm,
   //   'tempoScale.domain': tempoScale.domain(),
   //   'tempoScale.range': tempoScale.range(),
+  //   currentBeat,
+  //   playState
   // })
 
   audioGraph[clip.id] = ['soundtouchSource', outputs, {

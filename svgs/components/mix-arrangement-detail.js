@@ -125,25 +125,24 @@ class MixArrangementDetail extends React.Component {
   }
 
   _asyncUpdateAudioGraph () {
-    // TODO: remove this hack
     // Make sure this.props.mix is updated from previous action
     window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
   }
 
-  _wrapWithAsyncUpdatePlayState (func) {
-    return (...args) => {
-      func(...args)
-      
-      // TODO: remove this hack
-      // Make sure this.props.mix is updated from previous action
-      window.setTimeout(() => {
-        this.props.updatePlayStateForTempoChange({
-          channel: this.props.mix.channel,
-          playState: this.props.mix.playState,
-          beatScale: this.props.mix.channel.beatScale
+  _asyncUpdateAudioGraphForTempoChange () {
+    window.setTimeout(() => {
+      const { mix, seekToBeat, audioContext } = this.props
+
+      // on master tempo automation change, seek to current beat to retain correct position
+      seekToBeat({
+        channel: mix.channel,
+        seekBeat: getCurrentBeat({
+          audioContext,
+          playState: mix.playState,
+          beatScale: mix.channel.beatScale
         })
       })
-    }
+    })
   }
 
   render () {
@@ -209,7 +208,7 @@ class MixArrangementDetail extends React.Component {
 
       snipClip: ({ clip, channel, beat }) => {
         this.props.snipClip({ channel, clip, snipAtBeat: beat })
-        // this._asyncUpdateAudioGraph()
+        this._asyncUpdateAudioGraph()
       }
     }
 
@@ -217,12 +216,20 @@ class MixArrangementDetail extends React.Component {
       clip={mix.tempoClip}
       beatScale={beatScale}
       scaleX={scaleX}
-      createControlPoint={this._wrapWithAsyncUpdatePlayState(options =>
+      createControlPoint={(options) => {
         createControlPoint(assign({}, options, {
           value: get(fromTrackGroup, 'primaryTrack.sample.meta.bpm')
-        })))}
-      deleteControlPoint={this._wrapWithAsyncUpdatePlayState(deleteControlPoint)}
-      updateControlPointValue={this._wrapWithAsyncUpdatePlayState(updateControlPointValue)}
+        }))
+        this._asyncUpdateAudioGraphForTempoChange()
+      }}
+      deleteControlPoint={(options) => {
+        deleteControlPoint(options)
+        this._asyncUpdateAudioGraphForTempoChange()
+      }}
+      updateControlPointValue={(options) => {
+        updateControlPointValue(options)
+        this._asyncUpdateAudioGraphForTempoChange()
+      }}
       height={tempoAxisHeight}
       minBeat={get(mix, 'channel.minBeat')}
       maxBeat={get(mix, 'channel.maxBeat')}

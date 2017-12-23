@@ -15,7 +15,7 @@ const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithCo
 const { moveTrackGroup, resizeChannel, removeClipsFromChannel, createSampleTrackFromFile,
   updateChannel, moveChannel, unsetChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph, toggleSoloChannel,
-  updatePlayStateForTempoChange, startRecording, stopRecording } = require('../../audios/actions')
+  startRecording, stopRecording } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
 
 class MixDetailContainer extends React.Component {
@@ -73,7 +73,7 @@ class MixDetailContainer extends React.Component {
         'updateControlPointValue', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'moveChannel',   
         'resizeChannel', 'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
         'removeClipsFromChannel', 'toggleSoloChannel', 'updateMeta',
-        'updatePlayStateForTempoChange', 'snipClip']),
+        'snipClip']),
       (fn) => (options) => fn({
         quantization: _getQuantization(this.props.dragModifierKeys),
         ...options
@@ -204,8 +204,7 @@ module.exports = connect(
     stopRecording,
     unsetChannel,
     updateAudioGraph,
-    updateMeta,
-    updatePlayStateForTempoChange
+    updateMeta
   }
 )(DetectDragModifierKeys({ listenForAllDragEvents: true })(MixDetailContainer))
 

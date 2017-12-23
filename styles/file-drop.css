@@ -85,6 +85,10 @@ body {
   // stroke-dasharray: 5, 5;
 }
 
+.AutomationClipGroup:not(.is-editable) {
+  pointer-events: none;
+}
+
 /* TrackControl */
 
 .TrackControl:not(:last-child) {

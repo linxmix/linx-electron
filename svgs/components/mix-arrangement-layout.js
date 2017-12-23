@@ -168,7 +168,6 @@ class MixArrangementLayout extends React.Component {
   }
 
   _asyncUpdateAudioGraph (e) {
-    // TODO: remove this hack
     // Make sure this.props.mix is updated from previous action
     window.setTimeout(() => this.props.updateAudioGraph({ channel: this.props.mix.channel }))
   }
