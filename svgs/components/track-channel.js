@@ -27,7 +27,7 @@ class TrackChannel extends React.Component {
         height: this.props.height
       })
 
-      // subtract this because the clipsGroup target is offset this amount
+      // undo clipsGroup target offset which comes from clickBoxTranslateX
       beat += this.props.clickBoxTranslateX
 
       if (canEditAutomations) {
@@ -54,21 +54,21 @@ class TrackChannel extends React.Component {
       } else if (canEditClips) {
         const selectedClip = this.props.selectedClip
 
-        let clipOptions
+        // copy from selected clip if we have one
+        let sourceClipStartBeat, clipOptions = {}
         if (selectedClip) {
           clipOptions = {
-            startBeat: beat,
             beatCount: selectedClip.beatCount,
             audioStartTime: selectedClip.audioStartTime
           }
-        } else {
-          clipOptions = {
-            startBeat: beat
-          }
+
+          sourceClipStartBeat = selectedClip.startBeat
         }
 
         this.props.createSampleClip({
           clipOptions,
+          sourceClipStartBeat,
+          beat,
           channelId: channel.id,
           sampleId: channel.sampleId,
         })

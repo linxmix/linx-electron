@@ -192,12 +192,8 @@ class MixArrangementDetail extends React.Component {
         })
       },
 
-      createSampleClip: ({ channelId, sampleId, clipOptions }) => {
-        this.props.createSampleClip({
-          channelId,
-          sampleId,
-          clipOptions
-        })
+      createSampleClip: (options) => {
+        this.props.createSampleClip(options)
         this._asyncUpdateAudioGraph()
       },
 
