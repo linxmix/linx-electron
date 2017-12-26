@@ -1,7 +1,8 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { uniq, pick, without, map, omit, values, filter, forEach, cloneDeep } = require('lodash')
+const { cloneDeep, compact, concat, uniq, pick, without, map, omit,
+  values, filter, forEach } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -28,7 +29,7 @@ const {
   createClip
 } = require('../clips/actions')
 const { CHANNEL_TYPE_MIX } = require('../channels/constants')
-const { CLIP_TYPE_SAMPLE, CLIP_TYPE_TEMPO } = require('../clips/constants')
+const { CLIP_TYPE_SAMPLE, CLIP_TYPE_TEMPO, CONTROL_TYPE_REVERB } = require('../clips/constants')
 
 const {
   loadMixList,
@@ -86,10 +87,12 @@ function createReducer (config) {
       const { id, channelId, channels, clips } = flattenMix(action.payload)
       const mix = { id, channelId }
 
-      const loadSampleEffects = map(
+      const clipSampleIds = map(
         uniq(map(filter(values(clips), { type: CLIP_TYPE_SAMPLE }), 'sampleId')),
-        sampleId => Effects.constant(loadSample(sampleId))
       )
+      const reverbSampleIds = map(compact(uniq(map(values(channels), 'reverbSampleId'))))
+      const loadSampleEffects = map(concat(clipSampleIds, reverbSampleIds),
+        sampleId => Effects.constant(loadSample(sampleId)))
 
       return loop({
         ...state,
@@ -229,7 +232,7 @@ function createReducer (config) {
   function runSaveMix (nestedMix) {
     return service.saveMix({
       id: nestedMix.id,
-      channel: _removeParentChannels(cloneDeep(nestedMix.channel))
+      channel: _removeFieldsNotToSave(cloneDeep(nestedMix.channel))
     })
       .then(() => saveMixSuccess(nestedMix))
       .catch(saveMixFailure)
@@ -242,9 +245,21 @@ function createReducer (config) {
   }
 }
 
-function _removeParentChannels(channel) {
-  channel.parentChannel = undefined
-  delete channel.parentChannel
-  forEach(channel.channels || [], _removeParentChannels)
+const PROPERTIES_TO_REMOVE = [
+  'parentChannel',
+  'primaryTrack',
+  'sampleTracks',
+  'reverbSample',
+  'sample',
+  'tempoClip'
+]
+
+function _removeFieldsNotToSave(channel) {
+  forEach(PROPERTIES_TO_REMOVE, property => {
+    channel[property] = undefined
+    delete channel[property]
+  })
+
+  forEach(channel.channels || [], _removeFieldsNotToSave)
   return channel
 }

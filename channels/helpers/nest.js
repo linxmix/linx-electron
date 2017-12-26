@@ -26,7 +26,7 @@ function nestChannels ({
   dirtyChannels = []
 }) {
   const channel = channels[channelId] || {}
-  const { id, type, channelIds: childChannelIds = [], clipIds = [] } = channel
+  const { id, type, reverbSampleId, channelIds: childChannelIds = [], clipIds = [] } = channel
   const startBeat = validNumberOrDefault(channel.startBeat, 0)
 
   const currentChannel = { id: channelId, parentChannel }
@@ -43,10 +43,12 @@ function nestChannels ({
   }))
   const childClips = clipIds.map(clipId => (clips[clipId] || {}))
   const childSampleClips = filter(childClips, { type: CLIP_TYPE_SAMPLE })
+  const reverbSample = samples[reverbSampleId]
 
   // compute status
   let status = 'unloaded'
-  if (some(childChannels, { status: 'loading' }) || some(childSampleClips, { status: 'loading' })) {
+  if (some(childChannels, { status: 'loading' }) || some(childSampleClips, { status: 'loading' })
+    || (reverbSample && reverbSample.isLoading)) {
     status = 'loading'
   } else if (every(childChannels, { status: 'loaded' }) && every(childSampleClips, { status: 'loaded' })) {
     status = 'loaded'
@@ -124,6 +126,8 @@ function nestChannels ({
     pitchSemitones,
     tempoClip,
     startBeat,
+    reverbSample,
+    reverbSampleId,
     gain: validNumberOrDefault(channel.gain, DEFAULT_GAIN),
     delayTime: validNumberOrDefault(channel.delayTime, DEFAULT_DELAY_TIME),
     minBeat: validNumberOrDefault(minBeat, 0),

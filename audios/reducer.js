@@ -198,7 +198,6 @@ function createReducer (config) {
     [exportWavFailure]: (state, action) => {
       return state
     },
-    // TODO: should this all be in channels reducer? so we dont have to pass full channel
     [updateAudioGraph]: (state, action) => {
       const { channel } = action.payload
       assert(channel.status === 'loaded', 'Requires loaded channel to updateAudioGraph')

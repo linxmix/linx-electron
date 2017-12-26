@@ -14,7 +14,8 @@ const {
   CONTROL_TYPE_FILTER_LOWPASS_Q,
   CONTROL_TYPE_DELAY_WET,
   CONTROL_TYPE_DELAY_CUTOFF,
-  CONTROL_TYPE_DELAY_TIME
+  CONTROL_TYPE_DELAY_TIME,
+  CONTROL_TYPE_REVERB
 } = require('../../clips/constants')
 
 const FX_CHAIN_ORDER = [
@@ -39,7 +40,8 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
     find(clips, { controlType: CONTROL_TYPE_DELAY_CUTOFF }),
     find(clips, { controlType: CONTROL_TYPE_DELAY_WET })
   ], isNil)
-  const sortedLevelsClips = sortBy(difference(clips, highpassClips, lowpassClips, delayClips),
+  const reverbClip = find(clips, { controlType: CONTROL_TYPE_REVERB })
+  const sortedLevelsClips = sortBy(difference(clips, highpassClips, lowpassClips, delayClips, [reverbClip]),
     ({ controlType }) => FX_CHAIN_ORDER.indexOf(controlType))
 
   // console.log({
@@ -54,7 +56,7 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
   //
   let previousOutput = outputs
 
-  // connect highpass, lowpass, and delay automations
+  // connect highpass, lowpass, reverb, and delay automations
   if (highpassClips.length) {
     const audioProperties = reduce(
       highpassClips,
@@ -78,6 +80,14 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
 
     const audioGraphKey = `${channel.id}_lowpassNode`
     audioGraph[audioGraphKey] = ['biquadFilter', previousOutput, audioProperties]
+    previousOutput = audioGraphKey
+  }
+
+  if (reverbClip) {
+    const reverbSample = channel.reverbSample
+    const audioGraphKey = `${channel.id}_reverbNode`
+
+    audioGraph[audioGraphKey] = ['convolver', previousOutput, { buffer: reverbSample.audioBuffer }]
     previousOutput = audioGraphKey
   }
 

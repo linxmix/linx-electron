@@ -1,5 +1,5 @@
 const { createSelector: Getter, createStructuredSelector: Struct } = require('reselect')
-const { mapValues, values, includes } = require('lodash')
+const { filter, mapValues, values, includes } = require('lodash')
 
 const { getMetas } = require('../metas/getters')
 
@@ -23,6 +23,11 @@ const getSamples = Getter(
   }))
 )
 
+const getReverbSamples = Getter(
+  getSamples,
+  samples => filter(samples, 'isReverbSample')
+)
+
 const getSampleList = Getter(
   getSamples,
   (samples) => values(samples)
@@ -43,6 +48,7 @@ const getSampleProps = Struct({
 
 module.exports = {
   getSamples,
+  getReverbSamples,
   getSampleListProps,
   getSampleProps,
   getSamplesError
