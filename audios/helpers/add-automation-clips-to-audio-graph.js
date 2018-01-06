@@ -85,10 +85,18 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
 
   if (reverbClip) {
     const reverbSample = channel.reverbSample
-    const audioGraphKey = `${channel.id}_reverbNode`
+    const reverbInKey = `${channel.id}_reverbNode_in`
+    const reverbOutKey = `${channel.id}_reverbNode_out`
+    const reverbWetKey = `${channel.id}_reverbNode_wet`
+    const reverbDryKey = `${channel.id}_reverbNode_dry`
+    const reverbKey = `${channel.id}_reverbNode`
 
-    audioGraph[audioGraphKey] = ['convolver', previousOutput, { buffer: reverbSample.audioBuffer }]
-    previousOutput = audioGraphKey
+    audioGraph[reverbOutKey] = ['gain', previousOutput]
+    audioGraph[reverbWetKey] = ['gain', reverbOutKey, { gain: 1 }]
+    audioGraph[reverbKey] = ['convolver', reverbWetKey, { buffer: reverbSample.audioBuffer }]
+    audioGraph[reverbInKey] = ['gain', [reverbKey, reverbDryKey]]
+    audioGraph[reverbDryKey] = ['gain', reverbOutKey, { gain: 0 }]
+    previousOutput = reverbInKey
   }
 
   if (delayClips.length) {
