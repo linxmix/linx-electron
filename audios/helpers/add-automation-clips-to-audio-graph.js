@@ -60,7 +60,7 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
   if (highpassClips.length) {
     const audioProperties = reduce(
       highpassClips,
-      (audioProperties, clip) => merge({}, audioProperties, _getAutomationParameters({
+      (audioProperties, clip) => merge({}, audioProperties, _getVirtualNode({
         previousOutput, clip, startBeat, currentBeat, beatScale, currentTime })),
       { type: 'highpass' }
     )
@@ -73,7 +73,7 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
   if (lowpassClips.length) {
     const audioProperties = reduce(
       lowpassClips,
-      (audioProperties, clip) => merge({}, audioProperties, _getAutomationParameters({
+      (audioProperties, clip) => merge({}, audioProperties, _getVirtualNode({
         previousOutput, clip, startBeat, currentBeat, beatScale, currentTime })),
       { type: 'lowpass' }
     )
@@ -91,18 +91,59 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
     const reverbDryKey = `${channel.id}_reverbNode_dry`
     const reverbKey = `${channel.id}_reverbNode`
 
+    // TODO: abstract this better with _getAutomationParameters
+    // scale to automation clip start in time domain
+    const controlPoints = reverbClip.controlPoints || []
+    const clipStartTime = beatScale(startBeat + reverbClip.startBeat)
+    const valueScaleDomain = map(controlPoints,
+        ({ beat }) => beatScale(beat + startBeat) - clipStartTime)
+    const wetValueScale = d3.scaleLinear()
+      .domain(valueScaleDomain)
+      .range(map(controlPoints, 'scaledValue'))
+      .clamp(true)
+    const dryValueScale = d3.scaleLinear()
+      .domain(valueScaleDomain)
+      .range(map(wetValueScale.range(), value => 1 - value))
+      .clamp(true)
+
+    const wetStartValue = validNumberOrDefault(wetValueScale(0), wetValueScale.range()[0])
+    const wetAudioParameters = [
+      ['setValueAtTime', wetStartValue, 0],
+      valueScaleToAudioParameter({
+        valueScale: wetValueScale,
+        clip: reverbClip,
+        startBeat,
+        currentBeat,
+        beatScale,
+        currentTime
+      })
+    ]
+
+    const dryStartValue = validNumberOrDefault(dryValueScale(0), dryValueScale.range()[0])
+    const dryAudioParameters = [
+      ['setValueAtTime', dryStartValue, 1],
+      valueScaleToAudioParameter({
+        valueScale: dryValueScale,
+        clip: reverbClip,
+        startBeat,
+        currentBeat,
+        beatScale,
+        currentTime
+      })
+    ]
+
     audioGraph[reverbOutKey] = ['gain', previousOutput]
-    audioGraph[reverbWetKey] = ['gain', reverbOutKey, { gain: 1 }]
+    audioGraph[reverbWetKey] = ['gain', reverbOutKey, { gain: wetAudioParameters }]
     audioGraph[reverbKey] = ['convolver', reverbWetKey, { buffer: reverbSample.audioBuffer }]
     audioGraph[reverbInKey] = ['gain', [reverbKey, reverbDryKey]]
-    audioGraph[reverbDryKey] = ['gain', reverbOutKey, { gain: 0 }]
+    audioGraph[reverbDryKey] = ['gain', reverbOutKey, { gain: dryAudioParameters }]
     previousOutput = reverbInKey
   }
 
   if (delayClips.length) {
     const audioProperties = reduce(
       delayClips,
-      (audioProperties, clip) => merge({}, audioProperties, _getAutomationParameters({
+      (audioProperties, clip) => merge({}, audioProperties, _getVirtualNode({
         previousOutput, clip, startBeat, currentBeat, beatScale, currentTime })),
       {}
     )
@@ -121,7 +162,11 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
       endBeat: startBeat + channel.maxBeat
     })
     audioProperties['delay.delayTime'] = valueScaleToAudioParameter({
-      clip: { startBeat: channel.minBeat, beatCount: channel.beatCount, controlType: 'delayTime for logging' },
+      clip: {
+        startBeat: channel.minBeat,
+        beatCount: channel.beatCount,
+        controlType: 'delayTime for logging'
+      },
       startBeat,
       currentBeat,
       valueScale: delayTimeValueScale,
@@ -151,7 +196,7 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
   // connect levels automations in order, returning previousOutput to connect to the source node
   return reduce(sortedLevelsClips, (previousOutput, clip) => {
     const audioGraphKey = `${channel.id}_${clip.controlType}_${clip.id}`
-    audioGraph[audioGraphKey] = _getAutomationParameters({
+    audioGraph[audioGraphKey] = _getVirtualNode({
       previousOutput, clip, startBeat, currentBeat, beatScale, currentTime })
 
     return audioGraphKey
@@ -172,7 +217,8 @@ function _getAutomationParameters({
     .range(map(controlPoints, 'scaledValue'))
     .clamp(true)
   const startValue = validNumberOrDefault(valueScale(0), valueScale.range()[0])
-  const audioParameters = [
+
+  return [
     ['setValueAtTime', startValue, 0],
     valueScaleToAudioParameter({
       clip,
@@ -183,7 +229,10 @@ function _getAutomationParameters({
       currentTime
     })
   ]
+}
 
+function _getVirtualNode(options) {
+  const automationParamters = _getAutomationParameters(options)
   switch(clip.controlType) {
     case CONTROL_TYPE_GAIN:
       return ['gain', previousOutput, {
