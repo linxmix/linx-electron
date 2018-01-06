@@ -6,6 +6,7 @@ const keymaster = require('keymaster')
 const { getMixProps } = require('../getters')
 const { saveMix, loadMix, deleteMix, unsetTrackGroupFromMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
+const { loadReverbSampleList } = require('../../samples/actions')
 const { playPause, seekToBeat, startRecording, stopRecording } = require('../../audios/actions')
 const { createTrackGroupFromFile, swapChannels } = require('../../channels/actions')
 const { updateZoom } = require('../../svgs/actions')
@@ -22,10 +23,11 @@ class MixOverviewContainer extends React.Component {
 
     // keymaster('⌘+s, ctrl+s', () => this.props.mix.isDirty && this.props.saveMix(this.props.mix))
 
-    const { loadMix, mix } = this.props
+    const { loadMix, mix, loadReverbSampleList } = this.props
     if (mix && !mix.channel.type) {
       loadMix(mix.id)
     }
+    loadReverbSampleList()
   }
 
   componentWillUnmount () {
@@ -177,6 +179,7 @@ module.exports = connect(
     updateMeta,
     createTrackGroupFromFile,
     swapChannels,
+    loadReverbSampleList,
     unsetTrackGroupFromMix,
     seekToBeat,
     updateZoom,

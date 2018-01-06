@@ -10,6 +10,7 @@ const {
   CHANNEL_TYPE_SAMPLE_TRACK
 } = require('../constants')
 const { CLIP_TYPE_SAMPLE, CLIP_TYPE_TEMPO } = require('../../clips/constants')
+const { DEFAULT_REVERB_SAMPLE_ID } = require('../../samples/constants')
 
 const DEFAULT_GAIN = 1
 const DEFAULT_DELAY_TIME = 0.25
@@ -43,7 +44,7 @@ function nestChannels ({
   }))
   const childClips = clipIds.map(clipId => (clips[clipId] || {}))
   const childSampleClips = filter(childClips, { type: CLIP_TYPE_SAMPLE })
-  const reverbSample = samples[reverbSampleId]
+  const reverbSample = samples[reverbSampleId || DEFAULT_REVERB_SAMPLE_ID]
 
   // compute status
   let status = 'unloaded'

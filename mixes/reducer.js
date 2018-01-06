@@ -81,7 +81,10 @@ function createReducer (config) {
     }),
     [loadMix]: (state, action) => loop({
       ...state, loading: [...state.loading, action.payload]
-    }, Effects.promise(runLoadMix, action.payload)),
+    }, Effects.batch([
+      Effects.constant(loadMetaList()),
+      Effects.promise(runLoadMix, action.payload)
+    ])),
     [loadMixSuccess]: (state, action) => {
       // TODO: convert to flattenChannel, action.payload.channel
       const { id, channelId, channels, clips } = flattenMix(action.payload)
@@ -90,9 +93,7 @@ function createReducer (config) {
       const clipSampleIds = map(
         uniq(map(filter(values(clips), { type: CLIP_TYPE_SAMPLE }), 'sampleId')),
       )
-      const reverbSampleIds = map(compact(uniq(map(values(channels), 'reverbSampleId'))))
-      const loadSampleEffects = map(concat(clipSampleIds, reverbSampleIds),
-        sampleId => Effects.constant(loadSample(sampleId)))
+      const loadSampleEffects = map(clipSampleIds, sampleId => Effects.constant(loadSample(sampleId)))
 
       return loop({
         ...state,

@@ -3,11 +3,12 @@ const fsRaw = require('fs')
 const fs = pify(fsRaw)
 const { join } = require('path')
 const crypto = require('crypto')
-const { omitBy, isNil } = require('lodash')
+const { isNil, omitBy, map } = require('lodash')
 const JsMediaTags = require('jsmediatags')
 
 const { validNumberOrDefault, getFirstBarOffsetTime } = require('../lib/number-utils')
 const calculateBeatGrid = require('./helpers/calculate-beat-grid')
+const { REVERB_SAMPLE_IDS } = require('./constants')
 
 module.exports = createService
 
@@ -17,6 +18,7 @@ function createService (config) {
 
   return {
     readSampleList,
+    readReverbSampleList,
     readSample,
     createSample,
     analyzeSample
@@ -32,6 +34,10 @@ function createService (config) {
         return !item.startsWith('.')
       }))
       .then(list => list.map(item => ({ id: item })))
+  }
+
+  function readReverbSampleList () {
+    return Promise.all(map(REVERB_SAMPLE_IDS, readSample))
   }
 
   function readSample (id) {

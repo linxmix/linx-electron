@@ -4,7 +4,11 @@ const { find, filter, includes, map, mapValues, sortBy, values } = require('loda
 const { getPlayStates, getAudioContext } = require('../audios/getters')
 const { getMetas } = require('../metas/getters')
 const { getChannels } = require('../channels/getters')
-const { getReverbSamples, getSamplesError } = require('../samples/getters')
+const {
+  getReverbSamples,
+  getSamplesError,
+  getIsLoadingReverbSampleList
+} = require('../samples/getters')
 const { getZooms } = require('../svgs/getters')
 const { CHANNEL_TYPE_TRACK_GROUP } = require('../channels/constants')
 const { CLIP_TYPE_TEMPO } = require('../clips/constants')
@@ -24,7 +28,8 @@ const getMixes = Getter(
   getMixesSaving,
   getMixesLoading,
   getMixesDirty,
-  (mixes, playStates, metas, channels, saving, loading, dirtyMixes) => {
+  getIsLoadingReverbSampleList,
+  (mixes, playStates, metas, channels, saving, loading, dirtyMixes, isLoadingReverbSampleList) => {
     return mapValues(mixes, ({ id, channelId }) => {
       const meta = metas[id] || {}
       const channel = channels[channelId] || {}
@@ -44,7 +49,7 @@ const getMixes = Getter(
             ...trackGroup
           })
         ),
-        isLoading: includes(loading, id),
+        isLoading: includes(loading, id) || isLoadingReverbSampleList,
         isSaving: includes(saving, id),
         isDirty: includes(dirtyMixes, id) ||
           meta.isDirty ||
@@ -69,6 +74,7 @@ const getMixProps = Struct({
   mixes: getMixes,
   zooms: getZooms,
   reverbSamples: getReverbSamples,
+  isLoadingReverbSampleList: getIsLoadingReverbSampleList,
   sampleError: getSamplesError,
   error: getMixesError,
   audioContext: getAudioContext

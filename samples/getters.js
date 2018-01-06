@@ -4,11 +4,12 @@ const { filter, mapValues, values, includes } = require('lodash')
 const { getMetas } = require('../metas/getters')
 
 const getSamplesRecords = (state) => state.samples.records
-const getSampleListIsLoading = (state) => state.samples.isLoadingList
+const getIsLoadingSampleList = (state) => state.samples.isLoadingList
 const getSamplesCreating = (state) => state.samples.creating
 const getSamplesAnalyzing = (state) => state.samples.analyzing
 const getSamplesLoading = (state) => state.samples.loading
 const getSamplesError = (state) => state.samples.error
+const getIsLoadingReverbSampleList = (state) => state.samples.isLoadingReverbList
 
 const getSamples = Getter(
   getSamplesRecords,
@@ -36,7 +37,7 @@ const getSampleList = Getter(
 const getSampleListProps = Struct({
   samples: getSamples,
   sampleList: getSampleList,
-  isLoadingList: getSampleListIsLoading,
+  isLoadingList: getIsLoadingSampleList,
   creatingSamples: getSamplesCreating,
   error: getSamplesError
 })
@@ -51,5 +52,6 @@ module.exports = {
   getReverbSamples,
   getSampleListProps,
   getSampleProps,
-  getSamplesError
+  getSamplesError,
+  getIsLoadingReverbSampleList
 }

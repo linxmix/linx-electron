@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { assign, keyBy, without, includes, omit } = require('lodash')
+const { assign, includes, keyBy, map, omit, without } = require('lodash')
 const assert = require('assert')
 
 const {
@@ -12,6 +12,10 @@ const {
   loadSampleSuccess,
   loadSampleFailure,
   loadSampleEnd,
+  loadReverbSampleList,
+  loadReverbSampleListSuccess,
+  loadReverbSampleListFailure,
+  loadReverbSampleListEnd,
   createSample,
   createSampleSuccess,
   createSampleDuplicate,
@@ -84,6 +88,23 @@ function createReducer (config) {
     }),
     [loadSampleEnd]: (state, action) => ({
       ...state, loading: without(state.loading, action.payload)
+    }),
+    [loadReverbSampleList]: (state, action) => loop({
+      ...state, isLoadingReverbList: true
+    }, Effects.batch([
+      Effects.constant(loadMetaList()),
+      Effects.promise(runLoadReverbSampleList),
+      Effects.constant(loadReverbSampleListEnd())
+    ])),
+    [loadReverbSampleListSuccess]: (state, action) => ({
+      ...state,
+      records: assign({}, state.records, keyBy(action.payload, 'id'))
+    }),
+    [loadReverbSampleListFailure]: (state, action) => ({
+      ...state, error: action.payload.message
+    }),
+    [loadReverbSampleListEnd]: (state, action) => ({
+      ...state, isLoadingReverbList: false
     }),
     [createSample]: (state, action) => {
       const { file, effectCreator } = action.payload
@@ -159,6 +180,7 @@ function createReducer (config) {
     })
   }, {
     isLoadingList: false,
+    isLoadingReverbList: false,
     creating: [],
     loading: [],
     analyzing: [],
@@ -170,6 +192,12 @@ function createReducer (config) {
     return service.readSampleList()
       .then(loadSampleListSuccess)
       .catch(loadSampleListFailure)
+  }
+
+  function runLoadReverbSampleList () {
+    return service.readReverbSampleList()
+      .then(list => loadReverbSampleListSuccess(map(list, ({ sample }) => sample)))
+      .catch(loadReverbSampleListFailure)
   }
 
   function runLoadSample (id) {
