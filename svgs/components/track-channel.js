@@ -30,6 +30,9 @@ class TrackChannel extends React.Component {
       // undo clipsGroup target offset which comes from clickBoxTranslateX
       beat += this.props.clickBoxTranslateX
 
+      // adjust for channel startBeat
+      beat -= channel.startBeat
+
       if (canEditAutomations) {
         const automationClip = find(channel.clips, { controlType: showAutomationControlType })
 
