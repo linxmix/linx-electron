@@ -58,7 +58,7 @@ class TrackChannel extends React.Component {
         const selectedClip = this.props.selectedClip
 
         // copy from selected clip if we have one
-        let sourceClipStartBeat, clipOptions = { audioStartTime: channel.sample.meta.firstPeakTime }
+        let sourceClipStartBeat, clipOptions = { audioStartTime: channel.sample.meta.barGridTime }
         if (selectedClip) {
           clipOptions = {
             beatCount: selectedClip.beatCount,

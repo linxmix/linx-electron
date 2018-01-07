@@ -379,22 +379,28 @@ function createReducer (config) {
     },
     [selectGridMarker]: (state, action) => {
       const { clip, marker } = action.payload
+      const audioBpm = get(clip, 'sample.meta.bpm')
 
       const previousAudioStartTime = get(clip, 'audioStartTime')
-      const previousOffsetTime = get(clip, 'sample.meta.barGridTime')
+
+      // this may have existing incorrect data, so recalculate to be sure
+      const previousOffsetTime = getFirstBarOffsetTime({
+        time: get(clip, 'sample.meta.barGridTime'),
+        bpm: audioBpm
+      })
 
       const firstBarOffsetTime = getFirstBarOffsetTime({
-        time: marker.time,
-        bpm: get(clip, 'sample.meta.bpm')
+        time: get(marker, 'time'),
+        bpm: audioBpm
       })
 
       return loop(state, Effects.batch([
         Effects.constant(updateMeta({
-          id: clip.id,
+          id: get(clip, 'sample.id'),
           barGridTime: firstBarOffsetTime
         })),
         Effects.constant(updateClip({
-          id: clip.id,
+          id: get(clip, 'id'),
           audioStartTime: previousAudioStartTime +
             (firstBarOffsetTime - previousOffsetTime)
         }))
