@@ -37,7 +37,8 @@ class MixArrangementDetail extends React.Component {
 
   selectControlType (controlType) {
     this.setState({
-      selectedControlType: controlType
+      selectedControlType: controlType,
+      isEditingAutomations: !!controlType
     })
   }
 
