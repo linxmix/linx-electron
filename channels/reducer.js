@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { assign, keyBy, map, defaults, without, includes, findIndex, concat,
-  filter, values, omit, indexOf } = require('lodash')
+  filter, values, omit, indexOf, reduce } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -41,8 +41,18 @@ module.exports = createReducer
 
 function createReducer (config) {
   return handleActions({
-    [setChannels]: (state, action) => loop(state, Effects.batch(
-      map(action.payload, channel => Effects.constant(setChannel(channel))))),
+    [setChannels]: (state, action) => {
+      const records = reduce(action.payload, (records, channel) => {
+        records[channel.id] = channel
+        return records
+      }, { ...state.records })
+
+      return {
+        ...state,
+        records,
+        dirty: without(state.dirty, ...map(action.payload, 'id')),
+      }
+    },
     [setChannel]: (state, action) => ({
       ...state,
       dirty: without(state.dirty, action.payload.id),
@@ -75,8 +85,10 @@ function createReducer (config) {
         Effects.constant(unsetClips(clipIds))
       ])))
     },
-    [undirtyChannels]: (state, action) => loop(state, Effects.batch(
-      map(action.payload, id => Effects.constant(undirtyChannel(id))))),
+    [undirtyChannels]: (state, action) => ({
+      ...state,
+      dirty: without(state.dirty, ...action.payload)
+    }),
     [undirtyChannel]: (state, action) => ({
       ...state,
       dirty: without(state.dirty, action.payload)

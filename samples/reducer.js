@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { assign, includes, keyBy, map, omit, without } = require('lodash')
+const { assign, get, includes, keyBy, map, omit, reduce, reject, without } = require('lodash')
 const assert = require('assert')
 
 const {
@@ -12,6 +12,10 @@ const {
   loadSampleSuccess,
   loadSampleFailure,
   loadSampleEnd,
+  loadSamples,
+  loadSamplesSuccess,
+  loadSamplesFailure,
+  loadSamplesEnd,
   loadReverbSampleList,
   loadReverbSampleListSuccess,
   loadReverbSampleListFailure,
@@ -56,6 +60,37 @@ function createReducer (config) {
     }),
     [loadSampleListEnd]: (state, action) => ({
       ...state, isLoadingList: false
+    }),
+    [loadSamples]: (state, action) => {
+      const sampleIds = action.payload
+      const unloadedSampleIds = reject(sampleIds, sampleId =>
+        get(state, `records[${sampleId}].audioBuffer`))
+
+      if (!unloadedSampleIds.length) { return state }
+
+      const records = reduce(unloadedSampleIds, (records, id) => {
+        records[id] = records[id] || { id }
+        return records
+      }, { ...state.records })
+
+      return loop({
+        ...state,
+        records,
+        loading: [...state.loading, ...unloadedSampleIds],
+      }, Effects.batch([
+        Effects.promise(runLoadSamples, unloadedSampleIds),
+        Effects.constant(loadSamplesEnd(unloadedSampleIds))
+      ]))
+    },
+    [loadSamplesSuccess]: (state, action) => ({
+      ...state,
+      records: assign({}, state.records, keyBy(action.payload, 'id'))
+    }),
+    [loadSamplesFailure]: (state, action) => ({
+      ...state, error: action.payload.message
+    }),
+    [loadSamplesEnd]: (state, action) => ({
+      ...state, loading: without(state.loading, ...action.payload)
     }),
     [loadSample]: (state, action) => {
       const id = action.payload
@@ -204,6 +239,12 @@ function createReducer (config) {
     return service.readSample(id)
       .then(({ sample }) => loadSampleSuccess(sample))
       .catch(loadSampleFailure)
+  }
+
+  function runLoadSamples (ids) {
+    return Promise.all(map(ids, id => service.readSample(id).then(({ sample }) => sample)))
+      .then(loadSamplesSuccess)
+      .catch(loadSamplesFailure)
   }
 
   function runCreateSample ({ file, effectCreator }) {

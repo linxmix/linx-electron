@@ -1,6 +1,6 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
-const { get, map, defaults, without, omit, assign, includes } = require('lodash')
+const { assign, defaults, get, includes, map, omit, reduce, without } = require('lodash')
 const assert = require('assert')
 const uuid = require('uuid/v4')
 
@@ -41,8 +41,18 @@ module.exports = createReducer
 
 function createReducer (config) {
   return handleActions({
-    [setClips]: (state, action) => loop(state, Effects.batch(
-      map(action.payload, clip => Effects.constant(setClip(clip))))),
+    [setClips]: (state, action) => {
+      const records = reduce(action.payload, (records, clip) => {
+        records[clip.id] = clip
+        return records
+      }, { ...state.records })
+
+      return {
+        ...state,
+        records,
+        dirty: without(state.dirty, ...map(action.payload, 'id')),
+      }
+    },
     [setClip]: (state, action) => ({
       ...state,
       dirty: without(state.dirty, action.payload.id),
@@ -51,15 +61,20 @@ function createReducer (config) {
         [action.payload.id]: action.payload
       }
     }),
-    [unsetClips]: (state, action) => loop(state, Effects.batch(
-      map(action.payload, id => Effects.constant(unsetClip({ id }))))),
+    [unsetClips]: (state, action) => ({
+      ...state,
+      dirty: without(state.dirty, ...action.payload),
+      records: omit(state.records, action.payload)
+    }),
     [unsetClip]: (state, action) => ({
       ...state,
       dirty: without(state.dirty, action.payload.id),
       records: omit(state.records, action.payload.id)
     }),
-    [undirtyClips]: (state, action) => loop(state, Effects.batch(
-      map(action.payload, id => Effects.constant(undirtyClip(id))))),
+    [undirtyClips]: (state, action) => ({
+      ...state,
+      dirty: without(state.dirty, ...action.payload)
+    }),
     [undirtyClip]: (state, action) => ({
       ...state,
       dirty: without(state.dirty, action.payload)
