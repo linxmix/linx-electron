@@ -2,11 +2,12 @@ const React = require('react')
 const d3 = require('d3')
 const { DropTarget } = require('react-dnd')
 const HTML5Backend = require('react-dnd-html5-backend')
-const { map, throttle } = require('lodash')
+const { get, map, throttle } = require('lodash')
 const classnames = require('classnames')
 const uuid = require('uuid/v4')
 
 const BeatAxis = require('./beat-axis')
+const AutomationControl = require('./automation-control')
 const Playhead = require('./playhead')
 const { validNumberOrDefault, quantizeBeat } = require('../../lib/number-utils')
 const { CONTROL_TYPES } = require('../../clips/constants')
@@ -174,7 +175,7 @@ class MixArrangementLayout extends React.Component {
 
   render () {
     const { mix, audioContext, height, connectDropTarget, scaleX, translateX, translateY,
-      beatAxisHeight, tempoAxisHeight, showTempoAxis, selectedControlType,
+      beatAxisHeight, tempoAxisHeight, showTempoAxis, selectedControlType, selectedAutomation,
       selectControlType, isOverWithFiles, canDropFiles, showLastPlayMarker } = this.props
     if (!(mix && mix.channel)) { return null }
 
@@ -221,10 +222,30 @@ class MixArrangementLayout extends React.Component {
               {this.props.trackControls}
             </div>
 
-            <div className="VerticalLayout-fixedSection"
-              style={{ height: '50px', width: '100%', border: '1px solid gray' }}>
-              Thing stuff yeah?
-            </div>
+            {selectedAutomation && selectedAutomation.controlPoint && <div className="VerticalLayout-fixedSection" style={{ borderTop: '1px solid gray' }}>
+              <AutomationControl
+                min={get(selectedAutomation, 'channel.minBeat')}
+                max={get(selectedAutomation, 'channel.maxBeat')}
+                beat={get(selectedAutomation, 'controlPoint.beat')}
+                value={get(selectedAutomation, 'controlPoint.scaledValue')}
+                updateBeat={(beat) => {
+                  this.props.updateControlPointPosition({
+                    beat,
+                    id: get(selectedAutomation, 'controlPoint.id'),
+                    sourceId: get(selectedAutomation, 'clip.id'),
+                  })
+                  this._asyncUpdateAudioGraph()
+                }}
+                updateValue={(value) => {
+                  this.props.updateControlPointValue({
+                    value,
+                    id: get(selectedAutomation, 'controlPoint.id'),
+                    sourceId: get(selectedAutomation, 'clip.id'),
+                  })
+                  this._asyncUpdateAudioGraph()
+                }}
+              />
+            </div>}
           </div>
         </div>}
 
@@ -325,6 +346,8 @@ MixArrangementLayout.defaultProps = {
   trackControls: false,
   tempoClipElement: null,
   canDropFiles: false,
+  selectedControlType: null,
+  selectedAutomation: {},
   isEditingAutomations: false,
   showLastPlayMarker: false
 }

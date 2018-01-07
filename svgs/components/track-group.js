@@ -32,6 +32,7 @@ class TrackGroup extends React.Component {
         canResizeClips={canResizeClips && !isEditingAutomations}
         canEditClips={canEditClips && !isEditingAutomations}
         selectedClip={get(this, `props.selectedClips[${track.id}]`)}
+        selectedControlPoint={this.props.selectedControlPoint}
         showAutomationControlType={showAutomationControlType}
         canEditAutomations={isEditingAutomations && showAutomationControlType}
         color={color ||
@@ -48,6 +49,7 @@ TrackGroup.defaultProps = {
   beatScale: null,
   trackChannelActions: {},
   selectedClips: {},
+  selectedControlPoint: null,
   translateY: 0,
   scaleX: 1,
   rowHeight: 100,

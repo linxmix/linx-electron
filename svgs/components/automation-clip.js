@@ -12,7 +12,7 @@ const {
 
 class AutomationClip extends React.Component {
   render () {
-    const { clip, height, scaleX, canEdit, minBeat, maxBeat, deleteControlPoint } = this.props
+    const { clip, height, scaleX, canEdit, minBeat, maxBeat, selectedControlPoint } = this.props
     if (!clip) { return null }
 
     const { id, controlPoints } = clip
@@ -35,7 +35,6 @@ class AutomationClip extends React.Component {
       {map(controlPoints, controlPoint => <ControlPoint
         key={controlPoint.id}
         sourceId={id}
-        deleteControlPoint={deleteControlPoint}
         scaleX={scaleX}
         id={controlPoint.id}
         beat={controlPoint.beat}
@@ -44,6 +43,9 @@ class AutomationClip extends React.Component {
         maxBeat={maxBeat}
         height={height}
         canEdit={canEdit}
+        isSelected={canEdit && selectedControlPoint && (controlPoint.id === selectedControlPoint.id)}
+        deleteControlPoint={this.props.deleteControlPoint}
+        selectControlPoint={isSelected => this.props.selectControlPoint(!isSelected && controlPoint)}
       />)}
     </g>
   }
@@ -52,7 +54,8 @@ class AutomationClip extends React.Component {
 AutomationClip.defaultProps = {
   height: 100,
   scaleX: 1,
-  canEdit: false
+  canEdit: false,
+  selectedControlPoint: null,
 }
 
 module.exports = AutomationClip

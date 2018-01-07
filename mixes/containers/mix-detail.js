@@ -10,7 +10,7 @@ const { saveMix, loadMix } = require('../actions')
 const { updateZoom } = require('../../svgs/actions')
 const { loadReverbSampleList } = require('../../samples/actions')
 const { updateMeta } = require('../../metas/actions')
-const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint, createSampleClip, snipClip,
+const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint, createSampleClip, snipClip, updateControlPointPosition,
   deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
 const { moveTrackGroup, resizeChannel, removeClipsFromChannel, createSampleTrackFromFile,
@@ -72,7 +72,7 @@ class MixDetailContainer extends React.Component {
     const arrangementActions = mapValues(
       pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
-        'updateControlPointValue', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'moveChannel',   
+        'updateControlPointValue', 'updateControlPointPosition', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'moveChannel',   
         'resizeChannel', 'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
         'removeClipsFromChannel', 'toggleSoloChannel', 'updateMeta',
         'snipClip']),
@@ -188,6 +188,7 @@ module.exports = connect(
     createControlPoint,
     deleteControlPoint,
     updateControlPointValue,
+    updateControlPointPosition,
     createAutomationClipWithControlPoint,
     createSampleTrackFromFile,
     createSampleClip,

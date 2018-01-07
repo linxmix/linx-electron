@@ -248,13 +248,13 @@ function createReducer (config) {
     },
     [updateControlPointPosition]: (state, action) => {
       const { sourceId, id, beat } = action.payload
-      assert(isValidNumber(beat), 'Cannot updateControlPointBeat for invalid beat')
+      assert(isValidNumber(beat), 'Cannot updateControlPointPosition for invalid beat')
 
       const sourceClip = state.records[sourceId]
-      assert(sourceClip, 'Cannot updateControlPointValue for nonexistent sourceClip')
+      assert(sourceClip, 'Cannot updateControlPointPosition for nonexistent sourceClip')
 
       const controlPoint = sourceClip.controlPoints[id]
-      assert(controlPoint, 'Cannot updateControlPointValue for nonexistent controlPoint')
+      assert(controlPoint, 'Cannot updateControlPointPosition for nonexistent controlPoint')
 
       return loop(state, Effects.constant(updateClip({
         id: sourceId,

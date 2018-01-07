@@ -80,7 +80,7 @@ class TrackChannel extends React.Component {
   }
 
   render () {
-    const { channel, color, beatScale, translateY, scaleX, sampleResolution, height, canEditAutomations,
+    const { channel, color, beatScale, translateY, scaleX, sampleResolution, height, canEditAutomations, selectedControlPoint,
       canEditClips, canDragClips, canResizeClips, showAutomationControlType, showGridMarkers
     } = this.props
     if (!channel) { return null }
@@ -139,7 +139,13 @@ class TrackChannel extends React.Component {
               scaleX={scaleX}
               minBeat={channel.minBeat}
               maxBeat={channel.maxBeat}
+              selectedControlPoint={selectedControlPoint}
               deleteControlPoint={this.props.deleteControlPoint}
+              selectControlPoint={controlPoint => this.props.selectAutomation({
+                channel,
+                clip,
+                controlPoint
+              })}
               beatScale={beatScale}
               height={height}
               canEdit={canEditAutomations}
@@ -155,6 +161,7 @@ TrackChannel.defaultProps = {
   channel: null,
   beatScale: null,
   selectedClip: null,
+  selectedControlPoint: null,
   clickBoxTranslateX: 0,
   clickBoxWidth: 0,
   translateY: 0,
