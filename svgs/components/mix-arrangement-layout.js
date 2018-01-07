@@ -194,29 +194,38 @@ class MixArrangementLayout extends React.Component {
 
       <div style={{ display: 'flex', flex: 1 }}>
         {this.props.trackControls && <div style={{ flex: '0 0 auto', width: '200px', borderRight: '1px solid gray' }}>
-          <div style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray', height: beatAxisHeight, width: '100%', display: 'flex', alignItems: 'center' }}>
-            <span style={{ width: '25%' }}>
-              <input id={editAutomationsInputId}
-                ref={(element) => { this.editAutomationsInputElement = element }}
-                type='checkbox'
-                checked={this.props.isEditingAutomations}
-                onChange={this.handleToggleIsEditingAutomations.bind(this)} />
-              <label htmlFor={editAutomationsInputId}>Edit</label>
-            </span>
+          <div className="VerticalLayout VerticalLayout--fullHeight">
+            <div className="VerticalLayout-flexSection">
+              <div style={{ borderBottom: '1px solid gray', borderTop: '1px solid gray', height: beatAxisHeight, width: '100%', display: 'flex', alignItems: 'center' }}>
+                <span style={{ width: '25%' }}>
+                  <input id={editAutomationsInputId}
+                    ref={(element) => { this.editAutomationsInputElement = element }}
+                    type='checkbox'
+                    checked={this.props.isEditingAutomations}
+                    onChange={this.handleToggleIsEditingAutomations.bind(this)} />
+                  <label htmlFor={editAutomationsInputId}>Edit</label>
+                </span>
 
-            <select
-              value={selectedControlType || ""}
-              onChange={this.handleSelectControlType.bind(this)}
-              ref={(element) => { this.selectControlTypeElement = element }}
-              style={{ width: '75%' }}>
-              <option key="none" value="">none</option>)}
+                <select
+                  value={selectedControlType || ""}
+                  onChange={this.handleSelectControlType.bind(this)}
+                  ref={(element) => { this.selectControlTypeElement = element }}
+                  style={{ width: '75%' }}>
+                  <option key="none" value="">none</option>)}
 
-              {map(CONTROL_TYPES, controlType =>
-                <option key={controlType} value={controlType}>{controlType}</option>)}
-            </select>
+                  {map(CONTROL_TYPES, controlType =>
+                    <option key={controlType} value={controlType}>{controlType}</option>)}
+                </select>
+              </div>
+
+              {this.props.trackControls}
+            </div>
+
+            <div className="VerticalLayout-fixedSection"
+              style={{ height: '50px', width: '100%', border: '1px solid gray' }}>
+              Thing stuff yeah?
+            </div>
           </div>
-
-          {this.props.trackControls}
         </div>}
 
         <div className='VerticalLayout VerticalLayout--fullHeight'
