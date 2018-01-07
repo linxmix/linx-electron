@@ -49,7 +49,7 @@ const getMixes = Getter(
             ...trackGroup
           })
         ),
-        isLoading: includes(loading, id) || isLoadingReverbSampleList,
+        isLoading: includes(loading, id) || isLoadingReverbSampleList || (channel.status !== 'loaded'),
         isSaving: includes(saving, id),
         isDirty: includes(dirtyMixes, id) ||
           meta.isDirty ||

@@ -86,13 +86,10 @@ class MixOverviewContainer extends React.Component {
     console.log('mix', mix)
 
     const { playState, isSaving, isLoading, isDirty, channel } = mix
-    const { status: masterChannelStatus } = channel
 
     let titleElement
     if (isLoading) {
       titleElement = <div>'{mix.meta.title}' is loading…</div>
-    } else if (masterChannelStatus === 'loading') {
-      titleElement = <div>loading audio…</div>
     } else {
       titleElement = <input type='text'
         value={mix.meta.title}
@@ -111,12 +108,12 @@ class MixOverviewContainer extends React.Component {
           Delete Mix
         </button>
         <button
-          disabled={masterChannelStatus !== 'loaded'}
+          disabled={isLoading || isSaving}
           onClick={() => playPause({ channel, updateSeek: true })}>
           {playState.isPlaying ? 'Pause Mix' : 'Play Mix'}
         </button>
         <button
-          disabled={masterChannelStatus !== 'loaded'}
+          disabled={isLoading || isSaving}
           onClick={this.handleToggleRecording.bind(this)}>
           {playState.isRecording ? 'Stop Recording' : 'Start Recording'}
         </button>

@@ -120,7 +120,6 @@ class MixDetailContainer extends React.Component {
     }
 
     const { playState, isSaving, isLoading, isDirty, channel } = mix
-    const { status: masterChannelStatus } = channel
 
     return <div className='VerticalLayout VerticalLayout--fullHeight'>
       <header className='VerticalLayout-fixedSection'>
@@ -135,12 +134,12 @@ class MixDetailContainer extends React.Component {
           Save Mix
         </button>
         <button
-          disabled={masterChannelStatus !== 'loaded'}
+          disabled={isLoading || isSaving}
           onClick={() => playPause({ channel, updateSeek: false })}>
           {playState.isPlaying ? 'Pause Mix' : 'Play Mix'}
         </button>
         <button
-          disabled={masterChannelStatus !== 'loaded'}
+          disabled={isLoading || isSaving}
           onClick={this.handleToggleRecording.bind(this)}>
           {playState.isRecording ? 'Stop Recording' : 'Start Recording'}
         </button>

@@ -187,7 +187,8 @@ class MixArrangementLayout extends React.Component {
     const dropClassName = canDropFiles && isOverWithFiles ? 'u-valid-file-drag-over' : ''
 
     return connectDropTarget(<div
-      className={classnames('VerticalLayout', 'VerticalLayout--fullHeight', dropClassName)}
+      className={classnames('MixArrangementLayout', 'VerticalLayout', 'VerticalLayout--fullHeight',
+        dropClassName, { 'is-loading': mix.isLoading })}
       onMouseDown={this.handleMouseDown.bind(this)}
       onWheel={this.handleMouseWheel.bind(this)}>
 
