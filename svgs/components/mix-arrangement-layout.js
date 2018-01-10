@@ -222,7 +222,7 @@ class MixArrangementLayout extends React.Component {
               {this.props.trackControls}
             </div>
 
-            {selectedAutomation && selectedAutomation.controlPoint && <div className="VerticalLayout-fixedSection" style={{ borderTop: '1px solid gray' }}>
+            {false && selectedAutomation && selectedAutomation.controlPoint && <div className="VerticalLayout-fixedSection" style={{ borderTop: '1px solid gray' }}>
               <AutomationControl
                 min={get(selectedAutomation, 'channel.minBeat')}
                 max={get(selectedAutomation, 'channel.maxBeat')}

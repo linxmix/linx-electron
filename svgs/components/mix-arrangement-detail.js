@@ -286,7 +286,7 @@ class MixArrangementDetail extends React.Component {
             this._asyncUpdateAudioGraph()
           }}
           updateBpm={bpm => {
-            this.props.updateMeta({ id: get(track, 'sample.meta.id'), bpm })
+            this.props.updateAndSaveMeta({ id: get(track, 'sample.meta.id'), bpm })
             this._asyncUpdateAudioGraph()
           }}
           selectDelayTime={delayTime => {

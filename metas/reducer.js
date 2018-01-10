@@ -21,7 +21,8 @@ const {
   deleteMetaFailure,
   deleteMetaEnd,
   createMeta,
-  updateMeta
+  updateMeta,
+  updateAndSaveMeta
 } = require('./actions')
 const createService = require('./service')
 
@@ -126,7 +127,11 @@ function createReducer (config) {
           [id]: assign({}, state.records[id], action.payload)
         }
       }
-    }
+    },
+    [updateAndSaveMeta]: (state, action) => loop(state, Effects.batch([
+      Effects.constant(updateMeta(action.payload)),
+      Effects.constant(saveMeta(action.payload.id))
+    ]))
   }, {
     isLoadingList: false,
     loading: [],
