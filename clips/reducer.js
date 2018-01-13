@@ -241,7 +241,7 @@ function createReducer (config) {
           ...sourceClip.controlPoints,
           [id]: {
             ...controlPoint,
-            value
+            value: clamp(0, value, 1)
           }
         }
       })))

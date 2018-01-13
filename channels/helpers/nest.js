@@ -138,6 +138,7 @@ function nestChannels ({
       some(childClips, { isDirty: true })),
     channels: childChannels,
     clips: sortBy(childClips, ['startBeat', 'id'])
+      .map(clip => assign({}, clip, { channel: currentChannel }))
   }, isNil))
 
   return currentChannel

@@ -256,7 +256,7 @@ function createReducer (config) {
   }
 }
 
-const PROPERTIES_TO_REMOVE = [
+const CHANNEL_PROPERTIES_TO_REMOVE = [
   'parentChannel',
   'primaryTrack',
   'sampleTracks',
@@ -265,10 +265,34 @@ const PROPERTIES_TO_REMOVE = [
   'tempoClip'
 ]
 
+const CLIP_PROPERTIES_TO_REMOVE = [
+  'channel',
+  'sample',
+  'gridMarkers'
+]
+
+const CONTROL_POINT_PROPERTIES_TO_REMOVE = [
+  'clip'
+]
+
 function _removeFieldsNotToSave(channel) {
-  forEach(PROPERTIES_TO_REMOVE, property => {
+  forEach(CHANNEL_PROPERTIES_TO_REMOVE, property => {
     channel[property] = undefined
     delete channel[property]
+  })
+
+  forEach(channel.clips || [], clip => {
+    forEach(CLIP_PROPERTIES_TO_REMOVE, property => {
+      clip[property] = undefined
+      delete clip[property]
+    })
+
+    forEach(clip.controlPoints || [], controlPoint => {
+      forEach(CONTROL_POINT_PROPERTIES_TO_REMOVE, property => {
+        controlPoint[property] = undefined
+        delete controlPoint[property]
+      })
+    })
   })
 
   forEach(channel.channels || [], _removeFieldsNotToSave)

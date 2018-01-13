@@ -1,5 +1,6 @@
 const React = require('react')
-const { assign, find, forEach, pick, get, map, without, includes, concat } = require('lodash')
+const { assign, compact, find, forEach, pick, get, map, without, includes,
+  concat } = require('lodash')
 const keymaster = require('keymaster')
 
 const MixArrangementLayout = require('./mix-arrangement-layout')
@@ -23,7 +24,7 @@ class MixArrangementDetail extends React.Component {
       editingBeatgrids: [],
       selectedClips: {},
       selectedControlType: CONTROL_TYPE_GAIN,
-      selectedAutomation: {},
+      selectedControlPointId: null,
       isEditingAutomations: false
     }
   }
@@ -43,12 +44,8 @@ class MixArrangementDetail extends React.Component {
     })
   }
 
-  selectAutomation ({ channel, clip, controlPoint }) {
-    if (controlPoint) {
-      this.setState({ selectedAutomation: { channel, clip, controlPoint } })
-    } else {
-      this.setState({ selectedAutomation: {} })
-    }
+  selectControlPoint ({ controlPoint }) {
+    this.setState({ selectedControlPointId: controlPoint.id || null })
   }
 
   toggleIsEditingAutomations () {
@@ -158,11 +155,16 @@ class MixArrangementDetail extends React.Component {
   render () {
     const { mix, audioContext, height, rowHeight, fromTrackGroup, toTrackGroup,
       scaleX, translateX, tempoAxisHeight } = this.props
-    const { selectedControlType, isEditingAutomations, selectedAutomation = {} } = this.state
-    const selectedControlPoint = selectedAutomation.controlPoint
+    const { selectedControlType, isEditingAutomations, selectedControlPointId } = this.state
 
     if (!(mix && mix.channel)) { return null }
 
+    const selectedControlPoint = _findControlPoint(mix.channel, selectedControlPointId)
+    const selectedAutomation = selectedControlPoint ? {
+      controlPoint: selectedControlPoint,
+      clip: get(selectedControlPoint, 'clip'),
+      channel: get(selectedControlPoint, 'clip.channel')
+    } : {}
     const beatScale = get(mix, 'channel.beatScale')
 
     const createControlPoint = (...args) => {
@@ -185,7 +187,7 @@ class MixArrangementDetail extends React.Component {
     const trackChannelActions = {
       createControlPoint,
       deleteControlPoint,
-      selectAutomation: this.selectAutomation.bind(this),
+      selectAutomation: this.selectControlPoint.bind(this),
       selectClip: this.selectClip.bind(this),
 
       createAutomationClipWithControlPoint: ({ channelId, beat, value, minBeat, maxBeat }) => {
@@ -297,7 +299,7 @@ class MixArrangementDetail extends React.Component {
       </div>
     )
 
-    console.log('mix-arrangement-detail', { mix, fromTrackGroup, toTrackGroup })
+    console.log('mix-arrangement-detail', { mix, fromTrackGroup, toTrackGroup, selectedAutomation })
 
     return <MixArrangementLayout
       mix={mix}
@@ -373,6 +375,23 @@ class MixArrangementDetail extends React.Component {
 
     </MixArrangementLayout>
   }
+}
+
+// TODO: the state belongs in reducer, and this logic belongs in getter
+function _findControlPoint(channel, controlPointId) {
+  if (!controlPointId) { return }
+
+  // search this channel's clips
+  let controlPoint = compact(map(channel.clips || [],
+    clip => find(clip.controlPoints, { id: controlPointId })))[0]
+
+  // search this channel's channels
+  if (!controlPoint) {
+    controlPoint = compact(map(channel.channels || [],
+      channel => _findControlPoint(channel, controlPointId)))[0]
+  }
+
+  return controlPoint
 }
 
 MixArrangementDetail.defaultProps = {

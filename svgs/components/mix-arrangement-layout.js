@@ -2,7 +2,7 @@ const React = require('react')
 const d3 = require('d3')
 const { DropTarget } = require('react-dnd')
 const HTML5Backend = require('react-dnd-html5-backend')
-const { get, map, throttle } = require('lodash')
+const { first, get, last, map, throttle } = require('lodash')
 const classnames = require('classnames')
 const uuid = require('uuid/v4')
 
@@ -12,6 +12,7 @@ const Playhead = require('./playhead')
 const { validNumberOrDefault, quantizeBeat } = require('../../lib/number-utils')
 const { CONTROL_TYPES } = require('../../clips/constants')
 const getCurrentBeat = require('../../audios/helpers/get-current-beat')
+const getControlPointsValueScale = require('../../clips/helpers/get-control-points-value-scale')
 
 const ZOOM_STEP = 0.5
 const MIN_SCALE_X = 0.1
@@ -222,10 +223,13 @@ class MixArrangementLayout extends React.Component {
               {this.props.trackControls}
             </div>
 
-            {false && selectedAutomation && selectedAutomation.controlPoint && <div className="VerticalLayout-fixedSection" style={{ borderTop: '1px solid gray' }}>
+            {selectedAutomation && selectedAutomation.controlPoint && <div className="VerticalLayout-fixedSection" style={{ borderTop: '1px solid gray' }}>
               <AutomationControl
-                min={get(selectedAutomation, 'channel.minBeat')}
-                max={get(selectedAutomation, 'channel.maxBeat')}
+                controlType={get(selectedAutomation, 'clip.controlType')}
+                minBeat={get(selectedAutomation, 'channel.minBeat')}
+                maxBeat={get(selectedAutomation, 'channel.maxBeat')}
+                minValue={first(get(selectedAutomation, 'controlPoint.valueScale').range())}
+                maxValue={last(get(selectedAutomation, 'controlPoint.valueScale').range())}
                 beat={get(selectedAutomation, 'controlPoint.beat')}
                 value={get(selectedAutomation, 'controlPoint.scaledValue')}
                 updateBeat={(beat) => {
@@ -233,12 +237,16 @@ class MixArrangementLayout extends React.Component {
                     beat,
                     id: get(selectedAutomation, 'controlPoint.id'),
                     sourceId: get(selectedAutomation, 'clip.id'),
+                    quantization: 'sample'
                   })
                   this._asyncUpdateAudioGraph()
                 }}
-                updateValue={(value) => {
+                updateValue={(scaledValue) => {
+                  const controlPointsValueScale =
+                    getControlPointsValueScale(get(selectedAutomation, 'clip.controlType'))
+
                   this.props.updateControlPointValue({
-                    value,
+                    value: controlPointsValueScale.invert(scaledValue),
                     id: get(selectedAutomation, 'controlPoint.id'),
                     sourceId: get(selectedAutomation, 'clip.id'),
                   })

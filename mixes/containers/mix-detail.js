@@ -1,7 +1,7 @@
 const React = require('react')
 const { connect } = require('react-redux')
 const { Link } = require('react-router')
-const { assign, clone, find, pick, mapValues } = require('lodash')
+const { assign, clone, find, get, mapValues, pick } = require('lodash')
 const keymaster = require('keymaster')
 
 const DetectDragModifierKeys = require('../../lib/detect-drag-modifier-keys')
@@ -77,7 +77,7 @@ class MixDetailContainer extends React.Component {
         'removeClipsFromChannel', 'toggleSoloChannel', 'updateAndSaveMeta',
         'snipClip']),
       (fn) => (options) => fn({
-        quantization: _getQuantization(this.props.dragModifierKeys),
+        quantization: get(options, 'quantization') || _getQuantization(this.props.dragModifierKeys),
         ...options
       })
     )
