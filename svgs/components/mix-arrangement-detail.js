@@ -82,7 +82,7 @@ class MixArrangementDetail extends React.Component {
       file,
       parentChannelId: fromTrackGroup.id,
       channelAttrs: {
-        startBeat: fromTrackGroup.startBeat,
+        startBeat: 0,
       },
       clipAttrs: {
         startBeat: beat - fromTrackGroup.startBeat
