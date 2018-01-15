@@ -28,15 +28,17 @@ class ControlPoint extends React.Component {
   }
 
   render () {
-    const { beat, value, height, radius, scaleX, isSelected, connectDragSource } = this.props
+    const { beat, value, height, radius, scaleX, isSelected, color, connectDragSource } = this.props
     const dragX = validNumberOrDefault(this.state.dragX, 0)
     const dragY = validNumberOrDefault(this.state.dragY, 0)
     const cy = (1 - value) + dragY
 
     return connectDragSource(<ellipse
-      className={classnames('AutomationClipControlPoint', {
+      className={classnames('AutomationClipControlPoint', color, {
         'is-selected': isSelected
       })}
+      strokeWidth={this.props.strokeWidth / scaleX}
+      stroke={this.props.strokeColor}
       cx={beat + dragX}
       cy={clamp(0, cy, 1) * height}
       rx={radius / scaleX}
@@ -49,6 +51,9 @@ class ControlPoint extends React.Component {
 ControlPoint.defaultProps = {
   height: 100,
   scaleX: 1,
+  color: 'blue',
+  strokeColor: 'rgba(255,255,255,0.8)',
+  strokeWidth: 0.3,
   radius: 10,
   canEdit: false,
   isSelected: false

@@ -1,6 +1,7 @@
 const React = require('react')
 const d3 = require('d3')
 const { map } = require('lodash')
+const classnames = require('classnames')
 
 const ControlPoint = require('./automation-clip/control-point')
 const {
@@ -29,7 +30,11 @@ class AutomationClip extends React.Component {
     }
 
     return <g>
-      <path strokeWidth={1 / scaleX} stroke={color} fill='transparent' d={line(controlPoints)} />
+      <path
+        className={classnames('AutomationClipPath', color)}
+        strokeWidth={1 / scaleX}
+        fill='transparent'
+        d={line(controlPoints)} />
       <rect width={maxBeat - minBeat} height={height} fill='transparent' />
 
       {map(controlPoints, controlPoint => <ControlPoint
@@ -42,6 +47,7 @@ class AutomationClip extends React.Component {
         minBeat={minBeat}
         maxBeat={maxBeat}
         height={height}
+        color={color}
         canEdit={canEdit}
         isSelected={canEdit && selectedControlPoint && (controlPoint.id === selectedControlPoint.id)}
         deleteControlPoint={this.props.deleteControlPoint}

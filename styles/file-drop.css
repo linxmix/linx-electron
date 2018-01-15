@@ -93,17 +93,47 @@ body {
 
 .AutomationClipGroup:not(.is-editable) {
   pointer-events: none;
-  opacity: 0.65;
+  opacity: 0.5;
 }
 
+.AutomationClipPath.red {
+  stroke: rgba(240, 112, 92, 1);
+}
 
-/* AutomationClipControlPoint */
-.AutomationClipControlPoint {
-  fill: #B8DE44;
+.AutomationClipPath.green {
+  stroke: rgba(190, 240, 92, 1);
+}
+
+.AutomationClipPath.blue {
+  stroke: rgba(92, 98, 240, 1);
+}
+
+.AutomationClipControlPoint.red {
+  fill: rgba(214, 112, 92, 1);
+}
+
+.AutomationClipGroup:not(.is-editable).AutomationClipControlPoint.red {
+  fill: rgba(179, 94, 77, 1);
+}
+
+.AutomationClipControlPoint.green {
+  fill: rgba(190, 214, 92, 1);
+}
+
+.AutomationClipGroup:not(.is-editable).AutomationClipControlPoint.green {
+  fill: rgba(158, 179, 77, 1);
+}
+
+.AutomationClipControlPoint.blue {
+  fill: rgba(92, 98, 214, 1);
+}
+
+.AutomationClipGroup:not(.is-editable).AutomationClipControlPoint.blue {
+  fill: rgba(77, 82, 179, 1);
 }
 
 .AutomationClipControlPoint.is-selected {
-  fill: rgb(100, 200, 100);
+  fill: rgb(70, 230, 70);
 }
 
 
