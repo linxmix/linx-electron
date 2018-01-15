@@ -175,7 +175,8 @@ module.exports = function ({ clips, outputs, channel, startBeat, audioGraph, bea
     })
 
     // console.log('delayTime', {
-    //   audioProperty: audioProperties['delay.delayTime'],
+    //   delayClips,
+    //   audioProperties,
     //   startBeat,
     //   currentBeat,
     //   'channel.beatCount': channel.beatCount,

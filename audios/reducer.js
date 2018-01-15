@@ -214,7 +214,13 @@ function createReducer (config) {
         audioContext: state.audioContext,
         output: state.audioContext.destination
       })
-      virtualAudioGraph.update(audioGraph)
+
+      try {
+        virtualAudioGraph.update(audioGraph)
+      } catch (e) {
+        console.warn(e)
+        return state
+      }
 
       return {
         ...state,
