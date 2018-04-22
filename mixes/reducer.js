@@ -250,9 +250,13 @@ function createReducer (config) {
   }
 
   function runDeleteMix (id) {
-    return service.deleteMix(id)
-      .then(() => deleteMixSuccess(id))
-      .catch(deleteMixFailure)
+    if (window.confirm('Are you sure to you want to delete this mix?')) {
+      return service.deleteMix(id)
+        .then(() => deleteMixSuccess(id))
+        .catch(deleteMixFailure);
+    } else {
+      return Promise.resolve(deleteMixFailure({ message: 'User canceled delete.' }));
+    }
   }
 }
 
