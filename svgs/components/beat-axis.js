@@ -1,7 +1,8 @@
 const React = require('react')
 const { map, range } = require('lodash')
 
-const { clamp, roundTo, roundToNearestPowerOfTwo } = require('../../lib/number-utils')
+const { clamp, roundTo, roundToNearestPowerOfTwo, calculateHumanReadableTimestamp }
+  = require('../../lib/number-utils')
 const { isRightClick } = require('../../lib/mouse-event-utils')
 
 class BeatAxis extends React.Component {
@@ -39,7 +40,7 @@ class BeatAxis extends React.Component {
           opacity={0.75}
           transform={`scale(${1.0 / scaleX}, 1)`}>
             {this.state.displayTimestamp ?
-              _calculateHumanReadableTimestamp(beatScale(tick)) : (tick / phraseBeatCount)}
+              calculateHumanReadableTimestamp(beatScale(tick)) : (tick / phraseBeatCount)}
         </text>}
 
         <line
@@ -67,13 +68,3 @@ BeatAxis.defaultProps = {
 
 module.exports = BeatAxis
 
-function _calculateHumanReadableTimestamp(totalSeconds) {
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = _keepTwoDigits(Math.round(totalSeconds % 60))
-
-  return `${minutes}:${seconds}`
-}
-
-function _keepTwoDigits(n) {
-  return (n).toLocaleString(undefined, { minimumIntegerDigits: 2, useGrouping:false })
-}

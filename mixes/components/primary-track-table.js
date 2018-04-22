@@ -9,6 +9,7 @@ const { findIndex, isEmpty, isEqual } = require('lodash')
 const {
   createPrimaryTrackRowClass
 } = require('./primary-track-row')
+const { calculateHumanReadableTimestamp } = require('../../lib/number-utils')
 
 class PrimaryTrackTable extends React.Component {
   constructor (props) {
@@ -60,6 +61,7 @@ class PrimaryTrackTable extends React.Component {
       mixId,
       trackGroups,
       isLoading,
+      beatScale,
       isOver,
       canDrop,
       connectDropTarget,
@@ -96,8 +98,15 @@ class PrimaryTrackTable extends React.Component {
       minWidth: 100,
       render: props => <span title={props.value}>{props.value}</span>
     }, {
-      header: 'Start',
-      accessor: 'channel.startBeat',
+      id: 'duration',
+      header: 'Play Time',
+      accessor: trackGroup => {
+        const primaryTrack = trackGroup.primaryTrack
+        const startBeat = primaryTrack.startBeat
+
+        return calculateHumanReadableTimestamp(
+          beatScale(startBeat + primaryTrack.beatCount) - beatScale(startBeat))
+      },
       minWidth: 70,
       maxWidth: 100
     }, {

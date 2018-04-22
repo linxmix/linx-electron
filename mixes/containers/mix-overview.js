@@ -122,6 +122,7 @@ class MixOverviewContainer extends React.Component {
       <section className='VerticalLayout-flexSection u-scrollable'>
         <PrimaryTrackTable
           mixId={mix.id}
+          beatScale={mix.channel.beatScale}
           trackGroups={mix.trackGroups}
           isLoading={isLoading}
           handleFilesDrop={this.handleFilesDrop.bind(this)}
