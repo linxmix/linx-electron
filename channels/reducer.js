@@ -1,7 +1,8 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
+const { push } = require('react-router-redux')
 const { assign, keyBy, map, defaults, without, includes, findIndex, concat,
-  filter, values, omit, indexOf, reduce } = require('lodash')
+  filter, values, omit, indexOf, reduce, reject, uniq } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -14,9 +15,12 @@ const {
   undirtyChannel,
   createChannel,
   updateChannel,
+  updateChannels,
   moveTrackGroup,
   resizeChannel,
   moveChannel,
+  splitTrackGroup,
+  insertChannelAtIndex,
   setClipsChannel,
   removeClipsFromChannel,
   setChannelsParent,
@@ -101,9 +105,14 @@ function createReducer (config) {
       })
       assert(includes(CHANNEL_TYPES, attrs.type), 'Must have valid type to createChannel')
 
-      return loop({
-        ...state, dirty: [...state.dirty, attrs.id]
-      }, Effects.constant(setChannel(attrs)))
+      return {
+        ...state,
+        dirty: [...state.dirty, attrs.id],
+        records: {
+          ...state.records,
+          [attrs.id]: attrs
+        }
+      }
     },
     [setChannelsParent]: (state, action) => {
       const { channelIds, parentChannelId } = action.payload
@@ -114,6 +123,19 @@ function createReducer (config) {
       return loop(state, Effects.constant(updateChannel({
         id: parentChannelId,
         channelIds: concat((parentChannel.channelIds || []), channelIds)
+      })))
+    },
+    [insertChannelAtIndex]: (state, action) => {
+      const { parentChannelId, channelId, index } = action.payload
+
+      const parentChannel = state.records[parentChannelId] || {}
+      let newChannelIds = (parentChannel.channelIds || []).slice()
+      newChannelIds.splice(index, 0, channelId);
+      newChannelIds = uniq(newChannelIds)
+
+      return loop(state, Effects.constant(updateChannel({
+        id: parentChannelId,
+        channelIds: newChannelIds
       })))
     },
     [setClipsChannel]: (state, action) => {
@@ -148,6 +170,22 @@ function createReducer (config) {
         records: {
           ...state.records,
           [id]: assign({}, state.records[id], action.payload)
+        }
+      }
+    },
+    [updateChannels]: (state, action) => {
+      const channels = action.payload
+      const channelIds = map(channels, 'id')
+
+      const updatedChannels = map(channels,
+        channel => assign({}, state.records[channel.id], channel))
+
+      return {
+        ...state,
+        dirty: [...state.dirty, ...channelIds],
+        records: {
+          ...state.records,
+          ...keyBy(updatedChannels, 'id')
         }
       }
     },
@@ -276,6 +314,73 @@ function createReducer (config) {
       }
 
       return loop(state, Effects.constant(createSample({ file, effectCreator })))
+    },
+    [splitTrackGroup]: (state, action) => {
+
+      const { mix, channel: primaryTrack, clip, splitAtBeat, quantization } = action.payload
+
+      const trackGroup = primaryTrack.parentChannel
+      const mixChannel = trackGroup.parentChannel
+      const quantizedSplitAtBeat = quantizeBeat({
+        quantization,
+        beat: splitAtBeat,
+        offset: mixChannel.startBeat + trackGroup.startBeat
+      })
+
+      if (quantizedSplitAtBeat <= trackGroup.minBeat ||
+        quantizedSplitAtBeat >= trackGroup.maxBeat) {
+        return state
+      }
+
+      // make new track group (left side)
+      // split primary track into left, right
+        // also split clips, automations
+      // update existing channels
+        // figure out new start beats
+        // special case if splitting first track group?
+      // update existing track group
+
+      const newTrackGroupId = uuid()
+      const channelsToUpdate =
+        map(reject(trackGroup.channels, { type: CHANNEL_TYPE_PRIMARY_TRACK }),
+          channel => ({
+            ...channel,
+            startBeat: channel.startBeat - quantizedSplitAtBeat
+          }))
+
+      return loop(state, Effects.batch([
+
+        // update existing track group and channels to be on right side
+        Effects.constant(updateChannel({
+          id: trackGroup.id,
+          startBeat: trackGroup.startBeat + quantizedSplitAtBeat
+        })),
+        Effects.constant(updateChannels(channelsToUpdate)),
+
+        // create new track group on left side
+        Effects.constant(createChannel({
+          id: newTrackGroupId,
+          type: CHANNEL_TYPE_TRACK_GROUP,
+          startBeat: trackGroup.startBeat,
+          sampleId: primaryTrack.sampleId
+        })),
+        Effects.constant(setChannelsParent({
+          parentChannelId: newTrackGroupId,
+          channelIds: [primaryTrack.id]
+        })),
+        Effects.constant(insertChannelAtIndex({
+          channelId: newTrackGroupId,
+          parentChannelId: mixChannel.id,
+          index: trackGroup.index
+        })),
+
+        // TODO: split the primary track
+
+        // navigate to newly created 'transition'
+        Effects.constant(
+          push(`/mixes/${mix.id}/trackGroups/${newTrackGroupId}/${trackGroup.id}`
+        ))
+      ]))
     },
     [moveTrackGroup]: (state, action) => {
       const { trackGroup, diffBeats, quantization, moveTempoControlsFromBeat } = action.payload

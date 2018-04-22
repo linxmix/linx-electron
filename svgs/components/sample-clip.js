@@ -33,7 +33,12 @@ class SampleClip extends React.Component {
 
       // left click
       } else {
-        this.props.selectClip({ clip: this.props.clip })
+        if (e.shiftKey) {
+          const { beat, value } = getPosition({ e, scaleX: this.props.scaleX, height: this.props.height })
+          this.props.splitTrackGroup({ clip: this.props.clip, beat, value })
+        } else {
+          this.props.selectClip({ clip: this.props.clip })
+        }
       }
     }
   }

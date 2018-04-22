@@ -220,6 +220,11 @@ class MixArrangementDetail extends React.Component {
       snipClip: ({ clip, channel, beat }) => {
         this.props.snipClip({ channel, clip, snipAtBeat: beat })
         this._asyncUpdateAudioGraph()
+      },
+
+      splitTrackGroup: ({ clip, channel, beat }) => {
+        this.props.splitTrackGroup({ mix, channel, clip, splitAtBeat: beat })
+        this._asyncUpdateAudioGraph()
       }
     }
 
@@ -250,7 +255,7 @@ class MixArrangementDetail extends React.Component {
     const trackGroups = [
       {
         trackGroup: fromTrackGroup,
-        tracks: fromTrackGroup.channels
+        tracks: fromTrackGroup && fromTrackGroup.channels
       },
       {
         trackGroup: toTrackGroup,

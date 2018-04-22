@@ -35,6 +35,7 @@ class TrackGroup extends React.Component {
         selectedControlPoint={this.props.selectedControlPoint}
         showAutomationControlType={showAutomationControlType}
         canEditAutomations={isEditingAutomations && showAutomationControlType}
+        isPrimaryTrack={track.id === channel.primaryTrack.id}
         color={color ||
           d3.interpolateCool((this.props.showSecondColorHalf ? 0 : 0.25) + (i / 10))}
         sampleResolution={sampleResolution}

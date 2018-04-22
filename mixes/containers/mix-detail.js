@@ -14,7 +14,7 @@ const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithCo
   deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
 const { moveTrackGroup, resizeChannel, removeClipsFromChannel, createSampleTrackFromFile,
-  updateChannel, moveChannel, unsetChannel } = require('../../channels/actions')
+  updateChannel, moveChannel, unsetChannel, splitTrackGroup } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph, toggleSoloChannel,
   startRecording, stopRecording } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
@@ -67,12 +67,12 @@ class MixDetailContainer extends React.Component {
   render () {
     const { mix, audioContext, fromTrackGroup, toTrackGroup, error, zoom,
       sampleError, saveMix, playPause, startRecording, stopRecording } = this.props
-    if (!mix) { return null }
+    if (!(mix && fromTrackGroup)) { return null }
 
     const arrangementActions = mapValues(
       pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
-        'updateControlPointValue', 'updateControlPointPosition', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'moveChannel',   
+        'updateControlPointValue', 'updateControlPointPosition', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'moveChannel', 'splitTrackGroup',
         'resizeChannel', 'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
         'removeClipsFromChannel', 'toggleSoloChannel', 'updateAndSaveMeta',
         'snipClip']),
@@ -171,6 +171,7 @@ module.exports = connect(
     const toTrackGroupId = ownProps.params.toTrackGroupId
     const fromTrackGroup = find(mix.trackGroups, { id: fromTrackGroupId })
     const toTrackGroup = find(mix.trackGroups, { id: toTrackGroupId })
+    console.log('FIND TRACK GROUPS', { trackGroups: mix.trackGroups, fromTrackGroupId, toTrackGroupId })
 
     const zoom = props.zooms[currentMixId] || {}
 
@@ -206,6 +207,7 @@ module.exports = connect(
     startRecording,
     stopRecording,
     unsetChannel,
+    splitTrackGroup,
     updateAudioGraph,
     updateAndSaveMeta
   }

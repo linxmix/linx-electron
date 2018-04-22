@@ -80,7 +80,7 @@ class TrackChannel extends React.Component {
   }
 
   render () {
-    const { channel, color, beatScale, translateY, scaleX, sampleResolution, height, canEditAutomations, selectedControlPoint,
+    const { channel, color, beatScale, translateY, scaleX, sampleResolution, height, canEditAutomations, selectedControlPoint, isPrimaryTrack,
       canEditClips, canDragClips, canResizeClips, showAutomationControlType, showGridMarkers
     } = this.props
     if (!channel) { return null }
@@ -116,6 +116,8 @@ class TrackChannel extends React.Component {
             isSelected={selectedClipId && selectedClipId === clip.id}
             snipClip={options =>
               this.props.snipClip(assign({ channel }, options))}
+            splitTrackGroup={options =>
+              isPrimaryTrack && this.props.splitTrackGroup(assign({ channel }, options))}
             deleteClip={options =>
               this.props.deleteClip(assign({ channel }, options))}
             selectClip={options =>
@@ -158,6 +160,7 @@ class TrackChannel extends React.Component {
 }
 
 TrackChannel.defaultProps = {
+  isPrimaryTrack: false,
   channel: null,
   beatScale: null,
   selectedClip: null,
