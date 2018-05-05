@@ -40,6 +40,10 @@ const getClips = Getter(
         if (!isValidNumber(audioStartTime)) {
           audioStartTime = validNumberOrDefault(get(sample, 'meta.barGridTime'), 0)
         }
+        if (audioStartTime < 0) {
+          audioStartTime = 0
+          console.warn('Cannot have clip with audioStartTime < 0')
+        }
 
         // compute beatCount
         beatCount = clip.beatCount
