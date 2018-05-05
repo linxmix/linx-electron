@@ -435,7 +435,13 @@ function _executeDragAction({ props, item, diff, itemType }) {
       action = props.onDragSampleClip
       break
     case 'resize-handle':
-      action = props.resizeSampleClip
+      if (item.isSampleClip) {
+        action = props.resizeSampleClip
+      } else if (item.isTrackChannel) {
+        action = props.moveChannel
+      } else {
+        throw new Error('Cannot drag resize-handle without valid item.')
+      }
       break
     case 'automation-clip/control-point':
       action = props.moveControlPoint

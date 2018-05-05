@@ -60,6 +60,7 @@ class SampleClip extends React.Component {
     const audioStartBeat = timeToBeat(audioStartTime, audioBpm)
 
     const onResizeArgs = {
+      isSampleClip: true,
       audioBpm,
       audioBuffer,
       audioStartTime,
@@ -94,6 +95,7 @@ class SampleClip extends React.Component {
 
       {canResize && <g>
         <ResizeHandle
+          isLeftHandle={true}
           id={clip.id}
           height={height}
           width={10 / scaleX}
@@ -101,7 +103,6 @@ class SampleClip extends React.Component {
           translateX={0}
           startBeat={clip.startBeat}
           beatCount={clip.beatCount}
-          audioBpm={audioBpm}
           canDrag
           onResizeArgs={onResizeArgs}
         />
@@ -113,7 +114,6 @@ class SampleClip extends React.Component {
           translateX={clip.beatCount}
           startBeat={clip.startBeat}
           beatCount={clip.beatCount}
-          audioBpm={audioBpm}
           canDrag
           onResizeArgs={onResizeArgs}
         />

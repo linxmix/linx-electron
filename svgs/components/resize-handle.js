@@ -3,16 +3,17 @@ const { DragSource } = require('react-dnd')
 
 class ResizeHandle extends React.Component {
   render () {
-    const { height, width, connectDragSource, translateX, translateY, scaleX } = this.props
-    const adjustedTranslateX = (translateX === 0) ? 0 : translateX - width
+    const { height, width, connectDragSource, translateX, translateY, scaleX,
+      isLeftHandle } = this.props
+    const adjustedTranslateX = isLeftHandle ? translateX : translateX - width
 
     return connectDragSource(<rect
       transform={`translate(${adjustedTranslateX}, ${translateY})`}
       width={width}
       height={height}
       visibility={scaleX > 0.5 ? 'visible' : 'hidden'}
-      cursor="col-resize"
-      style={{ fill: 'rgba(0,0,0,0.2' }}
+      cursor='col-resize'
+      fill={this.props.fill}
     />)
   }
 }
@@ -24,6 +25,7 @@ ResizeHandle.defaultProps = {
   translateX: 0,
   translateY: 0,
   scaleX: 1,
+  fill: 'rgba(0,0,0,0.2)',
   onResizeArgs: {}
 }
 
@@ -40,7 +42,7 @@ const dragSource = {
       id: props.id,
       startBeat: props.startBeat,
       beatCount: props.beatCount,
-      isResizeLeft: props.translateX === 0,
+      isResizeLeft: props.isLeftHandle,
       ...props.onResizeArgs
     }
   },

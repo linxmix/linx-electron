@@ -2,6 +2,7 @@ const React = require('react')
 const { get, map, find, assign, filter, includes, omit, isEqual } = require('lodash')
 const classnames = require('classnames')
 
+const ResizeHandle = require('./resize-handle')
 const SampleClip = require('./sample-clip')
 const AutomationClip = require('./automation-clip')
 const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../../clips/constants')
@@ -86,11 +87,15 @@ class TrackChannel extends React.Component {
     if (!channel) { return null }
 
     const selectedClipId = get(this.props.selectedClip, 'id')
+    const onResizeArgs = {
+      isTrackChannel: true,
+    }
 
     return <g className="TrackChannel"
+      transform={`translate(0,${translateY})`}
       onMouseUp={this.handleClick.bind(this)}>
       {(showAutomationControlType || canEditClips) &&
-        <rect transform={`translate(${this.props.clickBoxTranslateX},${translateY})`}
+        <rect transform={`translate(${this.props.clickBoxTranslateX},0)`}
           height={height}
           width={this.props.clickBoxWidth}
           fill="transparent"
@@ -98,7 +103,7 @@ class TrackChannel extends React.Component {
         />
       }
 
-      <g transform={`translate(${channel.startBeat},${translateY})`}>
+      <g transform={`translate(${channel.startBeat},0)`}>
         {map(filter(channel.clips, { type: CLIP_TYPE_SAMPLE }), clip =>
           <SampleClip
             key={clip.id}
@@ -155,6 +160,48 @@ class TrackChannel extends React.Component {
           )}
         </g>
       </g>
+
+      {this.props.canResizeChannel && <g>
+        <ResizeHandle
+          id={channel.id}
+          height={height / 2.0}
+          width={5.0 / scaleX}
+          scaleX={scaleX}
+          translateX={channel.minBeat}
+          startBeat={channel.startBeat}
+          beatCount={channel.beatCount}
+          canDrag={this.props.canResizeChannel}
+          isLeftHandle={true}
+          onResizeArgs={onResizeArgs}
+          fill='rgba(255,0,0,0.5)'
+        />
+
+        <ResizeHandle
+          id={channel.id}
+          height={height / 2.0}
+          width={5.0 / scaleX}
+          scaleX={scaleX}
+          translateX={channel.startBeat}
+          startBeat={channel.startBeat}
+          beatCount={channel.beatCount}
+          canDrag={this.props.canResizeChannel}
+          onResizeArgs={onResizeArgs}
+          fill='rgba(0,0,255,0.5)'
+        />
+
+        <ResizeHandle
+          id={channel.id}
+          height={height / 2.0}
+          width={5.0 / scaleX}
+          scaleX={scaleX}
+          translateX={channel.maxBeat}
+          startBeat={channel.startBeat}
+          beatCount={channel.beatCount}
+          canDrag={this.props.canResizeChannel}
+          onResizeArgs={onResizeArgs}
+          fill='rgba(255,0,0,0.5)'
+        />
+      </g>}
     </g>
   }
 }
@@ -173,6 +220,7 @@ TrackChannel.defaultProps = {
   color: 'green',
   canDragClips: false,
   canResizeClips: false,
+  canResizeChannel: false,
   canEditClips: false,
   showAutomationControlType: undefined,
   canEditAutomations: false,

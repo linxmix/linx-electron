@@ -30,6 +30,7 @@ class TrackGroup extends React.Component {
         scaleX={scaleX}
         canDragClips={canDragClips && !isEditingAutomations}
         canResizeClips={canResizeClips && !isEditingAutomations}
+        canResizeChannel={this.props.canResizeChannels}
         canEditClips={canEditClips && !isEditingAutomations}
         selectedClip={get(this, `props.selectedClips[${track.id}]`)}
         selectedControlPoint={this.props.selectedControlPoint}
@@ -56,6 +57,7 @@ TrackGroup.defaultProps = {
   rowHeight: 100,
   mixMinBeat: 0,
   mixBeatCount: 0,
+  canResizeChannels: false,
   canDragClips: false,
   canResizeClips: false,
   canEditClips: false,

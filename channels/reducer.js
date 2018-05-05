@@ -17,7 +17,6 @@ const {
   updateChannel,
   updateChannels,
   moveTrackGroup,
-  resizeChannel,
   moveChannel,
   splitTrackGroup,
   insertChannelAtIndex,
@@ -188,26 +187,6 @@ function createReducer (config) {
           ...keyBy(updatedChannels, 'id')
         }
       }
-    },
-    [resizeChannel]: (state, action) => {
-      const { id, startBeat, beatCount, diffBeats, isResizeLeft, quantization } = action.payload
-      const quantizedDiffBeats = quantizeBeat({ quantization, beat: diffBeats })
-
-      let updatePayload
-      if (isResizeLeft) {
-        updatePayload = {
-          id,
-          startBeat: startBeat + quantizedDiffBeats,
-          beatCount: beatCount - quantizedDiffBeats
-        }
-      } else {
-        updatePayload = {
-          id,
-          beatCount: beatCount + quantizedDiffBeats
-        }
-      }
-
-      return loop(state, Effects.constant(updateChannel(updatePayload)))
     },
     [moveChannel]: (state, action) => {
       const { id, startBeat, diffBeats, quantization } = action.payload

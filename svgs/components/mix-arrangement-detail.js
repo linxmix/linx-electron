@@ -181,7 +181,7 @@ class MixArrangementDetail extends React.Component {
     }
 
     const layoutActions = pick(this.props, ['updateZoom', 'moveClip', 'resizeSampleClip',
-      'moveTrackGroup', 'resizeChannel', 'updateAudioGraph', 'seekToBeat', 'moveControlPoint',
+      'moveTrackGroup', 'moveChannel', 'updateAudioGraph', 'seekToBeat', 'moveControlPoint',
       'onDragSampleClip', 'updateControlPointPosition', 'updateControlPointValue', 'getQuantization'])
 
     const trackChannelActions = {
@@ -336,6 +336,7 @@ class MixArrangementDetail extends React.Component {
         rowHeight={rowHeight}
         mixMinBeat={mix.channel.minBeat}
         mixBeatCount={mix.channel.beatCount}
+        canResizeChannels={!selectedControlType}
         canResizeClips
         canDragClips
         canEditClips
@@ -365,6 +366,7 @@ class MixArrangementDetail extends React.Component {
         rowHeight={rowHeight}
         mixMinBeat={mix.channel.minBeat}
         mixBeatCount={mix.channel.beatCount}
+        canResizeChannels={!selectedControlType}
         canResizeClips
         canDragClips
         canEditClips

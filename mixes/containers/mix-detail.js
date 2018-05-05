@@ -13,7 +13,7 @@ const { updateAndSaveMeta } = require('../../metas/actions')
 const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithControlPoint, createControlPoint, createSampleClip, snipClip, updateControlPointPosition,
   deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
-const { moveTrackGroup, resizeChannel, removeClipsFromChannel, createSampleTrackFromFile,
+const { moveTrackGroup, removeClipsFromChannel, createSampleTrackFromFile,
   updateChannel, moveChannel, unsetChannel, splitTrackGroup } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph, toggleSoloChannel,
   startRecording, stopRecording } = require('../../audios/actions')
@@ -73,7 +73,7 @@ class MixDetailContainer extends React.Component {
       pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
         'updateControlPointValue', 'updateControlPointPosition', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'moveChannel', 'splitTrackGroup',
-        'resizeChannel', 'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
+        'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
         'removeClipsFromChannel', 'toggleSoloChannel', 'updateAndSaveMeta',
         'snipClip']),
       (fn) => (options) => fn({
@@ -199,7 +199,6 @@ module.exports = connect(
     calculateGridMarkers,
     clearGridMarkers,
     moveTrackGroup,
-    resizeChannel,
     moveChannel,
     updateChannel,
     toggleSoloChannel,
