@@ -241,7 +241,7 @@ function createReducer (config) {
           ...sourceClip.controlPoints,
           [id]: {
             ...controlPoint,
-            value: clamp(0, value, 1)
+            value: (sourceClip.type === CLIP_TYPE_TEMPO) ? value : clamp(0, value, 1)
           }
         }
       })))
