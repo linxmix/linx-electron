@@ -171,7 +171,7 @@ module.exports = connect(
     const toTrackGroupId = ownProps.params.toTrackGroupId
     const fromTrackGroup = find(mix.trackGroups, { id: fromTrackGroupId })
     const toTrackGroup = find(mix.trackGroups, { id: toTrackGroupId })
-    console.log('FIND TRACK GROUPS', { trackGroups: mix.trackGroups, fromTrackGroupId, toTrackGroupId })
+    // console.log('FIND TRACK GROUPS', { trackGroups: mix.trackGroups, fromTrackGroupId, toTrackGroupId })
 
     const zoom = props.zooms[currentMixId] || {}
 
