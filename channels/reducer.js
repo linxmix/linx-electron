@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { assign, keyBy, map, defaults, without, includes, findIndex, concat,
+const { assign, get, keyBy, map, defaults, without, includes, findIndex, concat,
   filter, values, omit, indexOf, reduce, reject, uniq } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
@@ -114,15 +114,20 @@ function createReducer (config) {
       }
     },
     [setChannelsParent]: (state, action) => {
-      const { channelIds, parentChannelId } = action.payload
+      const { channelIds, parentChannelId, prevParentChannelIds } = action.payload
       assert(channelIds && channelIds.length && parentChannelId,
         'Must have channelIds and parentChannelId to setChannelsParent')
 
       const parentChannel = state.records[parentChannelId] || {}
-      return loop(state, Effects.constant(updateChannel({
+      const prevParentChannelsToUpdate = map(prevParentChannelIds || [], channelId => ({
+        id: channelId,
+        channelIds: without(get(state, `records[${channelId}].channelIds`), ...channelIds)
+      }))
+
+      return loop(state, Effects.constant(updateChannels([{
         id: parentChannelId,
         channelIds: concat((parentChannel.channelIds || []), channelIds)
-      })))
+      }].concat(prevParentChannelsToUpdate))))
     },
     [insertChannelAtIndex]: (state, action) => {
       const { parentChannelId, channelId, index } = action.payload
@@ -311,13 +316,24 @@ function createReducer (config) {
         return state
       }
 
-      // make new track group (left side)
-      // split primary track into left, right
-        // also split clips, automations
-      // update existing channels
-        // figure out new start beats
-        // special case if splitting first track group?
-      // update existing track group
+      // TODO finish implementing this
+      // first: split all clips in line of primary track
+      // then: do the rest
+        // make new track group (left side)
+        // move existing primary track into new track group
+        // create new primary track in existing track group
+        // split existing channels
+          // channels starting left of split: move into new track group
+          // channels starting right of split: update startBeat
+        // split existing sample clips
+          // clips ending left of split: untouched
+          // clips ending right of split: move into new primary track, update startBeat
+        // split existing automation clips:
+          // create a new automation clip of that type in new primary track
+          // control points left of split: untouched
+          // control points right of split: move into new primary track, update startBeat
+        // navigate to newly created 'transition'
+
 
       const newTrackGroupId = uuid()
       const channelsToUpdate =
@@ -329,14 +345,7 @@ function createReducer (config) {
 
       return loop(state, Effects.batch([
 
-        // update existing track group and channels to be on right side
-        Effects.constant(updateChannel({
-          id: trackGroup.id,
-          startBeat: trackGroup.startBeat + quantizedSplitAtBeat
-        })),
-        Effects.constant(updateChannels(channelsToUpdate)),
-
-        // create new track group on left side
+        // make new track group (left side)
         Effects.constant(createChannel({
           id: newTrackGroupId,
           type: CHANNEL_TYPE_TRACK_GROUP,
@@ -345,7 +354,8 @@ function createReducer (config) {
         })),
         Effects.constant(setChannelsParent({
           parentChannelId: newTrackGroupId,
-          channelIds: [primaryTrack.id]
+          channelIds: [primaryTrack.id],
+          prevParentChannelIds: [trackGroup.id]
         })),
         Effects.constant(insertChannelAtIndex({
           channelId: newTrackGroupId,
@@ -353,7 +363,12 @@ function createReducer (config) {
           index: trackGroup.index
         })),
 
-        // TODO: split the primary track
+        // update existing track group and channels to be on right side
+        Effects.constant(updateChannel({
+          id: trackGroup.id,
+          startBeat: trackGroup.startBeat + quantizedSplitAtBeat
+        })),
+        Effects.constant(updateChannels(channelsToUpdate)),
 
         // navigate to newly created 'transition'
         Effects.constant(
