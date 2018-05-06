@@ -5,6 +5,7 @@ const classnames = require('classnames')
 
 const ControlPoint = require('./automation-clip/control-point')
 const {
+  CONTROL_TYPE_VOLUME,
   CONTROL_TYPE_GAIN,
   CONTROL_TYPE_LOW_BAND,
   CONTROL_TYPE_MID_BAND,
@@ -23,7 +24,7 @@ class AutomationClip extends React.Component {
 
     let color
     switch(clip.controlType) {
-      case CONTROL_TYPE_GAIN: color = 'red'; break;
+      case CONTROL_TYPE_GAIN: case CONTROL_TYPE_VOLUME: color = 'red'; break;
       case CONTROL_TYPE_LOW_BAND: case CONTROL_TYPE_MID_BAND: case CONTROL_TYPE_HIGH_BAND:
         color = 'green'; break
       default: color = 'blue'; break;

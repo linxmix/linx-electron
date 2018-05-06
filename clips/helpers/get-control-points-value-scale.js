@@ -1,7 +1,6 @@
 const d3 = require('d3')
 
 const { 
-  CONTROL_TYPE_GAIN,
   CONTROL_TYPE_LOW_BAND,
   CONTROL_TYPE_MID_BAND,
   CONTROL_TYPE_HIGH_BAND,

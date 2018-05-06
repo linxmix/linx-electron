@@ -8,6 +8,7 @@ const clipsHash = {
 const CLIP_TYPES = values(clipsHash)
 
 const controlsHash = {
+  CONTROL_TYPE_VOLUME: 'volume',
   CONTROL_TYPE_GAIN: 'gain',
   CONTROL_TYPE_LOW_BAND: 'low-band',
   CONTROL_TYPE_MID_BAND: 'mid-band',

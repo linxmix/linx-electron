@@ -4,6 +4,7 @@ const { map, reduce, filter, sortBy, find, reject, difference, merge, isNil } = 
 const { bpmToSpb, validNumberOrDefault } = require('../../lib/number-utils')
 const { getValueCurve, valueScaleToAudioParameter } = require('./value-scale-to-audio-parameter')
 const {
+  CONTROL_TYPE_VOLUME,
   CONTROL_TYPE_GAIN,
   CONTROL_TYPE_LOW_BAND,
   CONTROL_TYPE_MID_BAND,
@@ -22,6 +23,7 @@ const FX_CHAIN_ORDER = [
   CONTROL_TYPE_HIGH_BAND,
   CONTROL_TYPE_MID_BAND,
   CONTROL_TYPE_LOW_BAND,
+  CONTROL_TYPE_VOLUME,
   CONTROL_TYPE_GAIN
 ]
 
@@ -237,7 +239,7 @@ function _getVirtualNode(options) {
   const controlType = options.clip.controlType
   const previousOutput = options.previousOutput
   switch(controlType) {
-    case CONTROL_TYPE_GAIN:
+    case CONTROL_TYPE_GAIN: case CONTROL_TYPE_VOLUME:
       return ['gain', previousOutput, {
         gain: audioParameters
       }]
