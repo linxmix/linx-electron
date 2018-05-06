@@ -222,8 +222,8 @@ class MixArrangementDetail extends React.Component {
         this._asyncUpdateAudioGraph()
       },
 
-      splitTrackGroup: ({ clip, channel, beat }) => {
-        this.props.splitTrackGroup({ mix, channel, clip, splitAtBeat: beat })
+      snipClipAndSplitTrackGroup: ({ clip, channel, beat }) => {
+        this.props.snipClipAndSplitTrackGroup({ mix, channel, clip, splitAtBeat: beat })
         this._asyncUpdateAudioGraph()
       }
     }

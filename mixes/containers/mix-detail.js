@@ -14,7 +14,7 @@ const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithCo
   deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
 const { moveTrackGroup, removeClipsFromChannel, createSampleTrackFromFile,
-  updateChannel, moveChannel, unsetChannel, splitTrackGroup } = require('../../channels/actions')
+  updateChannel, moveChannel, unsetChannel, snipClipAndSplitTrackGroup } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph, toggleSoloChannel,
   startRecording, stopRecording } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
@@ -72,7 +72,7 @@ class MixDetailContainer extends React.Component {
     const arrangementActions = mapValues(
       pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
-        'updateControlPointValue', 'updateControlPointPosition', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'moveChannel', 'splitTrackGroup',
+        'updateControlPointValue', 'updateControlPointPosition', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'moveChannel', 'snipClipAndSplitTrackGroup',
         'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
         'removeClipsFromChannel', 'toggleSoloChannel', 'updateAndSaveMeta',
         'snipClip']),
@@ -124,7 +124,7 @@ class MixDetailContainer extends React.Component {
     return <div className='VerticalLayout VerticalLayout--fullHeight'>
       <header className='VerticalLayout-fixedSection'>
         <h3>
-          {fromTrackGroup && fromTrackGroup.primaryTrack.sample.meta.title} - {toTrackGroup && toTrackGroup.primaryTrack.sample.meta.title}
+          {get(fromTrackGroup, 'primaryTrack.sample.meta.title')} - {get(toTrackGroup, 'primaryTrack.sample.meta.title')}
         </h3>
         <Link to={`/mixes/${mix.id}`}>
           Back to Mix
@@ -206,7 +206,7 @@ module.exports = connect(
     startRecording,
     stopRecording,
     unsetChannel,
-    splitTrackGroup,
+    snipClipAndSplitTrackGroup,
     updateAudioGraph,
     updateAndSaveMeta
   }

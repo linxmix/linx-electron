@@ -1,7 +1,7 @@
 const { Effects, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { assign, get, keyBy, map, defaults, without, includes, findIndex, concat,
+const { assign, get, flatten, keyBy, map, defaults, without, includes, findIndex, concat,
   filter, values, omit, indexOf, reduce, reject, uniq } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
@@ -19,6 +19,7 @@ const {
   moveTrackGroup,
   moveChannel,
   splitTrackGroup,
+  snipClipAndSplitTrackGroup,
   insertChannelAtIndex,
   setClipsChannel,
   removeClipsFromChannel,
@@ -27,7 +28,9 @@ const {
   createSampleTrackFromFile,
   swapChannels
 } = require('./actions')
-const { unsetClips, createClip, updateClip } = require('../clips/actions')
+const {
+  unsetClips, createClip, updateClip, snipClip, createControlPoint, deleteControlPoint
+} = require('../clips/actions')
 const {
   createSample
 } = require('../samples/actions')
@@ -37,7 +40,7 @@ const {
   CHANNEL_TYPE_TRACK_GROUP,
   CHANNEL_TYPES
 } = require('./constants')
-const { CLIP_TYPE_SAMPLE } = require('../clips/constants')
+const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../clips/constants')
 const { quantizeBeat } = require('../lib/number-utils')
 
 module.exports = createReducer
@@ -147,10 +150,17 @@ function createReducer (config) {
       assert(channelId && clipIds, 'Must have channelId and clipIds to setClipsChannel')
 
       const channel = state.records[channelId] || {}
-      return loop(state, Effects.constant(updateChannel({
-        id: channelId,
-        clipIds: concat((channel.clipIds || []), clipIds)
-      })))
+      return {
+        ...state,
+        dirty: [...state.dirty, channelId],
+        records: {
+          ...state.records,
+          [channelId]: assign({}, channel, {
+            id: channelId,
+            clipIds: concat((channel.clipIds || []), clipIds)
+          })
+        }
+      }
     },
     [removeClipsFromChannel]: (state, action) => {
       const { channelId, clipIds } = action.payload
@@ -299,9 +309,42 @@ function createReducer (config) {
 
       return loop(state, Effects.constant(createSample({ file, effectCreator })))
     },
-    [splitTrackGroup]: (state, action) => {
-
+    [snipClipAndSplitTrackGroup]: (state, action) => {
       const { mix, channel: primaryTrack, clip, splitAtBeat, quantization } = action.payload
+
+      // first: split the primary track clip that originated this action
+      return loop(state, Effects.batch([
+        Effects.constant(snipClip({
+          quantization,
+          clip,
+          channel: primaryTrack,
+          snipAtBeat: splitAtBeat
+        })),
+        Effects.constant(splitTrackGroup({
+          mix,
+          primaryTrack,
+          splitAtBeat,
+          quantization
+        }))
+      ]))
+    },
+    [splitTrackGroup]: (state, action) => {
+      const { mix, primaryTrack, splitAtBeat, quantization } = action.payload
+
+      // steps are as follows:
+        // make new track group (left side)
+        // move existing primary track into new track group
+        // update existing track group startBeat
+        // update existing channels startBeat
+        // create new primary track in existing track group
+        // split existing sample clips
+          // clips starting left of split: untouched
+          // clips starting right of split: move into new primary track
+        // split existing automation clips:
+          // create a new automation clip of that type in new primary track
+          // control points left of split: untouched
+          // control points right of split: move into new primary track
+        // navigate to newly created 'transition'
 
       const trackGroup = primaryTrack.parentChannel
       const mixChannel = trackGroup.parentChannel
@@ -311,38 +354,59 @@ function createReducer (config) {
         offset: mixChannel.startBeat + trackGroup.startBeat
       })
 
-      if (quantizedSplitAtBeat <= trackGroup.minBeat ||
-        quantizedSplitAtBeat >= trackGroup.maxBeat) {
-        return state
-      }
-
-      // TODO finish implementing this
-      // first: split all clips in line of primary track
-      // then: do the rest
-        // make new track group (left side)
-        // move existing primary track into new track group
-        // create new primary track in existing track group
-        // split existing channels
-          // channels starting left of split: move into new track group
-          // channels starting right of split: update startBeat
-        // split existing sample clips
-          // clips ending left of split: untouched
-          // clips ending right of split: move into new primary track, update startBeat
-        // split existing automation clips:
-          // create a new automation clip of that type in new primary track
-          // control points left of split: untouched
-          // control points right of split: move into new primary track, update startBeat
-        // navigate to newly created 'transition'
-
-
       const newTrackGroupId = uuid()
-      const channelsToUpdate =
-        map(reject(trackGroup.channels, { type: CHANNEL_TYPE_PRIMARY_TRACK }),
-          channel => ({
-            ...channel,
-            startBeat: channel.startBeat - quantizedSplitAtBeat
-          }))
+      const newPrimaryTrackId = uuid()
 
+      // split existing sample clips
+        // clips starting left of split: untouched
+        // clips starting right of split: move into new primary track
+      const sampleClipsToMove = filter(filter(primaryTrack.clips, { type: CLIP_TYPE_SAMPLE }), sampleClip => {
+          const sampleClipBeatInTrackGroup = primaryTrack.startBeat + sampleClip.startBeat
+          return sampleClipBeatInTrackGroup >= quantizedSplitAtBeat
+        });
+
+      // split existing automation clips:
+        // create a new automation clip of that type in new primary track
+        // control points left of split: untouched
+        // control points right of split: move into new primary track
+      const automationClipEffects = flatten(map(filter(primaryTrack.clips, { type: CLIP_TYPE_AUTOMATION }), automationClip => {
+        const newClipId = uuid()
+
+        const controlPointEffects = reduce(automationClip.controlPoints, (controlPointEffects, controlPoint) => {
+          const controlPointBeatInTrackGroup =
+            primaryTrack.startBeat + automationClip.startBeat + controlPoint.beat
+
+          if (controlPointBeatInTrackGroup >= quantizedSplitAtBeat) {
+            return controlPointEffects.concat([
+              Effects.constant(deleteControlPoint({
+                sourceId: automationClip.id,
+                id: controlPoint.id
+              })),
+              Effects.constant(createControlPoint({
+                sourceId: newClipId,
+                beat: controlPoint.beat,
+                value: controlPoint.value
+              }))
+            ])
+          } else {
+            return controlPointEffects
+          }
+        }, [])
+
+        return [
+          Effects.constant(createClip({
+            id: newClipId,
+            type: CLIP_TYPE_AUTOMATION,
+            controlType: automationClip.controlType
+          })),
+          Effects.constant(setClipsChannel({
+            channelId: newPrimaryTrackId,
+            clipIds: [newClipId]
+          })),
+          ...controlPointEffects
+        ]
+      }))
+        
       return loop(state, Effects.batch([
 
         // make new track group (left side)
@@ -352,29 +416,64 @@ function createReducer (config) {
           startBeat: trackGroup.startBeat,
           sampleId: primaryTrack.sampleId
         })),
-        Effects.constant(setChannelsParent({
-          parentChannelId: newTrackGroupId,
-          channelIds: [primaryTrack.id],
-          prevParentChannelIds: [trackGroup.id]
-        })),
         Effects.constant(insertChannelAtIndex({
           channelId: newTrackGroupId,
           parentChannelId: mixChannel.id,
           index: trackGroup.index
         })),
 
-        // update existing track group and channels to be on right side
+        // move existing primary track into new track group
+        Effects.constant(setChannelsParent({
+          parentChannelId: newTrackGroupId,
+          channelIds: [primaryTrack.id],
+          prevParentChannelIds: [trackGroup.id]
+        })),
+
+        // update existing track group startBeat
         Effects.constant(updateChannel({
           id: trackGroup.id,
           startBeat: trackGroup.startBeat + quantizedSplitAtBeat
         })),
-        Effects.constant(updateChannels(channelsToUpdate)),
+
+        // update existing channels startBeat
+        Effects.constant(updateChannels(map(reject(
+          trackGroup.channels,
+          { type: CHANNEL_TYPE_PRIMARY_TRACK }),
+          channel => ({
+            ...channel,
+            startBeat: channel.startBeat - quantizedSplitAtBeat
+          })
+        ))),
+
+        // create new primary track in existing track group
+        Effects.constant(createChannel({
+          id: newPrimaryTrackId,
+          type: CHANNEL_TYPE_PRIMARY_TRACK,
+          startBeat: 0,
+          sampleId: primaryTrack.sampleId
+        })),
+        Effects.constant(setChannelsParent({
+          parentChannelId: trackGroup.id,
+          channelIds: [newPrimaryTrackId]
+        })),
+
+        // move sample clips starting right of split into new primary track
+        // TODO: combine these two into the same action
+        !sampleClipsToMove.length ? Effects.none() : Effects.constant(setClipsParent({
+          channelId: newPrimaryTrackId,
+          clipIds: [map(sampleClipsToMove, 'id')]
+        })),
+        !sampleClipsToMove.length ? Effects.none() : Effects.constant(removeClipsFromChannel({
+          channelId: primaryTrack.id,
+          clipIds: [map(sampleClipsToMove, 'id')]
+        })),
+      ].concat(automationClipEffects).concat([
 
         // navigate to newly created 'transition'
         Effects.constant(
           push(`/mixes/${mix.id}/trackGroups/${newTrackGroupId}/${trackGroup.id}`
         ))
-      ]))
+      ])))
     },
     [moveTrackGroup]: (state, action) => {
       const { trackGroup, diffBeats, quantization, moveTempoControlsFromBeat } = action.payload
