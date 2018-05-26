@@ -197,7 +197,7 @@ function createReducer (config) {
         Cmd.action(createMeta(meta)),
         Cmd.action(saveMeta(id)),
         Cmd.action(analyzeSample({ id })),
-        (effectCreator && effectCreator(id)) || Cmd.none()
+        (effectCreator && effectCreator(id)) || Cmd.none
       ]))
     },
     [createSampleDuplicate]: (state, action) => {
@@ -205,7 +205,7 @@ function createReducer (config) {
 
       return loop(state, Cmd.batch([
         Cmd.action(loadSampleSuccess(sample)),
-        (effectCreator && effectCreator(sample.id)) || Cmd.none()
+        (effectCreator && effectCreator(sample.id)) || Cmd.none
       ]))
     },
     [createSampleFailure]: (state, action) => ({

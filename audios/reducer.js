@@ -109,7 +109,7 @@ function createReducer (config) {
         })),
         playState.status === PLAY_STATE_PLAYING ?
           Cmd.action(updateAudioGraph({ channel })) :
-          Cmd.none()
+          Cmd.none
       ]))
     },
     [toggleSoloChannel]: (state, action) => {
@@ -126,7 +126,7 @@ function createReducer (config) {
         })),
         playState.status === PLAY_STATE_PLAYING ?
           Cmd.action(updateAudioGraph({ channel })) :
-          Cmd.none()
+          Cmd.none
       ]))
     },
     [updatePlayState]: (state, action) => {

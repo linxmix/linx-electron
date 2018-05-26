@@ -459,11 +459,11 @@ function createReducer (config) {
 
         // move sample clips starting right of split into new primary track
         // TODO: combine these two into the same action
-        !sampleClipsToMove.length ? Cmd.none() : Cmd.action(setClipsParent({
+        !sampleClipsToMove.length ? Cmd.none : Cmd.action(setClipsParent({
           channelId: newPrimaryTrackId,
           clipIds: [map(sampleClipsToMove, 'id')]
         })),
-        !sampleClipsToMove.length ? Cmd.none() : Cmd.action(removeClipsFromChannel({
+        !sampleClipsToMove.length ? Cmd.none : Cmd.action(removeClipsFromChannel({
           channelId: primaryTrack.id,
           clipIds: [map(sampleClipsToMove, 'id')]
         })),
@@ -492,7 +492,7 @@ function createReducer (config) {
           id: channel.id,
           startBeat: channel.startBeat + beatsToMove
         }))),
-        !tempoControlPoints ? Cmd.none() : Cmd.action(updateClip({
+        !tempoControlPoints ? Cmd.none : Cmd.action(updateClip({
           id: mixTempoClip.id,
           controlPoints: keyBy(map(tempoControlPoints, controlPoint => ({
             ...controlPoint,

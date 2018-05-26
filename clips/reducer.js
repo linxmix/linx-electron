@@ -94,7 +94,7 @@ function createReducer (config) {
           ...state.records,
           [attrs.id]: attrs
         }
-      }, Cmd.none())
+      }, Cmd.none)
     },
     [updateClip]: (state, action) => {
       const { id } = action.payload
