@@ -1,4 +1,4 @@
-const { Effects, loop } = require('redux-loop')
+const { Cmd, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
 const { assign, get, flatten, keyBy, map, defaults, without, includes, findIndex, concat,
@@ -67,8 +67,8 @@ function createReducer (config) {
         [action.payload.id]: action.payload
       }
     }),
-    [unsetChannels]: (state, action) => loop(state, Effects.batch(
-      map(action.payload, id => Effects.constant(unsetChannel(id))))),
+    [unsetChannels]: (state, action) => loop(state, Cmd.batch(
+      map(action.payload, id => Cmd.action(unsetChannel(id))))),
     [unsetChannel]: (state, action) => {
       const channel = state.records[action.payload]
       const { id, channelIds = [], clipIds = [] } = channel
@@ -77,7 +77,7 @@ function createReducer (config) {
       const parentChannels = filter(values(state.records), channel =>
         includes(channel.channelIds, id))
       const parentChannelEffects = map(parentChannels, channel =>
-        Effects.constant(updateChannel({
+        Cmd.action(updateChannel({
           id: channel.id,
           channelIds: without(channel.channelIds, id)
         })))
@@ -86,9 +86,9 @@ function createReducer (config) {
         ...state,
         dirty: without(state.dirty, id),
         records: omit(state.records, id)
-      }, Effects.batch(parentChannelEffects.concat([
-        Effects.constant(unsetChannels(channelIds)),
-        Effects.constant(unsetClips(clipIds))
+      }, Cmd.batch(parentChannelEffects.concat([
+        Cmd.action(unsetChannels(channelIds)),
+        Cmd.action(unsetClips(clipIds))
       ])))
     },
     [undirtyChannels]: (state, action) => ({
@@ -127,7 +127,7 @@ function createReducer (config) {
         channelIds: without(get(state, `records[${channelId}].channelIds`), ...channelIds)
       }))
 
-      return loop(state, Effects.constant(updateChannels([{
+      return loop(state, Cmd.action(updateChannels([{
         id: parentChannelId,
         channelIds: concat((parentChannel.channelIds || []), channelIds)
       }].concat(prevParentChannelsToUpdate))))
@@ -140,7 +140,7 @@ function createReducer (config) {
       newChannelIds.splice(index, 0, channelId);
       newChannelIds = uniq(newChannelIds)
 
-      return loop(state, Effects.constant(updateChannel({
+      return loop(state, Cmd.action(updateChannel({
         id: parentChannelId,
         channelIds: newChannelIds
       })))
@@ -167,12 +167,12 @@ function createReducer (config) {
       assert(channelId && clipIds, 'Must have channelId and clipIds to removeClipsFromChannel')
 
       const channel = state.records[channelId] || {}
-      return loop(state, Effects.batch([
-        Effects.constant(updateChannel({
+      return loop(state, Cmd.batch([
+        Cmd.action(updateChannel({
           id: channelId,
           clipIds: without(channel.clipIds || [], ...clipIds)
         })),
-        Effects.constant(unsetClips(clipIds))
+        Cmd.action(unsetClips(clipIds))
       ]))
     },
     [updateChannel]: (state, action) => {
@@ -206,7 +206,7 @@ function createReducer (config) {
     [moveChannel]: (state, action) => {
       const { id, startBeat, diffBeats, quantization } = action.payload
 
-      return loop(state, Effects.constant(updateChannel({
+      return loop(state, Cmd.action(updateChannel({
         id,
         startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
       })))
@@ -251,32 +251,32 @@ function createReducer (config) {
         const primaryTrackId = uuid()
         const trackGroupId = uuid()
 
-        return Effects.batch([
-          Effects.constant(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
-          Effects.constant(createChannel({
+        return Cmd.batch([
+          Cmd.action(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
+          Cmd.action(createChannel({
             id: primaryTrackId,
             type: CHANNEL_TYPE_PRIMARY_TRACK,
             sampleId
           })),
-          Effects.constant(setClipsChannel({
+          Cmd.action(setClipsChannel({
             channelId: primaryTrackId,
             clipIds: [clipId]
           })),
-          Effects.constant(createChannel(assign({
+          Cmd.action(createChannel(assign({
             id: trackGroupId,
             type: CHANNEL_TYPE_TRACK_GROUP
           }, attrs))),
-          Effects.constant(setChannelsParent({
+          Cmd.action(setChannelsParent({
             parentChannelId: trackGroupId,
             channelIds: [primaryTrackId] })),
-          Effects.constant(setChannelsParent({
+          Cmd.action(setChannelsParent({
             parentChannelId,
             channelIds: [trackGroupId]
           }))
         ])
       }
 
-      return loop(state, Effects.constant(createSample({ file, effectCreator })))
+      return loop(state, Cmd.action(createSample({ file, effectCreator })))
     },
     [createSampleTrackFromFile]: (state, action) => {
       const { file, parentChannelId, clipAttrs = {}, channelAttrs = {} } = action.payload
@@ -285,42 +285,42 @@ function createReducer (config) {
         const clipId = uuid()
         const sampleTrackId = uuid()
 
-        return Effects.batch([
-          Effects.constant(createClip(assign({}, clipAttrs, {
+        return Cmd.batch([
+          Cmd.action(createClip(assign({}, clipAttrs, {
             sampleId,
             id: clipId,
             type: CLIP_TYPE_SAMPLE
           }))),
-          Effects.constant(createChannel(assign({}, channelAttrs, {
+          Cmd.action(createChannel(assign({}, channelAttrs, {
             id: sampleTrackId,
             type: CHANNEL_TYPE_SAMPLE_TRACK,
             sampleId
           }))),
-          Effects.constant(setClipsChannel({
+          Cmd.action(setClipsChannel({
             channelId: sampleTrackId,
             clipIds: [clipId]
           })),
-          Effects.constant(setChannelsParent({
+          Cmd.action(setChannelsParent({
             parentChannelId,
             channelIds: [sampleTrackId]
           }))
         ])
       }
 
-      return loop(state, Effects.constant(createSample({ file, effectCreator })))
+      return loop(state, Cmd.action(createSample({ file, effectCreator })))
     },
     [snipClipAndSplitTrackGroup]: (state, action) => {
       const { mix, channel: primaryTrack, clip, splitAtBeat, quantization } = action.payload
 
       // first: split the primary track clip that originated this action
-      return loop(state, Effects.batch([
-        Effects.constant(snipClip({
+      return loop(state, Cmd.batch([
+        Cmd.action(snipClip({
           quantization,
           clip,
           channel: primaryTrack,
           snipAtBeat: splitAtBeat
         })),
-        Effects.constant(splitTrackGroup({
+        Cmd.action(splitTrackGroup({
           mix,
           primaryTrack,
           splitAtBeat,
@@ -378,11 +378,11 @@ function createReducer (config) {
 
           if (controlPointBeatInTrackGroup >= quantizedSplitAtBeat) {
             return controlPointEffects.concat([
-              Effects.constant(deleteControlPoint({
+              Cmd.action(deleteControlPoint({
                 sourceId: automationClip.id,
                 id: controlPoint.id
               })),
-              Effects.constant(createControlPoint({
+              Cmd.action(createControlPoint({
                 sourceId: newClipId,
                 beat: controlPoint.beat,
                 value: controlPoint.value
@@ -394,12 +394,12 @@ function createReducer (config) {
         }, [])
 
         return [
-          Effects.constant(createClip({
+          Cmd.action(createClip({
             id: newClipId,
             type: CLIP_TYPE_AUTOMATION,
             controlType: automationClip.controlType
           })),
-          Effects.constant(setClipsChannel({
+          Cmd.action(setClipsChannel({
             channelId: newPrimaryTrackId,
             clipIds: [newClipId]
           })),
@@ -407,36 +407,36 @@ function createReducer (config) {
         ]
       }))
         
-      return loop(state, Effects.batch([
+      return loop(state, Cmd.batch([
 
         // make new track group (left side)
-        Effects.constant(createChannel({
+        Cmd.action(createChannel({
           id: newTrackGroupId,
           type: CHANNEL_TYPE_TRACK_GROUP,
           startBeat: trackGroup.startBeat,
           sampleId: primaryTrack.sampleId
         })),
-        Effects.constant(insertChannelAtIndex({
+        Cmd.action(insertChannelAtIndex({
           channelId: newTrackGroupId,
           parentChannelId: mixChannel.id,
           index: trackGroup.index
         })),
 
         // move existing primary track into new track group
-        Effects.constant(setChannelsParent({
+        Cmd.action(setChannelsParent({
           parentChannelId: newTrackGroupId,
           channelIds: [primaryTrack.id],
           prevParentChannelIds: [trackGroup.id]
         })),
 
         // update existing track group startBeat
-        Effects.constant(updateChannel({
+        Cmd.action(updateChannel({
           id: trackGroup.id,
           startBeat: trackGroup.startBeat + quantizedSplitAtBeat
         })),
 
         // update existing channels startBeat
-        Effects.constant(updateChannels(map(reject(
+        Cmd.action(updateChannels(map(reject(
           trackGroup.channels,
           { type: CHANNEL_TYPE_PRIMARY_TRACK }),
           channel => ({
@@ -446,31 +446,31 @@ function createReducer (config) {
         ))),
 
         // create new primary track in existing track group
-        Effects.constant(createChannel({
+        Cmd.action(createChannel({
           id: newPrimaryTrackId,
           type: CHANNEL_TYPE_PRIMARY_TRACK,
           startBeat: 0,
           sampleId: primaryTrack.sampleId
         })),
-        Effects.constant(setChannelsParent({
+        Cmd.action(setChannelsParent({
           parentChannelId: trackGroup.id,
           channelIds: [newPrimaryTrackId]
         })),
 
         // move sample clips starting right of split into new primary track
         // TODO: combine these two into the same action
-        !sampleClipsToMove.length ? Effects.none() : Effects.constant(setClipsParent({
+        !sampleClipsToMove.length ? Cmd.none() : Cmd.action(setClipsParent({
           channelId: newPrimaryTrackId,
           clipIds: [map(sampleClipsToMove, 'id')]
         })),
-        !sampleClipsToMove.length ? Effects.none() : Effects.constant(removeClipsFromChannel({
+        !sampleClipsToMove.length ? Cmd.none() : Cmd.action(removeClipsFromChannel({
           channelId: primaryTrack.id,
           clipIds: [map(sampleClipsToMove, 'id')]
         })),
       ].concat(automationClipEffects).concat([
 
         // navigate to newly created 'transition'
-        Effects.constant(
+        Cmd.action(
           push(`/mixes/${mix.id}/trackGroups/${newTrackGroupId}/${trackGroup.id}`
         ))
       ])))
@@ -488,11 +488,11 @@ function createReducer (config) {
       const tempoControlPoints = mixTempoClip && mixTempoClip.controlPoints
 
       const nextEffects = concat(
-        map(channelsToMove, channel => Effects.constant(updateChannel({
+        map(channelsToMove, channel => Cmd.action(updateChannel({
           id: channel.id,
           startBeat: channel.startBeat + beatsToMove
         }))),
-        !tempoControlPoints ? Effects.none() : Effects.constant(updateClip({
+        !tempoControlPoints ? Cmd.none() : Cmd.action(updateClip({
           id: mixTempoClip.id,
           controlPoints: keyBy(map(tempoControlPoints, controlPoint => ({
             ...controlPoint,
@@ -503,8 +503,8 @@ function createReducer (config) {
         }))
       )
 
-      return loop(state, Effects.batch([
-        Effects.constant(updateChannel({
+      return loop(state, Cmd.batch([
+        Cmd.action(updateChannel({
           id,
           startBeat: startBeat + beatsToMove
         }))
@@ -513,7 +513,7 @@ function createReducer (config) {
     [moveChannel]: (state, action) => {
       const { id, startBeat, diffBeats, quantization } = action.payload
 
-      return loop(state, Effects.constant(updateChannel({
+      return loop(state, Cmd.action(updateChannel({
         id,
         startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
       })))

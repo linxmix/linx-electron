@@ -1,4 +1,4 @@
-const { Effects, loop } = require('redux-loop')
+const { Cmd, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { assign, defaults, get, includes, map, omit, reduce, without } = require('lodash')
 const assert = require('assert')
@@ -94,7 +94,7 @@ function createReducer (config) {
           ...state.records,
           [attrs.id]: attrs
         }
-      }, Effects.none())
+      }, Cmd.none())
     },
     [updateClip]: (state, action) => {
       const { id } = action.payload
@@ -112,7 +112,7 @@ function createReducer (config) {
     [moveClip]: (state, action) => {
       const { id, startBeat, diffBeats, quantization } = action.payload
 
-      return loop(state, Effects.constant(updateClip({
+      return loop(state, Cmd.action(updateClip({
         id,
         startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
       })))
@@ -134,12 +134,12 @@ function createReducer (config) {
         return state
       }
 
-      return loop(state, Effects.batch([
-        Effects.constant(updateClip({
+      return loop(state, Cmd.batch([
+        Cmd.action(updateClip({
           id: clip.id,
           beatCount: quantizedSnipAtBeat
         })),
-        Effects.constant(createClip({
+        Cmd.action(createClip({
           id: newClipId,
           type: CLIP_TYPE_SAMPLE,
           sampleId: clip.sampleId,
@@ -149,7 +149,7 @@ function createReducer (config) {
           beatCount: clip.beatCount - quantizedSnipAtBeat,
           startBeat: clip.startBeat + quantizedSnipAtBeat
         })),
-        Effects.constant(setClipsChannel({
+        Cmd.action(setClipsChannel({
           channelId: channel.id,
           clipIds: [newClipId]
         })),
@@ -194,7 +194,7 @@ function createReducer (config) {
       if (updatePayload.beatCount < 0) {
         return state
       } else {
-        return loop(state, Effects.constant(updateClip(updatePayload)))
+        return loop(state, Cmd.action(updateClip(updatePayload)))
       }
     },
     [moveControlPoint]: (state, action) => {
@@ -217,7 +217,7 @@ function createReducer (config) {
         updatedControlPoint.value = clamp(0, value - diffValue, 1)
       }
 
-      return loop(state, Effects.constant(updateClip({
+      return loop(state, Cmd.action(updateClip({
         id: sourceId,
         controlPoints: {
           ...sourceClip.controlPoints,
@@ -235,7 +235,7 @@ function createReducer (config) {
       const controlPoint = sourceClip.controlPoints[id]
       assert(controlPoint, 'Cannot updateControlPointValue for nonexistent controlPoint')
 
-      return loop(state, Effects.constant(updateClip({
+      return loop(state, Cmd.action(updateClip({
         id: sourceId,
         controlPoints: {
           ...sourceClip.controlPoints,
@@ -256,7 +256,7 @@ function createReducer (config) {
       const controlPoint = sourceClip.controlPoints[id]
       assert(controlPoint, 'Cannot updateControlPointPosition for nonexistent controlPoint')
 
-      return loop(state, Effects.constant(updateClip({
+      return loop(state, Cmd.action(updateClip({
         id: sourceId,
         controlPoints: {
           ...sourceClip.controlPoints,
@@ -285,7 +285,7 @@ function createReducer (config) {
 
       const sourceClipControlPoints = get(sourceClip, 'controlPoints') || {}
 
-      return loop(state, Effects.constant(updateClip({
+      return loop(state, Cmd.action(updateClip({
         id: sourceId,
         controlPoints: {
           ...sourceClipControlPoints,
@@ -298,7 +298,7 @@ function createReducer (config) {
       const sourceClip = state.records[sourceId]
       assert(sourceClip, 'Cannot createControlPoint for nonexistent sourceClip')
 
-      return loop(state, Effects.constant(updateClip({
+      return loop(state, Cmd.action(updateClip({
         id: sourceId,
         controlPoints: omit(sourceClip.controlPoints, id)
       })))
@@ -311,17 +311,17 @@ function createReducer (config) {
 
       const automationClipId = uuid()
 
-      return loop(state, Effects.batch([
-        Effects.constant(createClip({
+      return loop(state, Cmd.batch([
+        Cmd.action(createClip({
           id: automationClipId,
           type: CLIP_TYPE_AUTOMATION,
           controlType
         })),
-        Effects.constant(setClipsChannel({
+        Cmd.action(setClipsChannel({
           channelId,
           clipIds: [automationClipId]
         })),
-        Effects.constant(createControlPoint({
+        Cmd.action(createControlPoint({
           sourceId: automationClipId,
           beat, value, minBeat, maxBeat, quantization
         }))
@@ -338,8 +338,8 @@ function createReducer (config) {
         quantization
       }), 0)
 
-      return loop(state, Effects.batch([
-        Effects.constant(createClip(assign({
+      return loop(state, Cmd.batch([
+        Cmd.action(createClip(assign({
           sampleId,
           id: clipId,
           type: CLIP_TYPE_SAMPLE,
@@ -348,7 +348,7 @@ function createReducer (config) {
             beat,
           }) + delta
         }, clipOptions))),
-        Effects.constant(setClipsChannel({
+        Cmd.action(setClipsChannel({
           channelId: channelId,
           clipIds: [clipId]
         }))
@@ -363,7 +363,7 @@ function createReducer (config) {
       const effectCreator = ({ attrs }) => {
         const { peaks = [] } = attrs
 
-        return Effects.constant(updateClip({
+        return Cmd.action(updateClip({
           id,
           gridMarkers: map(peaks, peak => ({
             id: uuid(),
@@ -376,7 +376,7 @@ function createReducer (config) {
         }))
       }
 
-      return loop(state, Effects.constant(analyzeSample({
+      return loop(state, Cmd.action(analyzeSample({
         id: sampleId,
         startTime,
         endTime,
@@ -387,7 +387,7 @@ function createReducer (config) {
       const { id } = action.payload
       assert(id, 'Cannot clearGridMarkers without id')
 
-      return loop(state, Effects.constant(updateClip({
+      return loop(state, Cmd.action(updateClip({
         id,
         gridMarkers: []
       })))
@@ -409,12 +409,12 @@ function createReducer (config) {
         bpm: audioBpm
       })
 
-      return loop(state, Effects.batch([
-        Effects.constant(updateMeta({
+      return loop(state, Cmd.batch([
+        Cmd.action(updateMeta({
           id: get(clip, 'sample.id'),
           barGridTime: firstBarOffsetTime
         })),
-        Effects.constant(updateClip({
+        Cmd.action(updateClip({
           id: get(clip, 'id'),
           audioStartTime: previousAudioStartTime +
             (firstBarOffsetTime - previousOffsetTime)

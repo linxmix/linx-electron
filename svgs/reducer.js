@@ -1,4 +1,4 @@
-// const { Effects, loop } = require('redux-loop')
+// const { Cmd, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { assign } = require('lodash')
 const assert = require('assert')

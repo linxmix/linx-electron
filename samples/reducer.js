@@ -1,4 +1,4 @@
-const { Effects, loop } = require('redux-loop')
+const { Cmd, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { assign, get, includes, keyBy, map, omit, reduce, reject, without } = require('lodash')
 const assert = require('assert')
@@ -46,10 +46,13 @@ function createReducer (config) {
   return handleActions({
     [loadSampleList]: (state, action) => loop({
       ...state, isLoadingList: true
-    }, Effects.batch([
-      Effects.constant(loadMetaList()),
-      Effects.promise(runLoadSampleList),
-      Effects.constant(loadSampleListEnd())
+    }, Cmd.batch([
+      Cmd.action(loadMetaList()),
+      Cmd.run(runLoadSampleList, {
+        successActionCreator: loadSampleListSuccess,
+        failActionCreator: loadSampleListFailure
+      }),
+      Cmd.action(loadSampleListEnd())
     ])),
     [loadSampleListSuccess]: (state, action) => ({
       ...state,
@@ -77,9 +80,13 @@ function createReducer (config) {
         ...state,
         records,
         loading: [...state.loading, ...unloadedSampleIds],
-      }, Effects.batch([
-        Effects.promise(runLoadSamples, unloadedSampleIds),
-        Effects.constant(loadSamplesEnd(unloadedSampleIds))
+      }, Cmd.batch([
+        Cmd.run(runLoadSamples, {
+          successActionCreator: loadSamplesSuccess,
+          failActionCreator: loadSamplesFailure,
+          args: [unloadedSampleIds]
+        }),
+        Cmd.action(loadSamplesEnd(unloadedSampleIds))
       ]))
     },
     [loadSamplesSuccess]: (state, action) => ({
@@ -96,7 +103,7 @@ function createReducer (config) {
       const id = action.payload
       const sample = state.records[id]
       if (sample && sample.audioBuffer) {
-        return loop(state, Effects.constant(loadSampleEnd(id)))
+        return loop(state, Cmd.action(loadSampleEnd(id)))
       } else {
         return loop({
           ...state,
@@ -105,9 +112,13 @@ function createReducer (config) {
             ...state.records,
             [id]: state.records[id] || { id }
           }
-        }, Effects.batch([
-          Effects.promise(runLoadSample, id),
-          Effects.constant(loadSampleEnd(id))
+        }, Cmd.batch([
+          Cmd.run(runLoadSample, {
+            successActionCreator: loadSampleSuccess,
+            failActionCreator: loadSampleFailure,
+            args: [id]
+          }),
+          Cmd.action(loadSampleEnd(id))
         ]))
       }
     },
@@ -126,10 +137,13 @@ function createReducer (config) {
     }),
     [loadReverbSampleList]: (state, action) => loop({
       ...state, isLoadingReverbList: true
-    }, Effects.batch([
-      Effects.constant(loadMetaList()),
-      Effects.promise(runLoadReverbSampleList),
-      Effects.constant(loadReverbSampleListEnd())
+    }, Cmd.batch([
+      Cmd.action(loadMetaList()),
+      Cmd.run(runLoadReverbSampleList, {
+        successActionCreator: loadReverbSampleListSuccess,
+        failActionCreator: loadReverbSampleListFailure
+      }),
+      Cmd.action(loadReverbSampleListEnd())
     ])),
     [loadReverbSampleListSuccess]: (state, action) => ({
       ...state,
@@ -148,13 +162,25 @@ function createReducer (config) {
 
       return loop({
         ...state, creating: [...state.creating, file.path]
-      }, Effects.batch([
-        Effects.promise(runCreateSample, { file, effectCreator }),
-        Effects.constant(createSampleEnd(file.path))
+      }, Cmd.batch([
+        Cmd.run(runCreateSample, {
+          successActionCreator: createSampleSuccess,
+          failActionCreator: createSampleFailure,
+          args: [{ file, effectCreator }]
+        }),
+        Cmd.action(createSampleEnd(file.path))
       ]))
     },
     [createSampleSuccess]: (state, action) => {
-      const { sample, file, effectCreator } = action.payload
+      const { sample, file, effectCreator, isDuplicate } = action.payload
+
+      if (isDuplicate) {
+        return loop(state, Cmd.action(createSampleDuplicate({
+          sample,
+          effectCreator
+        })))
+      }
+
       const { id } = sample
       const meta = {
         id,
@@ -167,19 +193,19 @@ function createReducer (config) {
           ...state.records,
           [id]: sample
         }
-      }, Effects.batch([
-        Effects.constant(createMeta(meta)),
-        Effects.constant(saveMeta(id)),
-        Effects.constant(analyzeSample({ id })),
-        (effectCreator && effectCreator(id)) || Effects.none()
+      }, Cmd.batch([
+        Cmd.action(createMeta(meta)),
+        Cmd.action(saveMeta(id)),
+        Cmd.action(analyzeSample({ id })),
+        (effectCreator && effectCreator(id)) || Cmd.none()
       ]))
     },
     [createSampleDuplicate]: (state, action) => {
       const { sample, effectCreator } = action.payload
 
-      return loop(state, Effects.batch([
-        Effects.constant(loadSampleSuccess(sample)),
-        (effectCreator && effectCreator(sample.id)) || Effects.none()
+      return loop(state, Cmd.batch([
+        Cmd.action(loadSampleSuccess(sample)),
+        (effectCreator && effectCreator(sample.id)) || Cmd.none()
       ]))
     },
     [createSampleFailure]: (state, action) => ({
@@ -194,17 +220,21 @@ function createReducer (config) {
 
       return loop({
         ...state, analyzing: [...state.analyzing, id]
-      }, Effects.batch([
-        Effects.promise(runAnalyzeSample, { id, startTime, endTime, effectCreator }),
-        Effects.constant(analyzeSampleEnd(id))
+      }, Cmd.batch([
+        Cmd.run(runAnalyzeSample, {
+          successActionCreator: analyzeSampleSuccess,
+          failActionCreator: analyzeSampleFailure,
+          args: [{ id, startTime, endTime, effectCreator }]
+        }),
+        Cmd.action(analyzeSampleEnd(id))
       ]))
     },
     [analyzeSampleSuccess]: (state, action) => {
       const { id, attrs, effectCreator } = action.payload
 
-      return loop(state, effectCreator ? effectCreator({ id, attrs }) : Effects.batch([
-        Effects.constant(updateMeta(omit(attrs, 'peaks'))),
-        Effects.constant(saveMeta(id))
+      return loop(state, effectCreator ? effectCreator({ id, attrs }) : Cmd.batch([
+        Cmd.action(updateMeta(omit(attrs, 'peaks'))),
+        Cmd.action(saveMeta(id))
       ]))
     },
     [analyzeSampleFailure]: (state, action) => ({
@@ -225,39 +255,29 @@ function createReducer (config) {
 
   function runLoadSampleList () {
     return service.readSampleList()
-      .then(loadSampleListSuccess)
-      .catch(loadSampleListFailure)
   }
 
   function runLoadReverbSampleList () {
     return service.readReverbSampleList()
-      .then(list => loadReverbSampleListSuccess(map(list, ({ sample }) => sample)))
-      .catch(loadReverbSampleListFailure)
+      .then(list => map(list, ({ sample }) => sample))
   }
 
   function runLoadSample (id) {
     return service.readSample(id)
-      .then(({ sample }) => loadSampleSuccess(sample))
-      .catch(loadSampleFailure)
+      .then(({ sample }) => sample)
   }
 
   function runLoadSamples (ids) {
     return Promise.all(map(ids, id => service.readSample(id).then(({ sample }) => sample)))
-      .then(loadSamplesSuccess)
-      .catch(loadSamplesFailure)
   }
 
   function runCreateSample ({ file, effectCreator }) {
     return service.createSample(file)
-      .then(({ sample, file, isDuplicate }) => isDuplicate
-        ? createSampleDuplicate({ sample, effectCreator })
-        : createSampleSuccess({ sample, file, effectCreator }))
-      .catch(createSampleFailure)
+      .then(({ sample, file, isDuplicate }) => ({ sample, file, isDuplicate, effectCreator }))
   }
 
   function runAnalyzeSample ({ id, startTime, endTime, effectCreator }) {
     return service.analyzeSample({ id, startTime, endTime })
-      .then(attrs => analyzeSampleSuccess({ id, attrs, effectCreator }))
-      .catch(analyzeSampleFailure)
+      .then(attrs => ({ id, attrs, effectCreator }))
   }
 }

@@ -1,4 +1,4 @@
-const { Effects, loop } = require('redux-loop')
+const { Cmd, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
 const { cloneDeep, compact, concat, uniq, pick, without, map, omit,
@@ -73,10 +73,13 @@ function createReducer (config) {
     }),
     [loadMixList]: (state, action) => loop({
       ...state, isLoadingList: true
-    }, Effects.batch([
-      Effects.constant(loadMetaList()),
-      Effects.promise(runLoadMixList),
-      Effects.constant(loadMixListEnd())
+    }, Cmd.batch([
+      Cmd.action(loadMetaList()),
+      Cmd.run(runLoadMixList, {
+        successActionCreator: loadMixListSuccess,
+        failActionCreator: loadMixListFailure
+      }),
+      Cmd.action(loadMixListEnd())
     ])),
     [loadMixListSuccess]: (state, action) => {
       const records = reduce(action.payload, (records, mix) => {
@@ -98,9 +101,13 @@ function createReducer (config) {
     }),
     [loadMix]: (state, action) => loop({
       ...state, loading: [...state.loading, action.payload]
-    }, Effects.batch([
-      Effects.constant(loadMetaList()),
-      Effects.promise(runLoadMix, action.payload)
+    }, Cmd.batch([
+      Cmd.action(loadMetaList()),
+      Cmd.run(runLoadMix, {
+        successActionCreator: loadMixSuccess,
+        failActionCreator: loadMixFailure,
+        args: [action.payload]
+      })
     ])),
     [loadMixSuccess]: (state, action) => {
       // TODO: convert to flattenChannel, action.payload.channel
@@ -111,25 +118,29 @@ function createReducer (config) {
         uniq(map(filter(values(clips), { type: CLIP_TYPE_SAMPLE }), 'sampleId')),
       )
 
-      return loop(state, Effects.batch([
-        Effects.constant(setMix(mix)),
-        Effects.constant(setChannels(channels)),
-        Effects.constant(setClips(clips)),
-        Effects.constant(loadSamples(clipSampleIds)),
-        Effects.constant(loadMixEnd(id)),
+      return loop(state, Cmd.batch([
+        Cmd.action(setMix(mix)),
+        Cmd.action(setChannels(channels)),
+        Cmd.action(setClips(clips)),
+        Cmd.action(loadSamples(clipSampleIds)),
+        Cmd.action(loadMixEnd(id)),
       ]))
     },
     [loadMixFailure]: (state, action) => loop({
       ...state, error: action.payload.error.message
-    }, Effects.constant(loadMixEnd(action.payload.id))),
+    }, Cmd.action(loadMixEnd(action.payload.id))),
     [loadMixEnd]: (state, action) => ({
       ...state, loading: without(state.loading, action.payload)
     }),
     [saveMix]: (state, action) => loop({
       ...state, saving: [...state.saving, action.payload.id]
-    }, Effects.batch([
-      Effects.promise(runSaveMix, action.payload),
-      Effects.constant(saveMixEnd(action.payload.id))
+    }, Cmd.batch([
+      Cmd.run(runSaveMix, {
+        successActionCreator: saveMixSuccess,
+        failActionCreator: saveMixFailure,
+        args: [action.payload]
+      }),
+      Cmd.action(saveMixEnd(action.payload.id))
     ])),
     [saveMixSuccess]: (state, action) => {
       // TODO: convert to flattenChannel, action.payload.channel
@@ -138,10 +149,10 @@ function createReducer (config) {
       return loop({
         ...state,
         dirty: without(state.dirty, id)
-      }, Effects.batch([
-        Effects.constant(undirtyChannels(map(channels, 'id'))),
-        Effects.constant(undirtyClips(map(clips, 'id'))),
-        Effects.constant(saveMeta(id))
+      }, Cmd.batch([
+        Cmd.action(undirtyChannels(map(channels, 'id'))),
+        Cmd.action(undirtyClips(map(clips, 'id'))),
+        Cmd.action(saveMeta(id))
       ]))
     },
     [saveMixFailure]: (state, action) => ({
@@ -152,9 +163,13 @@ function createReducer (config) {
     }),
     [deleteMix]: (state, action) => loop({
       ...state, saving: [...state.saving, action.payload]
-    }, Effects.batch([
-      Effects.promise(runDeleteMix, action.payload),
-      Effects.constant(deleteMixEnd(action.payload))
+    }, Cmd.batch([
+      Cmd.run(runDeleteMix, {
+        successActionCreator: deleteMixSuccess,
+        failActionCreator: deleteMixFailure,
+        args: [action.payload]
+      }),
+      Cmd.action(deleteMixEnd(action.payload))
     ])),
     [deleteMixSuccess]: (state, action) => {
       const { id, channelId } = state.records[action.payload]
@@ -163,10 +178,10 @@ function createReducer (config) {
         ...state,
         dirty: without(state.dirty, id),
         records: omit(state.records, id)
-      }, Effects.batch([
-        Effects.constant(unsetChannel(channelId)),
-        Effects.constant(deleteMeta(id)),
-        Effects.constant(navigateToMixList())
+      }, Cmd.batch([
+        Cmd.action(unsetChannel(channelId)),
+        Cmd.action(deleteMeta(id)),
+        Cmd.action(navigateToMixList())
       ]))
     },
     [deleteMixFailure]: (state, action) => ({
@@ -186,24 +201,24 @@ function createReducer (config) {
           ...state.records,
           [newMix.id]: newMix,
         }
-      }, Effects.batch([
-        Effects.constant(createChannel({
+      }, Cmd.batch([
+        Cmd.action(createChannel({
           id: newMix.channelId,
           type: CHANNEL_TYPE_MIX
         })),
-        Effects.constant(createClip({
+        Cmd.action(createClip({
           id: tempoClipId,
           type: CLIP_TYPE_TEMPO
         })),
-        Effects.constant(setClipsChannel({
+        Cmd.action(setClipsChannel({
           channelId: newMix.channelId,
           clipIds: [tempoClipId]
         })),
-        Effects.constant(createMeta({
+        Cmd.action(createMeta({
           id: newMix.id,
           title: 'new mix title'
         })),
-        Effects.constant(navigateToMix(newMix.id))
+        Cmd.action(navigateToMix(newMix.id))
       ]))
     },
     [unsetTrackGroupFromMix]: (state, action) => {
@@ -213,12 +228,12 @@ function createReducer (config) {
       return loop({
         ...state,
         dirty: [...state.dirty, id]
-      }, Effects.constant(unsetChannel(trackGroupId)))
+      }, Cmd.action(unsetChannel(trackGroupId)))
     },
     [navigateToMix]: (state, action) => loop(state,
-      Effects.constant(push(`/mixes/${action.payload}`))),
+      Cmd.action(push(`/mixes/${action.payload}`))),
     [navigateToMixList]: (state, action) => loop(state,
-      Effects.constant(push('/mixes/')))
+      Cmd.action(push('/mixes/')))
   }, {
     isLoadingList: false,
     loading: [],
@@ -230,32 +245,26 @@ function createReducer (config) {
 
   function runLoadMixList () {
     return service.readMixList()
-      .then(loadMixListSuccess)
-      .catch(loadMixListFailure)
   }
 
   function runLoadMix (id) {
     return service.readMix(id)
-      .then(loadMixSuccess)
-      .catch(error => loadMixFailure({ error, id }))
+      .catch(error => { error, id })
   }
 
   function runSaveMix (nestedMix) {
     return service.saveMix({
       id: nestedMix.id,
       channel: _removeFieldsNotToSave(cloneDeep(nestedMix.channel))
-    })
-      .then(() => saveMixSuccess(nestedMix))
-      .catch(saveMixFailure)
+    }).then(() => nestedMix)
   }
 
   function runDeleteMix (id) {
     if (window.confirm('Are you sure to you want to delete this mix?')) {
       return service.deleteMix(id)
-        .then(() => deleteMixSuccess(id))
-        .catch(deleteMixFailure);
+        .then(() => id)
     } else {
-      return Promise.resolve(deleteMixFailure({ message: 'User canceled delete.' }));
+      return Promise.reject({ message: 'User canceled delete.' });
     }
   }
 }

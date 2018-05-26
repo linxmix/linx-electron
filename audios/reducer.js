@@ -1,4 +1,4 @@
-const { Effects, loop } = require('redux-loop')
+const { Cmd, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const createVirtualAudioGraph = require('virtual-audio-graph')
 const assert = require('assert')
@@ -48,14 +48,14 @@ function createReducer (config) {
         }
       }
 
-      return loop(state, Effects.batch([
-        Effects.constant(updatePlayState({
+      return loop(state, Cmd.batch([
+        Cmd.action(updatePlayState({
           channelId: channel.id,
           status: PLAY_STATE_PLAYING,
           absSeekTime: state.audioContext.currentTime,
           seekBeat
         })),
-        Effects.constant(updateAudioGraph({ channel }))
+        Cmd.action(updateAudioGraph({ channel }))
       ]))
     },
     [pause]: (state, action) => {
@@ -77,14 +77,14 @@ function createReducer (config) {
         absSeekTime = currentTime
       }
 
-      return loop(state, Effects.batch([
-        Effects.constant(updatePlayState({
+      return loop(state, Cmd.batch([
+        Cmd.action(updatePlayState({
           channelId: channel.id,
           status: PLAY_STATE_PAUSED,
           absSeekTime,
           seekBeat
         })),
-        Effects.constant(updateAudioGraph({ channel }))
+        Cmd.action(updateAudioGraph({ channel }))
       ]))
     },
     [playPause]: (state, action) => {
@@ -92,24 +92,24 @@ function createReducer (config) {
       const playState = state.playStates[channel.id]
 
       if (!playState || playState.status === PLAY_STATE_PAUSED) {
-        return loop(state, Effects.constant(play(action.payload)))
+        return loop(state, Cmd.action(play(action.payload)))
       } else {
-        return loop(state, Effects.constant(pause(action.payload)))
+        return loop(state, Cmd.action(pause(action.payload)))
       }
     },
     [seekToBeat]: (state, action) => {
       const { channel, seekBeat } = action.payload
       const playState = state.playStates[channel.id] || {}
 
-      return loop(state, Effects.batch([
-        Effects.constant(updatePlayState({
+      return loop(state, Cmd.batch([
+        Cmd.action(updatePlayState({
           channelId: channel.id,
           seekBeat: seekBeat,
           absSeekTime: state.audioContext.currentTime
         })),
         playState.status === PLAY_STATE_PLAYING ?
-          Effects.constant(updateAudioGraph({ channel })) :
-          Effects.none()
+          Cmd.action(updateAudioGraph({ channel })) :
+          Cmd.none()
       ]))
     },
     [toggleSoloChannel]: (state, action) => {
@@ -119,14 +119,14 @@ function createReducer (config) {
       const newSoloChannelId = playState.soloChannelId && (playState.soloChannelId === soloChannelId) ?
         null : soloChannelId
 
-      return loop(state, Effects.batch([
-        Effects.constant(updatePlayState({
+      return loop(state, Cmd.batch([
+        Cmd.action(updatePlayState({
           channelId: channel.id,
           soloChannelId: newSoloChannelId
         })),
         playState.status === PLAY_STATE_PLAYING ?
-          Effects.constant(updateAudioGraph({ channel })) :
-          Effects.none()
+          Cmd.action(updateAudioGraph({ channel })) :
+          Cmd.none()
       ]))
     },
     [updatePlayState]: (state, action) => {
@@ -154,15 +154,15 @@ function createReducer (config) {
       const virtualAudioGraph = state.virtualAudioGraphs[channel.id]
 
       if (!virtualAudioGraph) {
-        return loop(state, Effects.batch([
-          Effects.constant(updateAudioGraph({ channel })),
-          Effects.constant(startRecording({ channel }))
+        return loop(state, Cmd.batch([
+          Cmd.action(updateAudioGraph({ channel })),
+          Cmd.action(startRecording({ channel }))
         ]))
       } else {
         const recorderNode = new Recorder(virtualAudioGraph.getAudioNodeById(channel.id))
         recorderNode.record()
 
-        return loop(state, Effects.constant(updatePlayState({
+        return loop(state, Cmd.action(updatePlayState({
           channelId: channel.id,
           isRecording: true,
           recorderNode,
@@ -177,20 +177,24 @@ function createReducer (config) {
 
       recorderNode.stop()
 
-      return loop(state, Effects.batch([
-        Effects.constant(updatePlayState({
+      return loop(state, Cmd.batch([
+        Cmd.action(updatePlayState({
           channelId: channel.id,
           isRecording: false,
           recorderNode: null
         })),
-        Effects.constant(exportWav({ recorderNode }))
+        Cmd.action(exportWav({ recorderNode }))
       ]))
     },
     [exportWav]: (state, action) => {
       const { fileName, recorderNode } = action.payload
       assert(recorderNode, 'Requires recorderNode to exportWav')
 
-      return loop(state, Effects.promise(runExportWav, { fileName, recorderNode }))
+      return loop(state, Cmd.run(runExportWav, {
+        successActionCreator: exportWavSuccess,
+        failActionCreator: exportWavFailure,
+        args: [{ fileName, recorderNode }]
+      }))
     },
     [exportWavSuccess]: (state, action) => {
       return state
@@ -243,8 +247,6 @@ function createReducer (config) {
 
   function runExportWav ({ fileName, recorderNode }) {
     return service.exportWav({ fileName, recorderNode })
-      .then(exportWavSuccess)
-      .catch(exportWavFailure)
   }
 }
 
