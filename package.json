@@ -38,7 +38,7 @@
     "globals": "^9.14.0",
     "insert-css": "^2.0.0",
     "invariant": "^2.2.2",
-    "jsmediatags": "^3.3.2",
+    "jsmediatags": "^3.8.1",
     "keymaster": "^1.6.2",
     "lodash": "^4.17.2",
     "npm-run-all": "^3.1.1",
