@@ -28,31 +28,45 @@ class MixArrangementLayout extends React.Component {
     this.state = {
       mouseMoveHandler: null,
       mouseUpHandler: null,
+      resizeHandler: null,
       isDragging: false,
-      dragCoords: null
+      dragCoords: null,
+      renderedSvgWidth: 0,
     }
   }
 
   componentDidMount () {
+    this.updateRenderedDimensions()
+    const resizeHandler = this.updateRenderedDimensions.bind(this)
     const mouseMoveHandler = this.handleMouseMove.bind(this)
     const mouseUpHandler = this.handleMouseUp.bind(this)
 
     document.addEventListener('mousemove', mouseMoveHandler)
     document.addEventListener('mouseup', mouseUpHandler)
+    window.addEventListener('resize', resizeHandler)
 
     this.setState({
-      mouseMoveHandler: mouseMoveHandler,
-      mouseUpHandler: mouseUpHandler
+      mouseMoveHandler,
+      mouseUpHandler,
+      resizeHandler
     })
   }
 
   componentWillUnmount () {
     document.removeEventListener('mousemove', this.state.mouseMoveHandler)
     document.removeEventListener('mouseup', this.state.mouseUpHandler)
+    window.removeEventListener('resize', this.state.resizeHandler)
 
     this.setState({
       mouseMoveHandler: null,
-      mouseUpHandler: null
+      mouseUpHandler: null,
+      resizeHandler: null
+    })
+  }
+
+  updateRenderedDimensions () {
+    this.setState({
+      renderedSvgWidth: this.svgElement.getBoundingClientRect().width
     })
   }
 
@@ -186,6 +200,11 @@ class MixArrangementLayout extends React.Component {
     const maxBeat = mix.channel.maxBeat
     const editAutomationsInputId = uuid()
 
+    // compute min and max beats in view within mix
+    const renderedSvgWidth = this.state.renderedSvgWidth
+    const minBeatInView = Math.max(minBeat, (-translateX / scaleX))
+    const maxBeatInView = Math.min(maxBeat, (-translateX + renderedSvgWidth) / scaleX)
+
     const dropClassName = canDropFiles && isOverWithFiles ? 'u-valid-file-drag-over' : ''
 
     return connectDropTarget(<div
@@ -269,8 +288,8 @@ class MixArrangementLayout extends React.Component {
             <g transform={transform}>
               <BeatAxis
                 scaleX={scaleX}
-                minBeat={minBeat}
-                maxBeat={maxBeat}
+                minBeat={minBeatInView}
+                maxBeat={maxBeatInView}
                 beatScale={beatScale}
                 height='100%'
                 strokeWidth={1 / scaleX}
@@ -298,8 +317,8 @@ class MixArrangementLayout extends React.Component {
             <g transform={transform}>
               <BeatAxis
                 scaleX={scaleX}
-                minBeat={minBeat}
-                maxBeat={maxBeat}
+                minBeat={minBeatInView}
+                maxBeat={maxBeatInView}
                 height={height}
                 strokeWidth={1 / scaleX}
               />
