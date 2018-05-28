@@ -121,8 +121,6 @@ class TrackChannel extends React.Component {
             isSelected={selectedClipId && selectedClipId === clip.id}
             snipClip={options =>
               this.props.snipClip(assign({ channel }, options))}
-            snipClipAndSplitTrackGroup={options => isPrimaryTrack &&
-              this.props.snipClipAndSplitTrackGroup(assign({ channel }, options))}
             deleteClip={options =>
               this.props.deleteClip(assign({ channel }, options))}
             selectClip={options =>

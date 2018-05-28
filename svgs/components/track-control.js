@@ -176,6 +176,12 @@ class TrackControl extends React.Component {
             type='checkbox' checked={isSoloTrack} onChange={this.handleToggleSoloTrack.bind(this)} />
           <label htmlFor={soloInputId}>Solo</label>
         </span>
+
+        {this.props.canDuplicateTrack && 
+          <span style={{ marginLeft: '5px' }}>
+            <button onClick={this.props.duplicateTrack}>Duplicate</button>
+          </span>
+        }
       </div>
     </div>
   }
@@ -187,6 +193,7 @@ TrackControl.defaultProps = {
   isEditingBeatgrid: false,
   isSoloTrack: false,
   canDeleteTrack: false,
+  canDuplicateTrack: false,
   musicalKey: '',
   pitchSemitones: 0,
   title: '',
