@@ -2,7 +2,7 @@ const { Cmd, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
 const { assign, get, flatten, keyBy, map, defaults, without, includes, findIndex, concat,
-  filter, values, omit, indexOf, reduce, reject, uniq } = require('lodash')
+  filter, values, omit, indexOf, mapValues, reduce, reject, uniq } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -18,8 +18,7 @@ const {
   updateChannels,
   moveTrackGroup,
   moveChannel,
-  splitTrackGroup,
-  snipClipAndSplitTrackGroup,
+  duplicateTrackChannel,
   insertChannelAtIndex,
   setClipsChannel,
   removeClipsFromChannel,
@@ -309,171 +308,70 @@ function createReducer (config) {
 
       return loop(state, Cmd.action(createSample({ file, effectCreator })))
     },
-    [snipClipAndSplitTrackGroup]: (state, action) => {
-      const { mix, channel: primaryTrack, clip, splitAtBeat, quantization } = action.payload
+    [duplicateTrackChannel]: (state, action) => {
+      const { mix, channel } = action.payload
+      const newChannelId = uuid()
+      const newChannelIndex = indexOf(channel.parentChannel.channels, channel) + 1
 
-      // first: split the primary track clip that originated this action
-      return loop(state, Cmd.batch([
-        Cmd.action(snipClip({
-          quantization,
-          clip,
-          channel: primaryTrack,
-          snipAtBeat: splitAtBeat
-        })),
-        Cmd.action(splitTrackGroup({
-          mix,
-          primaryTrack,
-          splitAtBeat,
-          quantization
-        }))
-      ]))
-    },
-    [splitTrackGroup]: (state, action) => {
-      const { mix, primaryTrack, splitAtBeat, quantization } = action.payload
+      const newClipIds = []
+      const clipCommands = map(channel.clips || [], (clip) => {
+        const newClipId = uuid()
+        newClipIds.push(newClipId)
 
-      // steps are as follows:
-        // make new track group (left side)
-        // move existing primary track into new track group
-        // update existing track group startBeat
-        // update existing channels startBeat
-        // create new primary track in existing track group
-        // split existing sample clips
-          // clips starting left of split: untouched
-          // clips starting right of split: move into new primary track
-        // split existing automation clips:
-          // create a new automation clip of that type in new primary track
-          // control points left of split: untouched
-          // control points right of split: move into new primary track
-        // navigate to newly created 'transition'
+        if (clip.isSampleClip) {
+          return Cmd.action(createClip({
+            id: newClipId,
+            sampleId: clip.sampleId,
+            type: clip.type,
+            startBeat: clip.startBeat,
+            audioStartTime: clip.audioStartTime,
+            beatCount: clip.beatCount
+          }))
 
-      const trackGroup = primaryTrack.parentChannel
-      const mixChannel = trackGroup.parentChannel
-      const quantizedSplitAtBeat = quantizeBeat({
-        quantization,
-        beat: splitAtBeat,
-        offset: mixChannel.startBeat + trackGroup.startBeat
+        } else if (clip.isAutomationClip) {
+          const controlPoints = clip.controlPoints || []
+
+          return Cmd.action(createClip({
+            id: newClipId,
+            type: clip.type,
+            controlType: clip.controlType,
+            controlPoints: keyBy(
+              mapValues(controlPoints, ({ beat, value }) => ({
+                id: uuid(),
+                beat,
+                value
+              })),
+              'id'
+            )
+          }))
+
+        } else {
+          throw new Error('Clip of unknown type')
+        }
       })
 
-      const newTrackGroupId = uuid()
-      const newPrimaryTrackId = uuid()
-
-      // split existing sample clips
-        // clips starting left of split: untouched
-        // clips starting right of split: move into new primary track
-      const sampleClipsToMove = filter(filter(primaryTrack.clips, { type: CLIP_TYPE_SAMPLE }), sampleClip => {
-          const sampleClipBeatInTrackGroup = primaryTrack.startBeat + sampleClip.startBeat
-          return sampleClipBeatInTrackGroup >= quantizedSplitAtBeat
-        });
-
-      // split existing automation clips:
-        // create a new automation clip of that type in new primary track
-        // control points left of split: untouched
-        // control points right of split: move into new primary track
-      const automationClipEffects = flatten(map(filter(primaryTrack.clips, { type: CLIP_TYPE_AUTOMATION }), automationClip => {
-        const newClipId = uuid()
-
-        const controlPointEffects = reduce(automationClip.controlPoints, (controlPointEffects, controlPoint) => {
-          const controlPointBeatInTrackGroup =
-            primaryTrack.startBeat + automationClip.startBeat + controlPoint.beat
-
-          if (controlPointBeatInTrackGroup >= quantizedSplitAtBeat) {
-            return controlPointEffects.concat([
-              Cmd.action(deleteControlPoint({
-                sourceId: automationClip.id,
-                id: controlPoint.id
-              })),
-              Cmd.action(createControlPoint({
-                sourceId: newClipId,
-                beat: controlPoint.beat,
-                value: controlPoint.value
-              }))
-            ])
-          } else {
-            return controlPointEffects
-          }
-        }, [])
-
-        return [
-          Cmd.action(createClip({
-            id: newClipId,
-            type: CLIP_TYPE_AUTOMATION,
-            controlType: automationClip.controlType
-          })),
-          Cmd.action(setClipsChannel({
-            channelId: newPrimaryTrackId,
-            clipIds: [newClipId]
-          })),
-          ...controlPointEffects
-        ]
-      }))
-        
-      return loop(state, Cmd.batch([
-
-        // make new track group (left side)
+      return loop(state, Cmd.list([
         Cmd.action(createChannel({
-          id: newTrackGroupId,
-          type: CHANNEL_TYPE_TRACK_GROUP,
-          startBeat: trackGroup.startBeat,
-          sampleId: primaryTrack.sampleId
+          id: newChannelId,
+          type: CHANNEL_TYPE_SAMPLE_TRACK,
+          startBeat: channel.startBeat,
+          pitchSemitones: channel.pitchSemitones,
+          delayTime: channel.delayTime,
+          gain: channel.gain,
+          sampleId: channel.sampleId,
+          reverbSampleId: channel.reverbSampleId,
         })),
         Cmd.action(insertChannelAtIndex({
-          channelId: newTrackGroupId,
-          parentChannelId: mixChannel.id,
-          index: trackGroup.index
+          channelId: newChannelId,
+          parentChannelId: channel.parentChannel.id,
+          index: newChannelIndex
         })),
-
-        // move existing primary track into new track group
-        Cmd.action(setChannelsParent({
-          parentChannelId: newTrackGroupId,
-          channelIds: [primaryTrack.id],
-          prevParentChannelIds: [trackGroup.id]
-        })),
-
-        // update existing track group startBeat
-        Cmd.action(updateChannel({
-          id: trackGroup.id,
-          startBeat: trackGroup.startBeat + quantizedSplitAtBeat
-        })),
-
-        // update existing channels startBeat
-        Cmd.action(updateChannels(map(reject(
-          trackGroup.channels,
-          { type: CHANNEL_TYPE_PRIMARY_TRACK }),
-          channel => ({
-            ...channel,
-            startBeat: channel.startBeat - quantizedSplitAtBeat
-          })
-        ))),
-
-        // create new primary track in existing track group
-        Cmd.action(createChannel({
-          id: newPrimaryTrackId,
-          type: CHANNEL_TYPE_PRIMARY_TRACK,
-          startBeat: 0,
-          sampleId: primaryTrack.sampleId
-        })),
-        Cmd.action(setChannelsParent({
-          parentChannelId: trackGroup.id,
-          channelIds: [newPrimaryTrackId]
-        })),
-
-        // move sample clips starting right of split into new primary track
-        // TODO: combine these two into the same action
-        !sampleClipsToMove.length ? Cmd.none : Cmd.action(setClipsParent({
-          channelId: newPrimaryTrackId,
-          clipIds: [map(sampleClipsToMove, 'id')]
-        })),
-        !sampleClipsToMove.length ? Cmd.none : Cmd.action(removeClipsFromChannel({
-          channelId: primaryTrack.id,
-          clipIds: [map(sampleClipsToMove, 'id')]
-        })),
-      ].concat(automationClipEffects).concat([
-
-        // navigate to newly created 'transition'
-        Cmd.action(
-          push(`/mixes/${mix.id}/trackGroups/${newTrackGroupId}/${trackGroup.id}`
-        ))
-      ])))
+        ...clipCommands,
+        newClipIds ? Cmd.action(setClipsChannel({
+          channelId: newChannelId,
+          clipIds: newClipIds
+        })) : Cmd.none
+      ], { sequence: true }))
     },
     [moveTrackGroup]: (state, action) => {
       const { trackGroup, diffBeats, quantization, moveTempoControlsFromBeat } = action.payload

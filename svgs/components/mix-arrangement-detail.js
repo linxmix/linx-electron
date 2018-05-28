@@ -221,11 +221,6 @@ class MixArrangementDetail extends React.Component {
         this.props.snipClip({ channel, clip, snipAtBeat: beat })
         this._asyncUpdateAudioGraph()
       },
-
-      snipClipAndSplitTrackGroup: ({ clip, channel, beat }) => {
-        this.props.snipClipAndSplitTrackGroup({ mix, channel, clip, splitAtBeat: beat })
-        this._asyncUpdateAudioGraph()
-      }
     }
 
     const tempoClipElement = <TempoClip
@@ -275,6 +270,7 @@ class MixArrangementDetail extends React.Component {
           isEditingBeatgrid={includes(this.state.editingBeatgrids, track.id)}
           isSoloTrack={mix.playState.soloChannelId === track.id}
           canDeleteTrack={track.type !== CHANNEL_TYPE_PRIMARY_TRACK}
+          canDuplicateTrack
           deleteTrack={() => {
             this.props.unsetChannel(track.id)
             this._asyncUpdateAudioGraph()
@@ -298,6 +294,10 @@ class MixArrangementDetail extends React.Component {
           }}
           selectDelayTime={delayTime => {
             this.props.updateChannel({ id: track.id, delayTime })
+            this._asyncUpdateAudioGraph()
+          }}
+          duplicateTrack={() => {
+            this.props.duplicateTrackChannel({ mix: this.props.mix, channel: track })
             this._asyncUpdateAudioGraph()
           }}
         />)}

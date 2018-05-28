@@ -14,7 +14,7 @@ const { moveClip, resizeSampleClip, moveControlPoint, createAutomationClipWithCo
   deleteControlPoint, calculateGridMarkers, clearGridMarkers, selectGridMarker, updateControlPointValue
 } = require('../../clips/actions')
 const { moveTrackGroup, removeClipsFromChannel, createSampleTrackFromFile,
-  updateChannel, moveChannel, unsetChannel, snipClipAndSplitTrackGroup } = require('../../channels/actions')
+  updateChannel, moveChannel, unsetChannel, duplicateTrackChannel } = require('../../channels/actions')
 const { playPause, seekToBeat, updateAudioGraph, toggleSoloChannel,
   startRecording, stopRecording } = require('../../audios/actions')
 const MixArrangementDetail = require('../../svgs/components/mix-arrangement-detail')
@@ -72,7 +72,7 @@ class MixDetailContainer extends React.Component {
     const arrangementActions = mapValues(
       pick(this.props, ['seekToBeat', 'updateZoom', 'moveControlPoint', 'updateAudioGraph',
         'createControlPoint', 'deleteControlPoint', 'createAutomationClipWithControlPoint',
-        'updateControlPointValue', 'updateControlPointPosition', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'moveChannel', 'snipClipAndSplitTrackGroup',
+        'updateControlPointValue', 'updateControlPointPosition', 'moveClip', 'resizeSampleClip', 'moveTrackGroup', 'createSampleTrackFromFile', 'updateChannel', 'createSampleClip', 'moveChannel', 'duplicateTrackChannel',
         'calculateGridMarkers', 'clearGridMarkers', 'selectGridMarker',
         'removeClipsFromChannel', 'toggleSoloChannel', 'updateAndSaveMeta',
         'snipClip']),
@@ -206,7 +206,7 @@ module.exports = connect(
     startRecording,
     stopRecording,
     unsetChannel,
-    snipClipAndSplitTrackGroup,
+    duplicateTrackChannel,
     updateAudioGraph,
     updateAndSaveMeta
   }

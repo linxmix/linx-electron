@@ -84,7 +84,9 @@ const getClips = Getter(
         audioStartTime,
         controlPoints,
         gridMarkers,
-        isDirty: includes(dirtyClips, clip.id)
+        isDirty: includes(dirtyClips, clip.id),
+        isAutomationClip: clip.type === CLIP_TYPE_AUTOMATION,
+        isSampleClip: clip.type === CLIP_TYPE_SAMPLE,
       }
     })
   }
