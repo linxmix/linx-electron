@@ -1,6 +1,5 @@
 const React = require('react')
-const d3 = require('d3')
-const { map, isEqual, omit } = require('lodash')
+const { map } = require('lodash')
 const { DragSource } = require('react-dnd')
 const classnames = require('classnames')
 
@@ -64,14 +63,14 @@ class SampleClip extends React.Component {
     }
     const dragX = validNumberOrDefault(this.state.dragX, 0)
 
-    return connectDragSource(<g className={classnames("SampleClip", {
-      "is-selected": isSelected,
-      "is-draggable": canDrag,
-      "is-editable": canEdit
+    return connectDragSource(<g className={classnames('SampleClip', {
+      'is-selected': isSelected,
+      'is-draggable': canDrag,
+      'is-editable': canEdit
     })}
       transform={`translate(${startBeat + dragX})`}
       onMouseUp={this.handleClick.bind(this)}>
-      <rect className="SampleClip-backdrop"
+      <rect className='SampleClip-backdrop'
         width={beatCount}
         height={height}
       />
@@ -90,7 +89,7 @@ class SampleClip extends React.Component {
 
       {canResize && <g>
         <ResizeHandle
-          isLeftHandle={true}
+          isLeftHandle
           id={clip.id}
           height={height}
           width={10 / scaleX}
@@ -170,10 +169,10 @@ const dragSource = {
   canDrag (props) {
     return props.canDrag
   },
-  endDrag(props, monitor, component) {
+  endDrag (props, monitor, component) {
     component.setState({
       dragX: null,
-      dragY: null,
+      dragY: null
     })
   }
 }

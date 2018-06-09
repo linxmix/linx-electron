@@ -9,13 +9,14 @@ const uuid = require('uuid/v4')
 const BeatAxis = require('./beat-axis')
 const AutomationControl = require('./automation-control')
 const Playhead = require('./playhead')
-const { validNumberOrDefault, quantizeBeat } = require('../../lib/number-utils')
+const { clamp, validNumberOrDefault, quantizeBeat } = require('../../lib/number-utils')
 const { CONTROL_TYPES } = require('../../clips/constants')
 const getCurrentBeat = require('../../audios/helpers/get-current-beat')
 const getControlPointsValueScale = require('../../clips/helpers/get-control-points-value-scale')
 
 const ZOOM_STEP = 0.5
 const MIN_SCALE_X = 0.1
+const MAX_SCALE_X = 15000
 
 function _isNegative (n) {
   // So we can handle the mousewheel returning -0 or 0
@@ -123,7 +124,7 @@ class MixArrangementLayout extends React.Component {
     } else {
       scaleX -= ZOOM_STEP * scaleX
     }
-    scaleX = Math.max(MIN_SCALE_X, scaleX)
+    scaleX = clamp(MIN_SCALE_X, scaleX, MAX_SCALE_X)
 
     const factor = 1 - (scaleX / this.props.scaleX)
     const mouseX = e.nativeEvent.offsetX

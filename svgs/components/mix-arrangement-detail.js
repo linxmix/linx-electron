@@ -14,8 +14,7 @@ const { getPosition } = require('../../lib/mouse-event-utils')
 const { CLIP_TYPE_SAMPLE, CONTROL_TYPE_VOLUME } = require('../../clips/constants')
 const { CHANNEL_TYPE_SAMPLE_TRACK, CHANNEL_TYPE_PRIMARY_TRACK } = require('../../channels/constants')
 
-const ZOOM_RESOLUTION = 15
-const NORMAL_RESOLUTION = 10
+const SAMPLE_RESOLUTION = 15
 
 class MixArrangementDetail extends React.Component {
   constructor (props) {
@@ -344,8 +343,7 @@ class MixArrangementDetail extends React.Component {
         selectedControlPoint={selectedControlPoint}
         showAutomationControlType={!includes(this.state.editingBeatgrids, fromTrackGroup.id) && selectedControlType}
         isEditingAutomations={isEditingAutomations}
-        sampleResolution={includes(this.state.editingBeatgrids, fromTrackGroup.id)
-          ? ZOOM_RESOLUTION : NORMAL_RESOLUTION}
+        sampleResolution={SAMPLE_RESOLUTION}
         trackChannelActions={trackChannelActions}
       />
 
@@ -375,8 +373,7 @@ class MixArrangementDetail extends React.Component {
         selectedControlPoint={selectedControlPoint}
         showAutomationControlType={!includes(this.state.editingBeatgrids, toTrackGroup.id) && selectedControlType}
         isEditingAutomations={isEditingAutomations}
-        sampleResolution={includes(this.state.editingBeatgrids, toTrackGroup.id)
-          ? ZOOM_RESOLUTION : NORMAL_RESOLUTION}
+        sampleResolution={SAMPLE_RESOLUTION}
         trackChannelActions={trackChannelActions}
       />}
 
