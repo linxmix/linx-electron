@@ -29,7 +29,7 @@ class MixArrangementOverview extends React.Component {
         translateY={0}
         scaleX={scaleX}
         rowHeight={height}
-        showOnlyPrimaryTrack
+        collapseRows
         color={d3.interpolateCool(i / trackGroups.length)}
         sampleResolution={sampleResolution}
       />)}

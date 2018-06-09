@@ -1,6 +1,6 @@
 const React = require('react')
 const d3 = require('d3')
-const { compact, concat, get, map, filter } = require('lodash')
+const { get, map, filter } = require('lodash')
 
 const TrackChannel = require('./track-channel')
 
@@ -17,7 +17,7 @@ class TrackGroup extends React.Component {
     )
 
     return <g
-      className="TrackGroup"
+      className='TrackGroup'
       transform={`translate(${channel.startBeat},${translateY})`}>
       {map(tracksToDisplay, (track, i) => <TrackChannel
         key={track.id}
@@ -25,7 +25,7 @@ class TrackGroup extends React.Component {
         beatScale={beatScale}
         clickBoxTranslateX={mixMinBeat - channel.startBeat}
         clickBoxWidth={mixBeatCount}
-        translateY={rowHeight * i}
+        translateY={this.props.collapseRows ? 0 : rowHeight * i}
         height={rowHeight}
         scaleX={scaleX}
         canDragClips={canDragClips && !isEditingAutomations}
@@ -42,7 +42,7 @@ class TrackGroup extends React.Component {
         sampleResolution={sampleResolution}
         {...trackChannelActions}
       />)}
-    </g>  
+    </g>
   }
 }
 
@@ -62,6 +62,7 @@ TrackGroup.defaultProps = {
   canResizeClips: false,
   canEditClips: false,
   showOnlyPrimaryTrack: false,
+  collapseRows: false,
   showAutomationControlType: undefined,
   showSecondColorHalf: false,
   isEditingAutomations: false
