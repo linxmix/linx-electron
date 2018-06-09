@@ -1,10 +1,11 @@
 const React = require('react')
 const { connect } = require('react-redux')
-const { assign, forEach, get, map } = require('lodash')
+const { assign, forEach } = require('lodash')
 const keymaster = require('keymaster')
 
 const { getMixProps } = require('../getters')
-const { saveMix, loadMix, deleteMix, unsetTrackGroupFromMix } = require('../actions')
+const { saveMix, loadMix, deleteMix, duplicateMix,
+  unsetTrackGroupFromMix } = require('../actions')
 const { updateMeta } = require('../../metas/actions')
 const { loadReverbSampleList } = require('../../samples/actions')
 const { playPause, seekToBeat, startRecording, stopRecording } = require('../../audios/actions')
@@ -53,6 +54,10 @@ class MixOverviewContainer extends React.Component {
     const newTitle = e && e.target && e.target.value
     const { mix, updateMeta } = this.props
     updateMeta({ id: mix.id, title: newTitle })
+  }
+
+  handleDuplicateMix () {
+    this.props.duplicateMix({ mix: this.props.mix })
   }
 
   handleToggleRecording () {
@@ -106,6 +111,11 @@ class MixOverviewContainer extends React.Component {
         </button>
         <button disabled={isLoading || isSaving} onClick={() => deleteMix(mix.id)}>
           Delete Mix
+        </button>
+        <button
+          disabled={isLoading || isSaving}
+          onClick={this.handleDuplicateMix.bind(this)}>
+          Duplicate Mix
         </button>
         <button
           disabled={isLoading || isSaving}
@@ -175,6 +185,7 @@ module.exports = connect(
     loadMix,
     deleteMix,
     updateMeta,
+    duplicateMix,
     createTrackGroupFromFile,
     swapChannels,
     loadReverbSampleList,

@@ -1,7 +1,7 @@
 const { Cmd, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
-const { cloneDeep, compact, concat, uniq, pick, without, map, omit,
+const { cloneDeep, get, keyBy, mapValues, uniq, without, map, omit,
   values, filter, forEach, reduce } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
@@ -15,7 +15,7 @@ const {
 const {
   unsetChannel,
   createChannel,
-  swapChannels,
+  duplicateTrackGroup,
   setChannels,
   undirtyChannels,
   setClipsChannel
@@ -29,7 +29,7 @@ const {
   createClip
 } = require('../clips/actions')
 const { CHANNEL_TYPE_MIX } = require('../channels/constants')
-const { CLIP_TYPE_SAMPLE, CLIP_TYPE_TEMPO, CONTROL_TYPE_REVERB } = require('../clips/constants')
+const { CLIP_TYPE_SAMPLE, CLIP_TYPE_TEMPO } = require('../clips/constants')
 
 const {
   loadMixList,
@@ -50,6 +50,7 @@ const {
   deleteMixEnd,
   setMix,
   createMix,
+  duplicateMix,
   unsetTrackGroupFromMix,
   navigateToMix,
   navigateToMixList
@@ -90,7 +91,7 @@ function createReducer (config) {
       return {
         ...state,
         records,
-        dirty: without(state.dirty, ...map(action.payload, 'id')),
+        dirty: without(state.dirty, ...map(action.payload, 'id'))
       }
     },
     [loadMixListFailure]: (state, action) => ({
@@ -123,7 +124,7 @@ function createReducer (config) {
         Cmd.action(setChannels(channels)),
         Cmd.action(setClips(clips)),
         Cmd.action(loadSamples(clipSampleIds)),
-        Cmd.action(loadMixEnd(id)),
+        Cmd.action(loadMixEnd(id))
       ]))
     },
     [loadMixFailure]: (state, action) => loop({
@@ -221,6 +222,61 @@ function createReducer (config) {
         Cmd.action(navigateToMix(newMix.id))
       ]))
     },
+    [duplicateMix]: (state, action) => {
+      const previousMix = action.payload.mix
+      const previousTempoClip = previousMix.tempoClip
+
+      const newMix = {
+        id: uuid(),
+        channelId: uuid()
+      }
+      const tempoClipId = uuid()
+
+      const duplicateTrackGroupActions = map(
+        get(previousMix, 'channel.channels'),
+        (channel) => Cmd.action(duplicateTrackGroup({
+          channel,
+          targetParentId: newMix.channelId
+        }))
+      )
+
+      return loop({
+        ...state,
+        records: {
+          ...state.records,
+          [newMix.id]: newMix
+        }
+      }, Cmd.list([
+        Cmd.list([
+          Cmd.action(createChannel({
+            id: newMix.channelId,
+            type: CHANNEL_TYPE_MIX
+          })),
+          Cmd.action(createClip({
+            id: tempoClipId,
+            type: CLIP_TYPE_TEMPO,
+            controlPoints: keyBy(
+              mapValues(previousTempoClip.controlPoints || [], ({ beat, value }) => ({
+                id: uuid(),
+                beat,
+                value
+              })),
+              'id'
+            )
+          })),
+          Cmd.action(setClipsChannel({
+            channelId: newMix.channelId,
+            clipIds: [tempoClipId]
+          })),
+          Cmd.action(createMeta({
+            id: newMix.id,
+            title: `${previousMix.meta.title} - Copy`
+          }))
+        ], { batch: true }),
+        Cmd.list(duplicateTrackGroupActions, { sequence: true }),
+        Cmd.action(navigateToMix(newMix.id))
+      ], { sequence: true }))
+    },
     [unsetTrackGroupFromMix]: (state, action) => {
       const { id, trackGroupId } = action.payload
       assert(id && trackGroupId, 'Must provide id && trackGroupId')
@@ -249,7 +305,7 @@ function createReducer (config) {
 
   function runLoadMix (id) {
     return service.readMix(id)
-      .catch(error => { error, id })
+      .catch(error => ({ error, id }))
   }
 
   function runSaveMix (nestedMix) {
@@ -264,7 +320,7 @@ function createReducer (config) {
       return service.deleteMix(id)
         .then(() => id)
     } else {
-      return Promise.reject({ message: 'User canceled delete.' });
+      return Promise.reject({ message: 'User canceled delete.' })
     }
   }
 }
@@ -288,7 +344,7 @@ const CONTROL_POINT_PROPERTIES_TO_REMOVE = [
   'clip'
 ]
 
-function _removeFieldsNotToSave(channel) {
+function _removeFieldsNotToSave (channel) {
   forEach(CHANNEL_PROPERTIES_TO_REMOVE, property => {
     channel[property] = undefined
     delete channel[property]

@@ -19,6 +19,7 @@ const {
   moveTrackGroup,
   moveChannel,
   duplicateTrackChannel,
+  duplicateTrackGroup,
   insertChannelAtIndex,
   setClipsChannel,
   removeClipsFromChannel,
@@ -308,10 +309,42 @@ function createReducer (config) {
 
       return loop(state, Cmd.action(createSample({ file, effectCreator })))
     },
-    [duplicateTrackChannel]: (state, action) => {
-      const { mix, channel } = action.payload
+    [duplicateTrackGroup]: (state, action) => {
+      const { channel, targetParentId } = action.payload
       const newChannelId = uuid()
-      const newChannelIndex = indexOf(channel.parentChannel.channels, channel) + 1
+
+      const trackChannelActions = map(channel.channels || [],
+        channel => Cmd.action(duplicateTrackChannel({
+          channel,
+          targetParentId: newChannelId
+        })))
+
+      return loop(state, Cmd.list([
+        Cmd.action(createChannel({
+          id: newChannelId,
+          type: channel.type,
+          startBeat: channel.startBeat
+        })),
+        Cmd.action(setChannelsParent({
+          parentChannelId: targetParentId,
+          channelIds: [newChannelId]
+        }))
+      ].concat(trackChannelActions), { sequence: true }))
+    },
+    [duplicateTrackChannel]: (state, action) => {
+      const { channel, targetParentId } = action.payload
+      const newChannelId = uuid()
+
+      const setChannelParentAction = targetParentId
+        ? Cmd.action(setChannelsParent({
+          parentChannelId: targetParentId,
+          channelIds: [newChannelId]
+        }))
+        : Cmd.action(insertChannelAtIndex({
+          channelId: newChannelId,
+          parentChannelId: channel.parentChannel.id,
+          index: indexOf(channel.parentChannel.channels, channel) + 1
+        }))
 
       const newClipIds = []
       const clipCommands = map(channel.clips || [], (clip) => {
@@ -327,7 +360,6 @@ function createReducer (config) {
             audioStartTime: clip.audioStartTime,
             beatCount: clip.beatCount
           }))
-
         } else if (clip.isAutomationClip) {
           const controlPoints = clip.controlPoints || []
 
@@ -344,7 +376,6 @@ function createReducer (config) {
               'id'
             )
           }))
-
         } else {
           throw new Error('Clip of unknown type')
         }
@@ -353,19 +384,16 @@ function createReducer (config) {
       return loop(state, Cmd.list([
         Cmd.action(createChannel({
           id: newChannelId,
-          type: CHANNEL_TYPE_SAMPLE_TRACK,
+          // when duplicating in existing channel, use sample track type
+          type: targetParentId ? channel.type : CHANNEL_TYPE_SAMPLE_TRACK,
           startBeat: channel.startBeat,
           pitchSemitones: channel.pitchSemitones,
           delayTime: channel.delayTime,
           gain: channel.gain,
           sampleId: channel.sampleId,
-          reverbSampleId: channel.reverbSampleId,
+          reverbSampleId: channel.reverbSampleId
         })),
-        Cmd.action(insertChannelAtIndex({
-          channelId: newChannelId,
-          parentChannelId: channel.parentChannel.id,
-          index: newChannelIndex
-        })),
+        setChannelParentAction,
         ...clipCommands,
         newClipIds ? Cmd.action(setClipsChannel({
           channelId: newChannelId,
