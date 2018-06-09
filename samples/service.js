@@ -73,11 +73,11 @@ function createService (config) {
   }
 
   function analyzeSample ({ id, startTime, endTime }) {
-    return readSample(id).then(({ sample, path, data }) => {
+    return readSample(id).then(({ sample, path }) => {
       const { audioBuffer } = sample
 
       return Promise.all([
-        readId3Tags(data),
+        readId3Tags(path),
         calculateBeatGrid(audioBuffer, { id, startTime, endTime })
       ]).then(([{ tags }, { peaks, intervals }]) => {
         const tagBpm = parseFloat(tags.TBPM && tags.TBPM.data)
@@ -96,15 +96,16 @@ function createService (config) {
         }
 
         return omitBy(attrs, isNil)
-      }).catch(
-        () => calculateBeatGrid(audioBuffer, { id, startTime, endTime }).then(({ peaks, intervals }) => ({
+      }).catch((e) => {
+        console.warn('Warning: analyzeSample failure', e)
+        return calculateBeatGrid(audioBuffer, { id, startTime, endTime }).then(({ peaks, intervals }) => ({
           id,
           bpm: 128,
           duration: audioBuffer.duration,
           firstPeakTime: peaks[0].time,
           peaks
         }))
-      ).then((attrs) => {
+      }).then((attrs) => {
         attrs.barGridTime = validNumberOrDefault(getFirstBarOffsetTime({
           time: attrs.firstPeakTime,
           bpm: attrs.bpm
@@ -123,9 +124,9 @@ function checksum (str, algorithm = 'sha256', encoding = 'hex') {
     .digest(encoding)
 }
 
-function readId3Tags (file) {
+function readId3Tags (path) {
   return new Promise((resolve, reject) => {
-    JsMediaTags.read(file, {
+    JsMediaTags.read(path, {
       onSuccess: resolve,
       onError: reject
     })
