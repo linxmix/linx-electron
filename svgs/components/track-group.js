@@ -4,6 +4,8 @@ const { get, map, filter } = require('lodash')
 
 const TrackChannel = require('./track-channel')
 
+const MAX_CHANNEL_BEAT_COUNT = 500
+
 class TrackGroup extends React.Component {
   render () {
     const { channel, color, beatScale, translateY, scaleX, sampleResolution, rowHeight, isEditingAutomations,
@@ -34,7 +36,8 @@ class TrackGroup extends React.Component {
         // or if enabled and channel startBeat is set at maxBeat
         canResizeChannel={this.props.canResizeChannels &&
           (!showAutomationControlType || (!isEditingAutomations &&
-            (track.startBeat >= track.maxBeat) && (track.beatCount > 0)))}
+            ((track.beatCount > MAX_CHANNEL_BEAT_COUNT) ||
+              (track.startBeat >= track.maxBeat) && (track.beatCount > 0))))}
         canEditClips={canEditClips && !isEditingAutomations}
         selectedClip={get(this, `props.selectedClips[${track.id}]`)}
         selectedControlPoint={this.props.selectedControlPoint}
