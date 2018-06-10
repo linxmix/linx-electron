@@ -30,7 +30,11 @@ class TrackGroup extends React.Component {
         scaleX={scaleX}
         canDragClips={canDragClips && !isEditingAutomations}
         canResizeClips={canResizeClips && !isEditingAutomations}
-        canResizeChannel={this.props.canResizeChannels}
+        // resize channel if enabled and not showing automation
+        // or if enabled and channel startBeat is set at maxBeat
+        canResizeChannel={this.props.canResizeChannels &&
+          (!showAutomationControlType || (!isEditingAutomations &&
+            (track.startBeat >= track.maxBeat) && (track.beatCount > 0)))}
         canEditClips={canEditClips && !isEditingAutomations}
         selectedClip={get(this, `props.selectedClips[${track.id}]`)}
         selectedControlPoint={this.props.selectedControlPoint}

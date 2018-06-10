@@ -335,7 +335,7 @@ class MixArrangementDetail extends React.Component {
         rowHeight={rowHeight}
         mixMinBeat={mix.channel.minBeat}
         mixBeatCount={mix.channel.beatCount}
-        canResizeChannels={!selectedControlType}
+        canResizeChannels
         canResizeClips
         canDragClips
         canEditClips
@@ -364,7 +364,7 @@ class MixArrangementDetail extends React.Component {
         rowHeight={rowHeight}
         mixMinBeat={mix.channel.minBeat}
         mixBeatCount={mix.channel.beatCount}
-        canResizeChannels={!selectedControlType}
+        canResizeChannels
         canResizeClips
         canDragClips
         canEditClips
