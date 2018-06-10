@@ -413,28 +413,51 @@ function createReducer (config) {
       const channelsToMove = filter(mixChannels, ({ index }) => index > trackGroupIndex)
       const tempoControlPoints = mixTempoClip && mixTempoClip.controlPoints
 
-      const nextEffects = concat(
-        map(channelsToMove, channel => Cmd.action(updateChannel({
-          id: channel.id,
-          startBeat: channel.startBeat + beatsToMove
-        }))),
-        !tempoControlPoints ? Cmd.none : Cmd.action(updateClip({
-          id: mixTempoClip.id,
-          controlPoints: keyBy(map(tempoControlPoints, controlPoint => ({
-            ...controlPoint,
-            beat: controlPoint.beat >= (moveTempoControlsFromBeat + diffBeats) ?
-              controlPoint.beat + beatsToMove :
-              controlPoint.beat
-          })), 'id')
-        }))
-      )
+      const channelEffects = map(channelsToMove, channel => Cmd.action(updateChannel({
+        id: channel.id,
+        startBeat: channel.startBeat + beatsToMove
+      })))
+
+      let updateTempoClipEffect = Cmd.none
+      if (tempoControlPoints) {
+        // moving to left
+        if (beatsToMove < 0) {
+          updateTempoClipEffect = Cmd.action(updateClip({
+            id: mixTempoClip.id,
+            controlPoints: keyBy(map(tempoControlPoints, (controlPoint) => {
+              let newBeat = controlPoint.beat
+              if (controlPoint.beat >= moveTempoControlsFromBeat) {
+                newBeat += beatsToMove
+              } else if (controlPoint.beat >= (moveTempoControlsFromBeat + diffBeats)) {
+                newBeat += beatsToMove
+              }
+
+              return {
+                ...controlPoint,
+                beat: newBeat
+              }
+            }), 'id')
+          }))
+        // moving to right
+        } else {
+          updateTempoClipEffect = Cmd.action(updateClip({
+            id: mixTempoClip.id,
+            controlPoints: keyBy(map(tempoControlPoints, controlPoint => ({
+              ...controlPoint,
+              beat: controlPoint.beat >= moveTempoControlsFromBeat
+                ? controlPoint.beat + beatsToMove
+                : controlPoint.beat
+            })), 'id')
+          }))
+        }
+      }
 
       return loop(state, Cmd.batch([
         Cmd.action(updateChannel({
           id,
           startBeat: startBeat + beatsToMove
         }))
-      ].concat(nextEffects)))
+      ].concat(channelEffects).concat(updateTempoClipEffect)))
     },
     [moveChannel]: (state, action) => {
       const { id, startBeat, diffBeats, quantization } = action.payload
@@ -443,7 +466,7 @@ function createReducer (config) {
         id,
         startBeat: quantizeBeat({ quantization, beat: diffBeats }) + startBeat
       })))
-    },
+    }
   }, {
     dirty: [],
     records: {}
