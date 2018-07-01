@@ -130,7 +130,8 @@ class PrimaryTrackTable extends React.Component {
         columns={columns}
         TrComponent={this.state.PrimaryTrackRow}
         showPagination={false}
-        minRows={0}
+        defaultPageSize={1000}
+        minRows={3}
         className={classnames('-striped', '-highlight', dropClassName)}
       >
         {(state, makeTable, instance) => {
