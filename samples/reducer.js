@@ -168,10 +168,16 @@ function createReducer (config) {
     },
     [readJsonAndCreateSamplesSuccess]: (state, action) => {
       const { sampleInfos, json, effectCreator } = action.payload
-      // TODO
-      // for each sampleInfos, run createSampleSuccess with given args
-      // run effectCreator with the provided json, and ids from each sample
-      return state
+      const sampleSuccessEffects = sampleInfos.map(({ sample, title, isDuplicate }) =>
+        Cmd.action(createSampleSuccess({ sample, title, isDuplicate })))
+      const sampleIds = sampleInfos.map(({ sample }) => sample.id)
+
+      const effects = sampleSuccessEffects.concat(effectCreator({
+        sampleIds,
+        json
+      }))
+
+      return loop(state, Cmd.batch(effects))
     },
     [createSample]: (state, action) => {
       const { file, effectCreator } = action.payload

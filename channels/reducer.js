@@ -317,6 +317,7 @@ function createReducer (config) {
 
       const effectCreator = (...args) => {
         console.log('EFFECT CREATOR', { args })
+        return Cmd.none
       }
 
       return loop(state,
