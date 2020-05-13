@@ -24,6 +24,7 @@ const {
   setClipsChannel,
   removeClipsFromChannel,
   setChannelsParent,
+  createTrackGroup,
   createTrackGroupFromFile,
   createSampleTrackFromFile,
   createMixFromJson,
@@ -245,37 +246,46 @@ function createReducer (config) {
         }
       }
     },
+    [createTrackGroup]: (state, action) => {
+      const { sampleId, parentChannelId, attrs = {} } = action.payload
+
+      const clipId = uuid()
+      const primaryTrackId = uuid()
+      const trackGroupId = uuid()
+
+      return loop(state, Cmd.batch([
+        Cmd.action(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
+        Cmd.action(createChannel({
+          id: primaryTrackId,
+          type: CHANNEL_TYPE_PRIMARY_TRACK,
+          sampleId
+        })),
+        Cmd.action(setClipsChannel({
+          channelId: primaryTrackId,
+          clipIds: [clipId]
+        })),
+        Cmd.action(createChannel(assign({
+          id: trackGroupId,
+          type: CHANNEL_TYPE_TRACK_GROUP
+        }, attrs))),
+        Cmd.action(setChannelsParent({
+          parentChannelId: trackGroupId,
+          channelIds: [primaryTrackId] })),
+        Cmd.action(setChannelsParent({
+          parentChannelId,
+          channelIds: [trackGroupId]
+        }))
+      ]))
+    },
     [createTrackGroupFromFile]: (state, action) => {
       const { file, parentChannelId, attrs = {} } = action.payload
 
       const effectCreator = (sampleId) => {
-        const clipId = uuid()
-        const primaryTrackId = uuid()
-        const trackGroupId = uuid()
-
-        return Cmd.batch([
-          Cmd.action(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
-          Cmd.action(createChannel({
-            id: primaryTrackId,
-            type: CHANNEL_TYPE_PRIMARY_TRACK,
-            sampleId
-          })),
-          Cmd.action(setClipsChannel({
-            channelId: primaryTrackId,
-            clipIds: [clipId]
-          })),
-          Cmd.action(createChannel(assign({
-            id: trackGroupId,
-            type: CHANNEL_TYPE_TRACK_GROUP
-          }, attrs))),
-          Cmd.action(setChannelsParent({
-            parentChannelId: trackGroupId,
-            channelIds: [primaryTrackId] })),
-          Cmd.action(setChannelsParent({
-            parentChannelId,
-            channelIds: [trackGroupId]
-          }))
-        ])
+        return Cmd.action(createTrackGroup({
+          sampleId,
+          parentChannelId,
+          attrs
+        }))
       }
 
       return loop(state, Cmd.action(createSample({ file, effectCreator })))
@@ -315,8 +325,16 @@ function createReducer (config) {
       const { file, parentChannelId, clipAttrs = {}, channelAttrs = {} } = action.payload
       // TODO
 
-      const effectCreator = (...args) => {
-        console.log('EFFECT CREATOR', { args })
+      const effectCreator = ({ sampleIds, json }) => {
+        console.log('EFFECT CREATOR', { sampleIds, json })
+        const { transition, prediction } = json[0]
+
+        // TODO: createTrackGroup for trackA
+        // createTrackGroup for trackB
+
+        // convert prediction xfades to automation clips
+        
+        
         return Cmd.none
       }
 
