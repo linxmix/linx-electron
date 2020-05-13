@@ -31,7 +31,7 @@ const {
   swapChannels
 } = require('./actions')
 const {
-  unsetClips, createClip, updateClip, snipClip, createControlPoint, deleteControlPoint
+  unsetClips, createClip, updateClip, snipClip, createControlPoint, deleteControlPoint, createAutomationClipWithControlPoint
 } = require('../clips/actions')
 const {
   createSample,
@@ -247,19 +247,23 @@ function createReducer (config) {
       }
     },
     [createTrackGroup]: (state, action) => {
-      const { sampleId, parentChannelId, attrs = {} } = action.payload
+      const { sampleId, parentChannelId, primaryClipAttrs = {}, trackGroupAttrs = {}, primaryChannelAttrs = {} } = action.payload
 
+      const primaryTrackId = action.payload.primaryTrackId || uuid()
       const clipId = uuid()
-      const primaryTrackId = uuid()
       const trackGroupId = uuid()
 
       return loop(state, Cmd.batch([
-        Cmd.action(createClip({ id: clipId, sampleId, type: CLIP_TYPE_SAMPLE })),
-        Cmd.action(createChannel({
+        Cmd.action(createClip(assign({
+          id: clipId,
+          sampleId,
+          type: CLIP_TYPE_SAMPLE
+        }, primaryClipAttrs))),
+        Cmd.action(createChannel(assign({
           id: primaryTrackId,
           type: CHANNEL_TYPE_PRIMARY_TRACK,
           sampleId
-        })),
+        }, primaryChannelAttrs))),
         Cmd.action(setClipsChannel({
           channelId: primaryTrackId,
           clipIds: [clipId]
@@ -267,7 +271,7 @@ function createReducer (config) {
         Cmd.action(createChannel(assign({
           id: trackGroupId,
           type: CHANNEL_TYPE_TRACK_GROUP
-        }, attrs))),
+        }, trackGroupAttrs))),
         Cmd.action(setChannelsParent({
           parentChannelId: trackGroupId,
           channelIds: [primaryTrackId] })),
@@ -278,13 +282,13 @@ function createReducer (config) {
       ]))
     },
     [createTrackGroupFromFile]: (state, action) => {
-      const { file, parentChannelId, attrs = {} } = action.payload
+      const { file, parentChannelId, trackGroupAttrs = {} } = action.payload
 
       const effectCreator = (sampleId) => {
         return Cmd.action(createTrackGroup({
           sampleId,
           parentChannelId,
-          attrs
+          trackGroupAttrs
         }))
       }
 
@@ -322,20 +326,55 @@ function createReducer (config) {
       return loop(state, Cmd.action(createSample({ file, effectCreator })))
     },
     [createMixFromJson]: (state, action) => {
-      const { file, parentChannelId, clipAttrs = {}, channelAttrs = {} } = action.payload
-      // TODO
+      const { file, parentChannelId } = action.payload
 
-      const effectCreator = ({ sampleIds, json }) => {
-        console.log('EFFECT CREATOR', { sampleIds, json })
-        const { transition, prediction } = json[0]
+      // TODO: make this not fixed
+      const bpm = 128
 
-        // TODO: createTrackGroup for trackA
+      const effectCreator = ({ sampleIds, transitionInfo }) => {
+        console.log('EFFECT CREATOR', { sampleIds, transitionInfo })
+        const [ transition, prediction ] = transitionInfo
+        const trackAID = uuid()
+        const trackBID = uuid()
+
+        // create trackA
+        // TODO: need effect to set offsets in clip meta
+
+        const trackA = transition.trackA
+        const createTrackAEffect = Cmd.action(createTrackGroup({
+          primaryTrackId: trackAID,
+          parentChannelId,
+          sampleId: sampleIds[0],
+          // trackGroupAttrs: {
+          //   startBeat: trackA.time * bpm / 60
+          // },
+          primaryClipAttrs: {
+            audioStartTime: trackA.offset
+          }
+        }))
+        const trackB = transition.trackB
+        // const createTrackBEffect = Cmd.action(createTrackGroup({
+        //   primaryTrackId: trackBID,
+        //   parentChannelId,
+        //   sampleId: sampleIds[1],
+        //   // trackGroupAttrs: {
+        //   //   startBeat: trackB.time * bpm / 60
+        //   // },
+        //   primaryClipAttrs: {
+        //     audioStartTime: trackB.offset
+        //   }
+        // }))
         // createTrackGroup for trackB
 
         // convert prediction xfades to automation clips
-        
-        
-        return Cmd.none
+        const sampleRate = 22050 // same as autodj
+        const hopLength = 512 // same as autodj
+        // createAutomationClipWithControlPoint({})
+
+        return Cmd.batch([
+          createTrackAEffect,
+          // createTrackBEffect,
+        ])
       }
 
       return loop(state,

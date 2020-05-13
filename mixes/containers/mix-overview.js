@@ -41,15 +41,18 @@ class MixOverviewContainer extends React.Component {
     const maxBeat = mix && mix.channel && mix.channel.maxBeat
     const startBeat = Math.ceil(maxBeat ? maxBeat + 1 : 0)
 
-    console.log('file', files[0])
-    console.log('type', files[0].type)
+    console.log('FILES', files)
+
     if (files.length === 1 && files[0].type.match(/json/)) {
-      createMixFromJson({ file: files[0] })
+      createMixFromJson({
+        file: files[0],
+        parentChannelId: mix.channel.id
+      })
     } else {
       forEach(files, (file, i) => createTrackGroupFromFile({
         file,
         parentChannelId: mix.channel.id,
-        attrs: {
+        trackGroupAttrs: {
           startBeat: quantizeBeat({ beat: startBeat + i, quantization: 'bar' })
         }
       }))

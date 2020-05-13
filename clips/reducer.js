@@ -268,7 +268,7 @@ function createReducer (config) {
       })))
     },
     [createControlPoint]: (state, action) => {
-      const { sourceId, beat, value, minBeat, maxBeat, quantization } = action.payload
+      const { sourceId, beat, value, quantization = 'sample' } = action.payload
 
       const sourceClip = state.records[sourceId]
       assert(sourceClip, 'Cannot createControlPoint for nonexistent sourceClip')
@@ -303,15 +303,36 @@ function createReducer (config) {
         controlPoints: omit(sourceClip.controlPoints, id)
       })))
     },
+
     [createAutomationClipWithControlPoint]: (state, action) => {
-      const { channelId, controlType, beat, value, minBeat, maxBeat, quantization } = action.payload
+      const { channelId, controlType, beat, value, minBeat, maxBeat, quantization, controlPointArgs = [] } = action.payload
       assert(channelId, 'Cannot createAutomationClipWithControlPoint without channelId')
       assert(includes(CONTROL_TYPES, controlType),
         'Must have valid controlType to createAutomationClipWithControlPoint')
 
       const automationClipId = uuid()
 
-      return loop(state, Cmd.batch([
+      let controlPointEffects = []
+
+      // NOTE: this takes a single point or for multiple points 
+      // this was done as a shortcut to save time on renaming
+      if (controlPointArgs.length) {
+        controlPointEffects = controlPointArgs.map(({
+          beat, value
+        }) => Cmd.action(createControlPoint({
+          sourceId: automationClipId,
+          beat, value, quantization
+        })))
+      } else {
+        controlPointEffects = [
+          Cmd.action(createControlPoint({
+            sourceId: automationClipId,
+            beat, value, quantization
+          }))
+        ]
+      }
+
+      const effects = [
         Cmd.action(createClip({
           id: automationClipId,
           type: CLIP_TYPE_AUTOMATION,
@@ -321,11 +342,9 @@ function createReducer (config) {
           channelId,
           clipIds: [automationClipId]
         })),
-        Cmd.action(createControlPoint({
-          sourceId: automationClipId,
-          beat, value, minBeat, maxBeat, quantization
-        }))
-      ]))
+      ].concat(controlPointEffects)
+
+      return loop(state, Cmd.batch(effects))
     },
     [createSampleClip]: (state, action) => {
       const { channelId, sampleId, beat, clipOptions, quantization, sourceClipStartBeat } = action.payload

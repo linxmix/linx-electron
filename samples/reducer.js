@@ -167,14 +167,14 @@ function createReducer (config) {
       }))
     },
     [readJsonAndCreateSamplesSuccess]: (state, action) => {
-      const { sampleInfos, json, effectCreator } = action.payload
-      const sampleSuccessEffects = sampleInfos.map(({ sample, title, isDuplicate }) =>
-        Cmd.action(createSampleSuccess({ sample, title, isDuplicate })))
+      const { sampleInfos, transitionInfo, effectCreator } = action.payload
+      const sampleSuccessEffects = sampleInfos.map(({ sample, file, isDuplicate }) =>
+        Cmd.action(createSampleSuccess({ sample, title: file && file.name, isDuplicate })))
       const sampleIds = sampleInfos.map(({ sample }) => sample.id)
 
       const effects = sampleSuccessEffects.concat(effectCreator({
         sampleIds,
-        json
+        transitionInfo
       }))
 
       return loop(state, Cmd.batch(effects))
@@ -307,7 +307,7 @@ function createReducer (config) {
 
   function runReadJsonAndCreateSamples ({ file, effectCreator }) {
     return service.readJsonAndCreateSamples(file)
-      .then(({ sampleInfos, json }) => ({ sampleInfos, json, effectCreator }))
+      .then(({ sampleInfos, transitionInfo }) => ({ sampleInfos, transitionInfo, effectCreator }))
   }
 
   function runAnalyzeSample ({ id, startTime, endTime, effectCreator }) {

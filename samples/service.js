@@ -58,7 +58,7 @@ function createService (config) {
 
       // expect shape [ [ transition, prediction ], ...]
       const json = JSON.parse(data)
-      const [ transition ] = json[0]
+      const [ transition, prediction ] = json[2]
 
       // TODO: add files from more transitions?
       const transitionFiles = [
@@ -74,7 +74,7 @@ function createService (config) {
         .then((sampleInfos) => {
           return {
             sampleInfos,
-            json,
+            transitionInfo: [ transition, prediction ],
           }
         })
     })
@@ -125,10 +125,10 @@ function createService (config) {
 
         return omitBy(attrs, isNil)
       }).catch((e) => {
-        console.warn('Warning: analyzeSample failure', e)
+        console.warn('Warning: readId3Tags failure', e)
         return calculateBeatGrid(audioBuffer, { id, startTime, endTime }).then(({ peaks, intervals }) => ({
           id,
-          bpm: 128,
+          bpm: validNumberOrDefault(intervals[0].tempo, 128),
           duration: audioBuffer.duration,
           firstPeakTime: peaks[0].time,
           peaks
