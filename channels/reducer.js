@@ -328,43 +328,34 @@ function createReducer (config) {
     [createMixFromJson]: (state, action) => {
       const { file, parentChannelId } = action.payload
 
-      // TODO: make this not fixed
-      const bpm = 128
-
       const effectCreator = ({ sampleIds, transitionInfo }) => {
         console.log('EFFECT CREATOR', { sampleIds, transitionInfo })
         const [ transition, prediction ] = transitionInfo
         const trackAID = uuid()
+        const trackGroupAID = uuid()
         const trackBID = uuid()
-
-        // create trackA
-        // TODO: need effect to set offsets in clip meta
+        const trackGroupBID = uuid()
 
         const trackA = transition.trackA
-        const createTrackAEffect = Cmd.action(createTrackGroup({
+        const createTrackAEffect = _createTrackGroup({
+          trackGroupId: trackGroupAID,
           primaryTrackId: trackAID,
           parentChannelId,
           sampleId: sampleIds[0],
-          // trackGroupAttrs: {
-          //   startBeat: trackA.time * bpm / 60
-          // },
           primaryClipAttrs: {
             audioStartTime: trackA.offset
           }
-        }))
+        })
         const trackB = transition.trackB
-        // const createTrackBEffect = Cmd.action(createTrackGroup({
-        //   primaryTrackId: trackBID,
-        //   parentChannelId,
-        //   sampleId: sampleIds[1],
-        //   // trackGroupAttrs: {
-        //   //   startBeat: trackB.time * bpm / 60
-        //   // },
-        //   primaryClipAttrs: {
-        //     audioStartTime: trackB.offset
-        //   }
-        // }))
-        // createTrackGroup for trackB
+        const createTrackBEffect = _createTrackGroup({
+          trackGroupId: trackGroupBID,
+          primaryTrackId: trackBID,
+          parentChannelId,
+          sampleId: sampleIds[1],
+          primaryClipAttrs: {
+            audioStartTime: trackB.offset
+          }
+        })
 
         // convert prediction xfades to automation clips
         const sampleRate = 22050 // same as autodj
@@ -373,7 +364,11 @@ function createReducer (config) {
 
         return Cmd.batch([
           createTrackAEffect,
-          // createTrackBEffect,
+          createTrackBEffect,
+          Cmd.action(setChannelsParent({
+            parentChannelId,
+            channelIds: [trackGroupAID, trackGroupBID]
+          }))
         ])
       }
 
@@ -544,3 +539,47 @@ function createReducer (config) {
   })
 }
 
+
+// using this because batching actions wasnt working as expected
+function _createTrackGroup ({
+  sampleId,
+  parentChannelId,
+  trackGroupId = uuid(),
+  primaryTrackId = uuid(),
+  primaryClipAttrs = {},
+  trackGroupAttrs = {},
+  primaryChannelAttrs = {}
+}) {
+  const clipId = uuid()
+
+  return Cmd.batch([
+    Cmd.action(createClip(assign({
+      id: clipId,
+      sampleId,
+      type: CLIP_TYPE_SAMPLE
+    }, primaryClipAttrs))),
+    Cmd.action(createChannel(assign({
+      id: primaryTrackId,
+      type: CHANNEL_TYPE_PRIMARY_TRACK,
+      sampleId
+    }, primaryChannelAttrs))),
+    Cmd.action(setClipsChannel({
+      channelId: primaryTrackId,
+      clipIds: [clipId]
+    })),
+    Cmd.action(createChannel(assign({
+      id: trackGroupId,
+      type: CHANNEL_TYPE_TRACK_GROUP
+    }, trackGroupAttrs))),
+    Cmd.action(setChannelsParent({
+      parentChannelId: trackGroupId,
+      channelIds: [primaryTrackId] })),
+
+    // this was removed because it didnt allow 2 creations at once
+    // 
+    // Cmd.action(setChannelsParent({
+    //   parentChannelId,
+    //   channelIds: [trackGroupId]
+    // }))
+  ])
+}
