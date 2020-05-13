@@ -25,6 +25,8 @@ const {
   createSampleDuplicate,
   createSampleFailure,
   createSampleEnd,
+  readJsonAndCreateSamples,
+  readJsonAndCreateSamplesSuccess,
   analyzeSample,
   analyzeSampleSuccess,
   analyzeSampleFailure,
@@ -155,6 +157,22 @@ function createReducer (config) {
     [loadReverbSampleListEnd]: (state, action) => ({
       ...state, isLoadingReverbList: false
     }),
+    [readJsonAndCreateSamples]: (state, action) => {
+      const { file, effectCreator } = action.payload
+
+      return loop(state, Cmd.run(runReadJsonAndCreateSamples, {
+        successActionCreator: readJsonAndCreateSamplesSuccess,
+        failActionCreator: createSampleFailure,
+        args: [{ file, effectCreator }]
+      }))
+    },
+    [readJsonAndCreateSamplesSuccess]: (state, action) => {
+      const { sampleInfos, json, effectCreator } = action.payload
+      // TODO
+      // for each sampleInfos, run createSampleSuccess with given args
+      // run effectCreator with the provided json, and ids from each sample
+      return state
+    },
     [createSample]: (state, action) => {
       const { file, effectCreator } = action.payload
       assert(file && file.path, 'Cannot createSample without file && file.path')
@@ -172,7 +190,7 @@ function createReducer (config) {
       ]))
     },
     [createSampleSuccess]: (state, action) => {
-      const { sample, file, effectCreator, isDuplicate } = action.payload
+      const { sample, title, effectCreator, isDuplicate } = action.payload
 
       if (isDuplicate) {
         return loop(state, Cmd.action(createSampleDuplicate({
@@ -184,7 +202,7 @@ function createReducer (config) {
       const { id } = sample
       const meta = {
         id,
-        title: file.name
+        title,
       }
 
       return loop({
@@ -273,7 +291,17 @@ function createReducer (config) {
 
   function runCreateSample ({ file, effectCreator }) {
     return service.createSample(file)
-      .then(({ sample, file, isDuplicate }) => ({ sample, file, isDuplicate, effectCreator }))
+      .then(({ sample, file, isDuplicate }) => ({
+        sample,
+        isDuplicate,
+        effectCreator,
+        title: file && file.name,
+      }))
+  }
+
+  function runReadJsonAndCreateSamples ({ file, effectCreator }) {
+    return service.readJsonAndCreateSamples(file)
+      .then(({ sampleInfos, json }) => ({ sampleInfos, json, effectCreator }))
   }
 
   function runAnalyzeSample ({ id, startTime, endTime, effectCreator }) {

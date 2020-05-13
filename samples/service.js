@@ -21,6 +21,7 @@ function createService (config) {
     readReverbSampleList,
     readSample,
     createSample,
+    readJsonAndCreateSamples,
     analyzeSample
   }
 
@@ -50,6 +51,33 @@ function createService (config) {
           .then(audioBuffer => ({ data, audioBuffer }))
       })
       .then(({ data, audioBuffer }) => ({ sample: { id, audioBuffer }, path, data }))
+  }
+
+  function readJsonAndCreateSamples (file) {
+    return fs.readFile(file.path, 'utf8').then((data) => {
+
+      // expect shape [ [ transition, prediction ], ...]
+      const json = JSON.parse(data)
+      const [ transition ] = json[0]
+
+      // TODO: add files from more transitions?
+      const transitionFiles = [
+        { path: transition.trackA.absolute_path,
+          name: transition.trackA.name
+        },
+        { path: transition.trackB.absolute_path,
+          name: transition.trackB.name
+        },
+      ]
+
+      return Promise.all(transitionFiles.map(createSample))
+        .then((sampleInfos) => {
+          return {
+            sampleInfos,
+            json,
+          }
+        })
+    })
   }
 
   function createSample (file) {

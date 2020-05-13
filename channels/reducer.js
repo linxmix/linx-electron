@@ -26,13 +26,15 @@ const {
   setChannelsParent,
   createTrackGroupFromFile,
   createSampleTrackFromFile,
+  createMixFromJson,
   swapChannels
 } = require('./actions')
 const {
   unsetClips, createClip, updateClip, snipClip, createControlPoint, deleteControlPoint
 } = require('../clips/actions')
 const {
-  createSample
+  createSample,
+  readJsonAndCreateSamples
 } = require('../samples/actions')
 const {
   CHANNEL_TYPE_PRIMARY_TRACK,
@@ -308,6 +310,17 @@ function createReducer (config) {
       }
 
       return loop(state, Cmd.action(createSample({ file, effectCreator })))
+    },
+    [createMixFromJson]: (state, action) => {
+      const { file, parentChannelId, clipAttrs = {}, channelAttrs = {} } = action.payload
+      // TODO
+
+      const effectCreator = (...args) => {
+        console.log('EFFECT CREATOR', { args })
+      }
+
+      return loop(state,
+        Cmd.action(readJsonAndCreateSamples({ file, effectCreator })))
     },
     [duplicateTrackGroup]: (state, action) => {
       const { channel, targetParentId } = action.payload

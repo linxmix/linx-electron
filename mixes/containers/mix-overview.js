@@ -9,7 +9,7 @@ const { saveMix, loadMix, deleteMix, duplicateMix,
 const { updateMeta } = require('../../metas/actions')
 const { loadReverbSampleList } = require('../../samples/actions')
 const { playPause, seekToBeat, startRecording, stopRecording } = require('../../audios/actions')
-const { createTrackGroupFromFile, swapChannels } = require('../../channels/actions')
+const { createTrackGroupFromFile, createMixFromJson, swapChannels } = require('../../channels/actions')
 const { updateZoom } = require('../../svgs/actions')
 const PrimaryTrackTable = require('../components/primary-track-table')
 const MixArrangementOverview = require('../../svgs/components/mix-arrangement-overview')
@@ -37,17 +37,19 @@ class MixOverviewContainer extends React.Component {
   }
 
   handleFilesDrop ({ files }) {
-    const { mix, createTrackGroupFromFile } = this.props
+    const { mix, createTrackGroupFromFile, createMixFromJson } = this.props
     const maxBeat = mix && mix.channel && mix.channel.maxBeat
     const startBeat = Math.ceil(maxBeat ? maxBeat + 1 : 0)
 
-    forEach(files, (file, i) => createTrackGroupFromFile({
-      file,
-      parentChannelId: mix.channel.id,
-      attrs: {
-        startBeat: quantizeBeat({ beat: startBeat + i, quantization: 'bar' })
-      }
-    }))
+    createMixFromJson({ file: files[0] })
+
+    // forEach(files, (file, i) => createTrackGroupFromFile({
+    //   file,
+    //   parentChannelId: mix.channel.id,
+    //   attrs: {
+    //     startBeat: quantizeBeat({ beat: startBeat + i, quantization: 'bar' })
+    //   }
+    // }))
   }
 
   handleChangeMixTitle (e) {
@@ -187,6 +189,7 @@ module.exports = connect(
     updateMeta,
     duplicateMix,
     createTrackGroupFromFile,
+    createMixFromJson,
     swapChannels,
     loadReverbSampleList,
     unsetTrackGroupFromMix,
