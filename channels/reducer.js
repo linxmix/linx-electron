@@ -581,32 +581,33 @@ function _createTransitionEffects({
     channelId: trackAId,
     controlType: CONTROL_TYPE_VOLUME,
     quantization: 'sample',
-    // controlPointArgs: prediction.map((yi, i) => ({
-    //   beat: (transitionStartBeat - trackAStartBeat) + (i / prediction.length) * transitionBeatCount,
-    //   // value: (1 - Math.cos(i * Math.pi / 2)),
-    //   // value: (1 - Math.cos(yi[0] * Math.pi / 2)),
-    //   value: 1 - yi[0],
-    controlPointArgs: transition.xfade_events.map(({ time, value }, i) => ({
-      beat: (time * mixBpm / 60) - trackAStartBeat,
-      value: 1 - value,
-    })),
+    controlPointArgs: prediction.map((yi, i) => ({
+      beat: (transitionStartBeat - trackAStartBeat) + (i / prediction.length) * transitionBeatCount,
+      // value: (1 - Math.cos(i * Math.pi / 2)),
+      // value: (1 - Math.cos(yi[0] * Math.pi / 2)),
+      value: 1 - yi[0],
+    }))
+    // controlPointArgs: transition.xfade_events.map(({ time, value }, i) => ({
+    //   beat: (time * mixBpm / 60) - trackAStartBeat,
+    //   value: 1 - value,
+    // }))
   }))
 
   const trackBVolumeEffect = Cmd.action(createAutomationClipWithControlPoint({
     channelId: trackBId,
     controlType: CONTROL_TYPE_VOLUME,
     quantization: 'sample',
-    // controlPointArgs: prediction.map((yi, i) => ({
-    //   // do not include transitionStartBeat because we are offset
-    //   // by trackGroup.startBeat
-    //   beat: (transitionStartBeat - trackBStartBeat) + (i / prediction.length) * transitionBeatCount,
-    //   // value: Math.cos(yi * Math.pi / 2),
-    //   value: yi[0],
-    // }))
-    controlPointArgs: transition.xfade_events.map(({ time, value }, i) => ({
-      beat: (time * mixBpm / 60) - trackBStartBeat,
-      value: value,
+    controlPointArgs: prediction.map((yi, i) => ({
+      // do not include transitionStartBeat because we are offset
+      // by trackGroup.startBeat
+      beat: (transitionStartBeat - trackBStartBeat) + (i / prediction.length) * transitionBeatCount,
+      // value: Math.cos(yi * Math.pi / 2),
+      value: yi[0],
     }))
+    // controlPointArgs: transition.xfade_events.map(({ time, value }, i) => ({
+    //   beat: (time * mixBpm / 60) - trackBStartBeat,
+    //   value: value,
+    // }))
   }))
 
   return [

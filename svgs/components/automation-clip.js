@@ -11,16 +11,36 @@ const {
   CONTROL_TYPE_MID_BAND,
   CONTROL_TYPE_HIGH_BAND,
 } = require('../../clips/constants')
+const { clamp } = require('../../lib/number-utils')
 
 class AutomationClip extends React.Component {
   render () {
     const { clip, height, scaleX, canEdit, minBeat, maxBeat, selectedControlPoint } = this.props
     if (!clip) { return null }
 
-    const { id, controlPoints } = clip
+    const { id } = clip
     const line = d3.line()
       .x((controlPoint) => controlPoint.beat)
       .y((controlPoint) => (1 - controlPoint.value) * height)
+
+    // performance hack: do not render too many control points
+    let controlPointRadius = 10
+    let { controlPoints } = clip
+    const maxControlPointsToDisplay = 300
+    const maxControlPointStep = 5
+    if (controlPoints.length > maxControlPointsToDisplay) {
+      controlPointRadius = 5
+      controlPoints = []
+      for (let i = 0; i < clip.controlPoints.length; i += maxControlPointStep) {
+        controlPoints[i / maxControlPointStep] = clip.controlPoints[i]
+      }
+
+      // make sure clip ends in last automation point
+      const lastControlPoint = clip.controlPoints[clip.controlPoints.length - 1]
+      if (controlPoints[controlPoints.length - 1] !== lastControlPoint) {
+        controlPoints.push(lastControlPoint)
+      }
+    }
 
     let color
     switch(clip.controlType) {
@@ -30,15 +50,9 @@ class AutomationClip extends React.Component {
       default: color = 'blue'; break;
     }
 
-    return <g>
-      <path
-        className={classnames('AutomationClipPath', color)}
-        strokeWidth={1 / scaleX}
-        fill='transparent'
-        d={line(controlPoints)} />
-      <rect width={maxBeat - minBeat} height={height} fill='transparent' />
-
-      {map(controlPoints, controlPoint => <ControlPoint
+    // performance hack: render all points together when not editing
+    const controlPointsRendered = canEdit
+      ? map(controlPoints, controlPoint => <ControlPoint
         key={controlPoint.id}
         sourceId={id}
         scaleX={scaleX}
@@ -50,10 +64,31 @@ class AutomationClip extends React.Component {
         height={height}
         color={color}
         canEdit={canEdit}
+        radius={controlPointRadius}
         isSelected={canEdit && selectedControlPoint && (controlPoint.id === selectedControlPoint.id)}
         deleteControlPoint={this.props.deleteControlPoint}
         selectControlPoint={isSelected => this.props.selectControlPoint(!isSelected && controlPoint)}
-      />)}
+      />)
+      : map(controlPoints, controlPoint => <ellipse
+        key={controlPoint.id}
+        className={classnames('AutomationClipControlPoint', color)}
+        strokeWidth={0.3 / scaleX}
+        stroke={'rgba(255,255,255,0.8)'}
+        cx={controlPoint.beat}
+        cy={clamp(0, (1 - controlPoint.value), 1) * height}
+        rx={controlPointRadius / scaleX}
+        ry={controlPointRadius}
+      />)
+
+    return <g>
+      <path
+        className={classnames('AutomationClipPath', color)}
+        strokeWidth={1 / scaleX}
+        fill='transparent'
+        d={line(controlPoints)} />
+      <rect width={maxBeat - minBeat} height={height} fill='transparent' />
+
+      {controlPointsRendered}
     </g>
   }
 }
