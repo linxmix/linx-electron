@@ -43,7 +43,7 @@ const {
   CHANNEL_TYPE_TRACK_GROUP,
   CHANNEL_TYPES
 } = require('./constants')
-const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION } = require('../clips/constants')
+const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION, CONTROL_TYPE_VOLUME } = require('../clips/constants')
 const { quantizeBeat } = require('../lib/number-utils')
 
 module.exports = createReducer
@@ -335,8 +335,10 @@ function createReducer (config) {
         const trackGroupAID = uuid()
         const trackBID = uuid()
         const trackGroupBID = uuid()
+        const mixBpm = 130 // inferred from the werthen dataset
 
         const trackA = transition.trackA
+        const trackAStartBeat = trackA.time * mixBpm / 60
         const createTrackAEffect = _createTrackGroup({
           trackGroupId: trackGroupAID,
           primaryTrackId: trackAID,
@@ -344,9 +346,13 @@ function createReducer (config) {
           sampleId: sampleIds[0],
           primaryClipAttrs: {
             audioStartTime: trackA.offset
+          },
+          trackGroupAttrs: {
+            startBeat: trackAStartBeat
           }
         })
         const trackB = transition.trackB
+        const trackBStartBeat = trackB.time * mixBpm / 60
         const createTrackBEffect = _createTrackGroup({
           trackGroupId: trackGroupBID,
           primaryTrackId: trackBID,
@@ -354,13 +360,41 @@ function createReducer (config) {
           sampleId: sampleIds[1],
           primaryClipAttrs: {
             audioStartTime: trackB.offset
+          },
+          trackGroupAttrs: {
+            startBeat: trackBStartBeat
           }
         })
 
         // convert prediction xfades to automation clips
         const sampleRate = 22050 // same as autodj
         const hopLength = 512 // same as autodj
-        // createAutomationClipWithControlPoint({})
+
+        const transitionStartBeat = transition.start * mixBpm / 60
+        const transitionEndBeat = transition.end * mixBpm / 60
+        const transitionBeatCount = transitionEndBeat - transitionStartBeat
+        const controlPointArgs = prediction.map((yi, i) => ({
+
+          // do not include transitionStartBeat because we are offset
+          // by trackGroup.startBeat
+          beat: (i / prediction.length) * transitionBeatCount,
+          value: yi[0],
+        }))
+
+        // TODO: need to add track end location?
+        // TODO: why are tracks not lining up?
+        console.log('createMixFromJson BLOOPER', {
+          transitionStartBeat,
+          trackAStartBeat,
+          trackBStartBeat,
+        })
+
+        const volumeEffect = createAutomationClipWithControlPoint({
+          channelId: trackBID,
+          controlType: CONTROL_TYPE_VOLUME,
+          quantization: 'sample',
+          controlPointArgs,
+        })
 
         return Cmd.batch([
           createTrackAEffect,
@@ -368,7 +402,8 @@ function createReducer (config) {
           Cmd.action(setChannelsParent({
             parentChannelId,
             channelIds: [trackGroupAID, trackGroupBID]
-          }))
+          })),
+          Cmd.action(volumeEffect)
         ])
       }
 

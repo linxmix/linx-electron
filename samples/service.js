@@ -58,7 +58,7 @@ function createService (config) {
 
       // expect shape [ [ transition, prediction ], ...]
       const json = JSON.parse(data)
-      const [ transition, prediction ] = json[2]
+      const [ transition, prediction ] = json[4]
 
       // TODO: add files from more transitions?
       const transitionFiles = [

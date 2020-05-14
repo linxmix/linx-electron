@@ -18,6 +18,7 @@ const {
   resizeSampleClip,
   moveControlPoint,
   createControlPoint,
+  createControlPoints,
   deleteControlPoint,
   updateControlPointValue,
   updateControlPointPosition,
@@ -293,6 +294,32 @@ function createReducer (config) {
         }
       })))
     },
+    [createControlPoints]: (state, action) => {
+      const { sourceId, controlPointArgs, quantization = 'sample' } = action.payload
+
+      const sourceClip = state.records[sourceId]
+      assert(sourceClip, 'Cannot createControlPoint for nonexistent sourceClip')
+
+      const sourceClipControlPoints = get(sourceClip, 'controlPoints') || {}
+
+      const newControlPoints = {}
+      controlPointArgs.forEach(({ beat, value }) => {
+        const id = uuid()
+        newControlPoints[id] = {
+          id,
+          beat: quantizeBeat({ quantization, beat }),
+          value: clamp(0, value, 1)
+        }
+      })
+
+      return loop(state, Cmd.action(updateClip({
+        id: sourceId,
+        controlPoints: {
+          ...newControlPoints,
+          ...sourceClipControlPoints
+        }
+      })))
+    },
     [deleteControlPoint]: (state, action) => {
       const { id, sourceId } = action.payload
       const sourceClip = state.records[sourceId]
@@ -312,24 +339,21 @@ function createReducer (config) {
 
       const automationClipId = uuid()
 
-      let controlPointEffects = []
+      let controlPointEffect
 
       // NOTE: this takes a single point or for multiple points 
       // this was done as a shortcut to save time on renaming
       if (controlPointArgs.length) {
-        controlPointEffects = controlPointArgs.map(({
-          beat, value
-        }) => Cmd.action(createControlPoint({
+        controlPointEffect = Cmd.action(createControlPoints({
+          sourceId: automationClipId,
+          quantization,
+          controlPointArgs
+        }))
+      } else {
+        controlPointEffect = Cmd.action(createControlPoint({
           sourceId: automationClipId,
           beat, value, quantization
-        })))
-      } else {
-        controlPointEffects = [
-          Cmd.action(createControlPoint({
-            sourceId: automationClipId,
-            beat, value, quantization
-          }))
-        ]
+        }))
       }
 
       const effects = [
@@ -342,7 +366,7 @@ function createReducer (config) {
           channelId,
           clipIds: [automationClipId]
         })),
-      ].concat(controlPointEffects)
+      ].concat(controlPointEffect)
 
       return loop(state, Cmd.batch(effects))
     },
