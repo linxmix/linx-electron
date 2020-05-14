@@ -3,7 +3,7 @@ const fsRaw = require('fs')
 const fs = pify(fsRaw)
 const { join } = require('path')
 const crypto = require('crypto')
-const { isNil, omitBy, map } = require('lodash')
+const { flatten, isNil, omitBy, map } = require('lodash')
 const JsMediaTags = require('jsmediatags')
 
 const { validNumberOrDefault, getFirstBarOffsetTime } = require('../lib/number-utils')
@@ -57,24 +57,23 @@ function createService (config) {
     return fs.readFile(file.path, 'utf8').then((data) => {
 
       // expect shape [ [ transition, prediction ], ...]
-      const json = JSON.parse(data)
-      const [ transition, prediction ] = json[4]
-
-      // TODO: add files from more transitions?
-      const transitionFiles = [
-        { path: transition.trackA.absolute_path,
-          name: transition.trackA.name
-        },
-        { path: transition.trackB.absolute_path,
-          name: transition.trackB.name
-        },
-      ]
+      const transitionInfos = JSON.parse(data)
+      const transitionFiles = flatten(transitionInfos.map(
+        ([ transition, prediction ]) => ([
+          { path: transition.trackA.absolute_path,
+            name: transition.trackA.name
+          },
+          { path: transition.trackB.absolute_path,
+            name: transition.trackB.name
+          },
+        ])
+      ))
 
       return Promise.all(transitionFiles.map(createSample))
         .then((sampleInfos) => {
           return {
             sampleInfos,
-            transitionInfo: [ transition, prediction ],
+            transitionInfos,
           }
         })
     })

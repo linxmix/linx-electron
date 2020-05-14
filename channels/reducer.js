@@ -2,7 +2,7 @@ const { Cmd, loop } = require('redux-loop')
 const { handleActions } = require('redux-actions')
 const { push } = require('react-router-redux')
 const { assign, get, flatten, keyBy, map, defaults, without, includes, findIndex, concat,
-  filter, values, omit, indexOf, mapValues, reduce, reject, uniq } = require('lodash')
+  filter, values, omit, indexOf, mapValues, range, reduce, reject, uniq } = require('lodash')
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
@@ -43,7 +43,7 @@ const {
   CHANNEL_TYPE_TRACK_GROUP,
   CHANNEL_TYPES
 } = require('./constants')
-const { CLIP_TYPE_SAMPLE, CLIP_TYPE_AUTOMATION, CONTROL_TYPE_VOLUME } = require('../clips/constants')
+const { CLIP_TYPE_SAMPLE, CONTROL_TYPE_VOLUME } = require('../clips/constants')
 const { quantizeBeat } = require('../lib/number-utils')
 
 module.exports = createReducer
@@ -328,83 +328,25 @@ function createReducer (config) {
     [createMixFromJson]: (state, action) => {
       const { file, parentChannelId } = action.payload
 
-      const effectCreator = ({ sampleIds, transitionInfo }) => {
-        console.log('EFFECT CREATOR', { sampleIds, transitionInfo })
-        const [ transition, prediction ] = transitionInfo
-        const trackAID = uuid()
-        const trackGroupAID = uuid()
-        const trackBID = uuid()
-        const trackGroupBID = uuid()
-        const mixBpm = 130 // inferred from the werthen dataset
+      const effectCreator = ({ sampleIds, transitionInfos }) => {
+        const trackGroupChannelIds = sampleIds.map(() => uuid())
 
-        const trackA = transition.trackA
-        const trackAStartBeat = trackA.time * mixBpm / 60
-        const createTrackAEffect = _createTrackGroup({
-          trackGroupId: trackGroupAID,
-          primaryTrackId: trackAID,
+        const effects = flatten(transitionInfos.map(([ transition, prediction ], i) => _createTransitionEffects({
+          transition,
+          prediction,
           parentChannelId,
-          sampleId: sampleIds[0],
-          primaryClipAttrs: {
-            audioStartTime: trackA.offset
-          },
-          trackGroupAttrs: {
-            startBeat: trackAStartBeat
-          }
-        })
-        const trackB = transition.trackB
-        const trackBStartBeat = trackB.time * mixBpm / 60
-        const createTrackBEffect = _createTrackGroup({
-          trackGroupId: trackGroupBID,
-          primaryTrackId: trackBID,
-          parentChannelId,
-          sampleId: sampleIds[1],
-          primaryClipAttrs: {
-            audioStartTime: trackB.offset
-          },
-          trackGroupAttrs: {
-            startBeat: trackBStartBeat
-          }
-        })
+          trackASampleId: sampleIds[i * 2],
+          trackAGroupChannelId: trackGroupChannelIds[i * 2],
+          trackBSampleId: sampleIds[(i * 2) + 1],
+          trackBGroupChannelId: trackGroupChannelIds[(i * 2) + 1],
+        })))
 
-        // convert prediction xfades to automation clips
-        const sampleRate = 22050 // same as autodj
-        const hopLength = 512 // same as autodj
-
-        const transitionStartBeat = transition.start * mixBpm / 60
-        const transitionEndBeat = transition.end * mixBpm / 60
-        const transitionBeatCount = transitionEndBeat - transitionStartBeat
-        const controlPointArgs = prediction.map((yi, i) => ({
-
-          // do not include transitionStartBeat because we are offset
-          // by trackGroup.startBeat
-          beat: (i / prediction.length) * transitionBeatCount,
-          value: yi[0],
-        }))
-
-        // TODO: need to add track end location?
-        // TODO: why are tracks not lining up?
-        console.log('createMixFromJson BLOOPER', {
-          transitionStartBeat,
-          trackAStartBeat,
-          trackBStartBeat,
-        })
-
-        const volumeEffect = createAutomationClipWithControlPoint({
-          channelId: trackBID,
-          controlType: CONTROL_TYPE_VOLUME,
-          quantization: 'sample',
-          controlPointArgs,
-        })
-
-        return Cmd.batch([
-          createTrackAEffect,
-          createTrackBEffect,
+        return Cmd.batch(effects.concat(
           Cmd.action(setChannelsParent({
             parentChannelId,
-            channelIds: [trackGroupAID, trackGroupBID]
-          })),
-          Cmd.action(volumeEffect)
-        ])
+            channelIds: trackGroupChannelIds
+          }))
+        ))
       }
 
       return loop(state,
@@ -574,6 +516,81 @@ function createReducer (config) {
   })
 }
 
+function _createTransitionEffects({
+  transition,
+  prediction,
+  trackASampleId,
+  trackAGroupChannelId,
+  trackBSampleId,
+  trackBGroupChannelId,
+  parentChannelId
+}) {
+  const trackAID = uuid()
+  const trackBID = uuid()
+  const mixBpm = 130 // inferred from the werthen dataset
+
+  const trackA = transition.trackA
+  const trackAStartBeat = trackA.time * mixBpm / 60
+  const createTrackAEffect = _createTrackGroup({
+    trackGroupId: trackAGroupChannelId,
+    primaryTrackId: trackAID,
+    parentChannelId,
+    sampleId: trackASampleId,
+    primaryClipAttrs: {
+      audioStartTime: trackA.offset
+    },
+    trackGroupAttrs: {
+      startBeat: trackAStartBeat
+    }
+  })
+  const trackB = transition.trackB
+  const trackBStartBeat = trackB.time * mixBpm / 60
+  const createTrackBEffect = _createTrackGroup({
+    trackGroupId: trackBGroupChannelId,
+    primaryTrackId: trackBID,
+    parentChannelId,
+    sampleId: trackBSampleId,
+    primaryClipAttrs: {
+      audioStartTime: trackB.offset
+    },
+    trackGroupAttrs: {
+      startBeat: trackBStartBeat
+    }
+  })
+
+  // convert prediction xfades to automation clips
+  const transitionStartBeat = transition.start * mixBpm / 60
+  const transitionEndBeat = transition.end * mixBpm / 60
+  const transitionBeatCount = transitionEndBeat - transitionStartBeat
+  const controlPointArgs = prediction.map((yi, i) => ({
+
+    // do not include transitionStartBeat because we are offset
+    // by trackGroup.startBeat
+    beat: (i / prediction.length) * transitionBeatCount,
+    value: yi[0],
+  }))
+
+  // TODO: need to add track end location?
+  // TODO: why are tracks not lining up?
+  console.log('createMixFromJson BLOOPER', {
+    transitionStartBeat,
+    trackAStartBeat,
+    trackBStartBeat,
+  })
+
+  const volumeEffect = createAutomationClipWithControlPoint({
+    channelId: trackBID,
+    controlType: CONTROL_TYPE_VOLUME,
+    quantization: 'sample',
+    controlPointArgs,
+  })
+
+  return [
+    createTrackAEffect,
+    createTrackBEffect,
+    Cmd.action(volumeEffect)
+  ]
+}
 
 // using this because batching actions wasnt working as expected
 function _createTrackGroup ({
