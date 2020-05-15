@@ -6,6 +6,8 @@ const { assign, get, flatten, keyBy, map, defaults, without, includes, findIndex
 const uuid = require('uuid/v4')
 const assert = require('assert')
 
+const { validNumberOrDefault } = require('../lib/number-utils')
+
 const {
   setChannels,
   setChannel,
@@ -334,7 +336,6 @@ function createReducer (config) {
 
         const effects = flatten(transitionInfos.map(([ transition, prediction ], i) => {
           const shouldMakeTrackA = (i === 0)
-          console.log("EFFECTSfdsafsd", transitionInfos.length, shouldMakeTrackA)
           return _createTransitionEffects({
             transition,
             prediction,
@@ -537,7 +538,8 @@ function _createTransitionEffects({
   trackBId = uuid(),
 }) {
   // TODO: mixBpm differs per mix!
-  const mixBpm = 128 // inferred from the werthen dataset
+  // TODO: need to add track end location?
+  const mixBpm = 127 // inferred from the werthen dataset
 
   const trackA = transition.trackA
   const trackAStartBeat = trackA.time * mixBpm / 60
@@ -570,44 +572,44 @@ function _createTransitionEffects({
   })
 
   // convert prediction xfades to automation clips
+  // first remove padding
+  const leftPad = validNumberOrDefault(transition.left_padding, 0)
+  const rightPad = validNumberOrDefault(transition.right_padding, 0)
+  prediction.splice(0, leftPad)
+  prediction.splice(prediction.length - rightPad, prediction.length)
   const transitionStartBeat = transition.start * mixBpm / 60
   const transitionEndBeat = transition.end * mixBpm / 60
   const transitionBeatCount = transitionEndBeat - transitionStartBeat
 
-  // TODO: need to add track end location?
-  // TODO: why are tracks not lining up?
-
+  const showRealXfades = false
   const trackAVolumeEffect = Cmd.action(createAutomationClipWithControlPoint({
     channelId: trackAId,
     controlType: CONTROL_TYPE_VOLUME,
     quantization: 'sample',
-    controlPointArgs: prediction.map((yi, i) => ({
-      beat: (transitionStartBeat - trackAStartBeat) + (i / prediction.length) * transitionBeatCount,
-      // value: (1 - Math.cos(i * Math.pi / 2)),
-      // value: (1 - Math.cos(yi[0] * Math.pi / 2)),
-      value: 1 - yi[0],
-    }))
-    // controlPointArgs: transition.xfade_events.map(({ time, value }, i) => ({
-    //   beat: (time * mixBpm / 60) - trackAStartBeat,
-    //   value: 1 - value,
-    // }))
+    controlPointArgs: showRealXfades
+      ? transition.xfade_events.map(({ time, value }, i) => ({
+        beat: (time * mixBpm / 60) - trackAStartBeat,
+        value: Math.cos(value * Math.PI / 2.0),
+      }))
+      : prediction.map((yi, i) => ({
+        beat: (transitionStartBeat - trackAStartBeat) + (i / prediction.length) * transitionBeatCount,
+        value: Math.cos(yi[0] * Math.PI / 2.0),
+      }))
   }))
 
   const trackBVolumeEffect = Cmd.action(createAutomationClipWithControlPoint({
     channelId: trackBId,
     controlType: CONTROL_TYPE_VOLUME,
     quantization: 'sample',
-    controlPointArgs: prediction.map((yi, i) => ({
-      // do not include transitionStartBeat because we are offset
-      // by trackGroup.startBeat
-      beat: (transitionStartBeat - trackBStartBeat) + (i / prediction.length) * transitionBeatCount,
-      // value: Math.cos(yi * Math.pi / 2),
-      value: yi[0],
-    }))
-    // controlPointArgs: transition.xfade_events.map(({ time, value }, i) => ({
-    //   beat: (time * mixBpm / 60) - trackBStartBeat,
-    //   value: value,
-    // }))
+    controlPointArgs: showRealXfades
+      ? transition.xfade_events.map(({ time, value }, i) => ({
+        beat: (time * mixBpm / 60) - trackBStartBeat,
+        value: Math.cos((1 - value) * Math.PI / 2.0),
+      }))
+      : prediction.map((yi, i) => ({
+        beat: (transitionStartBeat - trackBStartBeat) + (i / prediction.length) * transitionBeatCount,
+        value: Math.cos((1 - yi[0]) * Math.PI / 2.0),
+      }))
   }))
 
   return [
