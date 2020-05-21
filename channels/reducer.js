@@ -45,7 +45,7 @@ const {
   CHANNEL_TYPE_TRACK_GROUP,
   CHANNEL_TYPES
 } = require('./constants')
-const { CLIP_TYPE_SAMPLE, CONTROL_TYPE_VOLUME } = require('../clips/constants')
+const { CLIP_TYPE_SAMPLE, CONTROL_TYPE_VOLUME, CONTROL_TYPE_FILTER_HIGHPASS_Q } = require('../clips/constants')
 const { quantizeBeat } = require('../lib/number-utils')
 
 module.exports = createReducer
@@ -581,9 +581,16 @@ function _createTransitionEffects({
   const transitionEndBeat = transition.end * mixBpm / 60
   const transitionBeatCount = transitionEndBeat - transitionStartBeat
 
+  // make sure prediction start at 0 and ends at 1
+  prediction[0][0] = 0
+  prediction[prediction.length - 1][0] = 1
+
   const showRealXfades = false
+  const trackAVolumeClipId = uuid()
+  const trackAQClipId = uuid()
   const trackAVolumeEffect = Cmd.action(createAutomationClipWithControlPoint({
-    channelId: trackAId,
+    shouldUpdateChannel: false,
+    clipId: trackAVolumeClipId,
     controlType: CONTROL_TYPE_VOLUME,
     quantization: 'sample',
     controlPointArgs: showRealXfades
@@ -597,8 +604,22 @@ function _createTransitionEffects({
       }))
   }))
 
+  const trackAQEffect = Cmd.action(createAutomationClipWithControlPoint({
+    shouldUpdateChannel: false,
+    clipId: trackAQClipId,
+    controlType: CONTROL_TYPE_FILTER_HIGHPASS_Q,
+    quantization: 'sample',
+    controlPointArgs: transition.xfade_events.map(({ time, value }, i) => ({
+      beat: (time * mixBpm / 60) - trackAStartBeat,
+      value: Math.cos(value * Math.PI / 2.0),
+    }))
+  }))
+
+  const trackBVolumeClipId = uuid()
+  const trackBQClipId = uuid()
   const trackBVolumeEffect = Cmd.action(createAutomationClipWithControlPoint({
-    channelId: trackBId,
+    shouldUpdateChannel: false,
+    clipId: trackBVolumeClipId,
     controlType: CONTROL_TYPE_VOLUME,
     quantization: 'sample',
     controlPointArgs: showRealXfades
@@ -612,11 +633,33 @@ function _createTransitionEffects({
       }))
   }))
 
+  const trackBQEffect = Cmd.action(createAutomationClipWithControlPoint({
+    shouldUpdateChannel: false,
+    clipId: trackBQClipId,
+    controlType: CONTROL_TYPE_FILTER_HIGHPASS_Q,
+    quantization: 'sample',
+    controlPointArgs: transition.xfade_events.map(({ time, value }, i) => ({
+      beat: (time * mixBpm / 60) - trackBStartBeat,
+      value: Math.cos((1 - value) * Math.PI / 2.0),
+    }))
+  }))
+
   return [
     createTrackAEffect,
     createTrackBEffect,
     trackAVolumeEffect,
+    // trackAQEffect,
     trackBVolumeEffect,
+    trackBQEffect,
+    Cmd.action(setClipsChannel({
+      channelId: trackAId,
+      // clipIds: [trackAVolumeClipId, trackAQClipId]
+      clipIds: [trackAVolumeClipId]
+    })),
+    Cmd.action(setClipsChannel({
+      channelId: trackBId,
+      clipIds: [trackBVolumeClipId, trackBQClipId]
+    })),
   ]
 }
 

@@ -332,12 +332,9 @@ function createReducer (config) {
     },
 
     [createAutomationClipWithControlPoint]: (state, action) => {
-      const { channelId, controlType, beat, value, minBeat, maxBeat, quantization, controlPointArgs = [] } = action.payload
-      assert(channelId, 'Cannot createAutomationClipWithControlPoint without channelId')
+      const { clipId = uuid(), channelId, shouldUpdateChannel = true, controlType, beat, value, minBeat, maxBeat, quantization, controlPointArgs = [] } = action.payload
       assert(includes(CONTROL_TYPES, controlType),
         'Must have valid controlType to createAutomationClipWithControlPoint')
-
-      const automationClipId = uuid()
 
       let controlPointEffect
 
@@ -345,27 +342,27 @@ function createReducer (config) {
       // this was done as a shortcut to save time on renaming
       if (controlPointArgs.length) {
         controlPointEffect = Cmd.action(createControlPoints({
-          sourceId: automationClipId,
+          sourceId: clipId,
           quantization,
           controlPointArgs
         }))
       } else {
         controlPointEffect = Cmd.action(createControlPoint({
-          sourceId: automationClipId,
+          sourceId: clipId,
           beat, value, quantization
         }))
       }
 
       const effects = [
         Cmd.action(createClip({
-          id: automationClipId,
+          id: clipId,
           type: CLIP_TYPE_AUTOMATION,
           controlType
         })),
-        Cmd.action(setClipsChannel({
+        shouldUpdateChannel ? Cmd.action(setClipsChannel({
           channelId,
-          clipIds: [automationClipId]
-        })),
+          clipIds: [clipId]
+        })) : Cmd.none,
       ].concat(controlPointEffect)
 
       return loop(state, Cmd.batch(effects))
